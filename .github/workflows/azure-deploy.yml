@@ -62,6 +62,11 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
+    - name: Configure App Service for Java 21
+      run: |
+        az webapp config set --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --linux-fx-version "JAVA|21-java21"
+        az webapp config set --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --web-sockets-enabled true
+    
     - name: Deploy to Azure Web App
       run: |
         JAR_FILE=$(ls target/*.jar | head -1)
