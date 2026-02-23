@@ -14,7 +14,7 @@ on:
 env:
   JAVA_VERSION: '21'
   AZURE_WEBAPP_NAME: perfsimjava
-  AZURE_RESOURCE_GROUP: rg-perfsimjava
+  AZURE_RESOURCE_GROUP: rhamlettRG
   
 permissions:
   id-token: write
