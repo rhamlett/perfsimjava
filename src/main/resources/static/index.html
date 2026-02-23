@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Problem Simulator - Java Blessed Image (Java|21)</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1>Performance Problem Simulator</h1>
+            <span class="subtitle">Java Blessed Image (Java|21)</span>
+        </div>
+        <div class="header-right">
+            <span class="connection-status" id="connectionStatus">Connecting...</span>
+            <nav class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/docs.html">Docs</a>
+                <a href="/azure-diagnostics.html">Azure Diagnostics</a>
+                <a href="/azure-deployment.html">Deployment</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <!-- Event Log Panel -->
+        <section class="panel event-log-panel">
+            <h2>Event Log</h2>
+            <div class="event-log" id="eventLog">
+                <div class="event info">Application started</div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="panel charts-panel">
+            <h2>System Metrics</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>CPU Usage</h3>
+                    <canvas id="cpuChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Memory Usage</h3>
+                    <canvas id="memoryChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Thread Count</h3>
+                    <canvas id="threadChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Request Latency (ms)</h3>
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulations Control Panel -->
+        <section class="panel simulations-panel">
+            <h2>Simulations</h2>
+            
+            <!-- Active Simulations -->
+            <div class="active-simulations" id="activeSimulations">
+                <h3>Active Simulations</h3>
+                <div class="simulation-list" id="simulationList">
+                    <p class="no-simulations">No active simulations</p>
+                </div>
+            </div>
+
+            <!-- Simulation Controls -->
+            <div class="simulation-controls">
+                <!-- CPU Stress -->
+                <div class="control-group">
+                    <h3>🔥 CPU Stress</h3>
+                    <p>Spawns worker threads performing cryptographic operations.</p>
+                    <div class="control-row">
+                        <label>
+                            Workers:
+                            <input type="number" id="cpuWorkers" value="4" min="1" max="32">
+                        </label>
+                        <label>
+                            Duration (ms):
+                            <input type="number" id="cpuDuration" value="30000" min="1000" max="120000">
+                        </label>
+                    </div>
+                    <button class="btn btn-danger" onclick="startCpuStress()">Start CPU Stress</button>
+                </div>
+
+                <!-- Memory Pressure -->
+                <div class="control-group">
+                    <h3>💾 Memory Pressure</h3>
+                    <p>Allocates memory chunks to increase heap usage.</p>
+                    <div class="control-row">
+                        <label>
+                            Target MB:
+                            <input type="number" id="memoryTarget" value="500" min="50" max="2000">
+                        </label>
+                        <label>
+                            Duration (ms):
+                            <input type="number" id="memoryDuration" value="30000" min="1000" max="120000">
+                        </label>
+                    </div>
+                    <button class="btn btn-warning" onclick="startMemoryPressure()">Start Memory Pressure</button>
+                </div>
+
+                <!-- Thread Pool Starvation -->
+                <div class="control-group">
+                    <h3>⏳ Thread Pool Starvation</h3>
+                    <p>Blocks servlet threads to starve the thread pool (Java equivalent of Event Loop Blocking).</p>
+                    <div class="control-row">
+                        <label>
+                            Blocked Threads:
+                            <input type="number" id="starvationCount" value="50" min="10" max="200">
+                        </label>
+                        <label>
+                            Duration (ms):
+                            <input type="number" id="starvationDuration" value="30000" min="1000" max="120000">
+                        </label>
+                    </div>
+                    <button class="btn btn-warning" onclick="startThreadStarvation()">Start Thread Starvation</button>
+                </div>
+
+                <!-- Slow Request -->
+                <div class="control-group">
+                    <h3>🐢 Slow Request</h3>
+                    <p>Creates artificially slow HTTP responses.</p>
+                    <div class="control-row">
+                        <label>
+                            Delay (ms):
+                            <input type="number" id="slowDelay" value="5000" min="100" max="60000">
+                        </label>
+                        <label>
+                            Pattern:
+                            <select id="slowPattern">
+                                <option value="SLEEP">Sleep</option>
+                                <option value="EXECUTOR_SATURATION">Executor Saturation</option>
+                                <option value="SYNC_BLOCKING">Sync Blocking</option>
+                            </select>
+                        </label>
+                    </div>
+                    <button class="btn btn-info" onclick="triggerSlowRequest()">Trigger Slow Request</button>
+                </div>
+
+                <!-- Crash Simulation -->
+                <div class="control-group">
+                    <h3>💥 Crash Simulation</h3>
+                    <p>Triggers various crash scenarios for testing diagnostics.</p>
+                    <div class="control-row">
+                        <label>
+                            Crash Type:
+                            <select id="crashType">
+                                <option value="FAILFAST">Fail Fast (Exit)</option>
+                                <option value="STACKOVERFLOW">Stack Overflow</option>
+                                <option value="EXCEPTION">Unhandled Exception</option>
+                                <option value="OOM">Out of Memory</option>
+                            </select>
+                        </label>
+                    </div>
+                    <button class="btn btn-danger" onclick="triggerCrash()">⚠️ Trigger Crash</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Current Metrics Panel -->
+        <section class="panel metrics-panel">
+            <h2>Current Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">CPU Usage</div>
+                    <div class="metric-value" id="currentCpu">--%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Heap Used</div>
+                    <div class="metric-value" id="currentMemory">-- MB</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Thread Count</div>
+                    <div class="metric-value" id="currentThreads">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Probe Latency</div>
+                    <div class="metric-value" id="currentLatency">-- ms</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">GC Count</div>
+                    <div class="metric-value" id="currentGcCount">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">GC Time</div>
+                    <div class="metric-value" id="currentGcTime">-- ms</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Performance Problem Simulator - Java 21 | <span id="skuInfo">Loading...</span></p>
+    </footer>
+
+    <script src="/js/charts.js"></script>
+    <script src="/js/socket-client.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

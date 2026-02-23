@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Diagnostics - Performance Problem Simulator - Java</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1>Performance Problem Simulator</h1>
+            <span class="subtitle">Java Blessed Image (Java|21)</span>
+        </div>
+        <div class="header-right">
+            <nav class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/docs.html">Docs</a>
+                <a href="/azure-diagnostics.html">Azure Diagnostics</a>
+                <a href="/azure-deployment.html">Deployment</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="docs-container">
+        <h1>Azure Diagnostics Guide</h1>
+        <p>This guide explains how to use Azure diagnostic tools to analyze performance issues simulated by this application.</p>
+
+        <h2>AppLens Integration</h2>
+        
+        <p>This application is designed to work with Azure AppLens by sending health probes every 100ms 
+        through the Azure stamp frontend. This high-frequency probing ensures that latency spikes and 
+        availability issues are visible in AppLens dashboards.</p>
+
+        <h3>What AppLens Can Detect</h3>
+        <ul>
+            <li><strong>CPU Stress:</strong> High CPU utilization graphs, potential throttling alerts</li>
+            <li><strong>Memory Pressure:</strong> Memory usage spikes, potential OOM patterns</li>
+            <li><strong>Thread Starvation:</strong> Increased request latency, request queuing</li>
+            <li><strong>Slow Requests:</strong> Long response times, timeout patterns</li>
+            <li><strong>Crashes:</strong> Instance restarts, availability drops</li>
+        </ul>
+
+        <h2>Azure Monitor Metrics</h2>
+
+        <p>Key metrics to watch in Azure Monitor when running simulations:</p>
+
+        <h3>Platform Metrics</h3>
+        <ul>
+            <li><strong>CPU Percentage:</strong> Watch for spikes during CPU stress simulations</li>
+            <li><strong>Memory Working Set:</strong> Increases during memory pressure simulations</li>
+            <li><strong>HTTP Queue Length:</strong> Grows during thread starvation</li>
+            <li><strong>Response Time:</strong> Watch for P95/P99 latency increases</li>
+            <li><strong>Http 5xx:</strong> May increase during crash simulations</li>
+        </ul>
+
+        <h3>JVM Metrics (if App Insights enabled)</h3>
+        <ul>
+            <li><strong>jvm_memory_used:</strong> Heap and non-heap memory</li>
+            <li><strong>jvm_gc_pause:</strong> GC pause times</li>
+            <li><strong>jvm_threads_live:</strong> Active thread count</li>
+        </ul>
+
+        <h2>Application Insights</h2>
+
+        <p>If Application Insights is configured, you can use these features:</p>
+
+        <h3>Live Metrics Stream</h3>
+        <p>Watch real-time metrics during simulations:</p>
+        <ol>
+            <li>Navigate to your App Service in Azure Portal</li>
+            <li>Go to Application Insights → Live Metrics</li>
+            <li>Observe CPU, memory, and request rates in real-time</li>
+        </ol>
+
+        <h3>Transaction Search</h3>
+        <p>Find slow or failed requests:</p>
+        <ol>
+            <li>Go to Application Insights → Transaction Search</li>
+            <li>Filter by "Failed requests" or "Server response time > 5s"</li>
+            <li>Drill into individual requests to see timing breakdown</li>
+        </ol>
+
+        <h3>Application Map</h3>
+        <p>Visualize service health and dependencies:</p>
+        <ol>
+            <li>Go to Application Insights → Application Map</li>
+            <li>Look for red/yellow indicators during simulations</li>
+            <li>Check for increased failure rates or latency</li>
+        </ol>
+
+        <h2>Diagnose and Solve Problems</h2>
+
+        <p>Azure App Service provides built-in diagnostic tools:</p>
+
+        <h3>Availability and Performance</h3>
+        <ol>
+            <li>Go to App Service → Diagnose and solve problems</li>
+            <li>Select "Availability and Performance"</li>
+            <li>Check "HTTP 5xx Errors" for crash-related issues</li>
+            <li>Check "High CPU" for CPU stress detection</li>
+            <li>Check "Memory" for memory pressure detection</li>
+        </ol>
+
+        <h3>Diagnostic Tools</h3>
+        <ul>
+            <li><strong>CPU Drill Down:</strong> See CPU usage breakdown by instance</li>
+            <li><strong>Memory Dump:</strong> Capture heap dumps during memory issues</li>
+            <li><strong>Thread Dump:</strong> Capture thread stacks during starvation</li>
+            <li><strong>JFR (Java Flight Recorder):</strong> Profile Java application</li>
+        </ul>
+
+        <h2>Log Analytics / KQL Queries</h2>
+
+        <p>Useful KQL queries for analyzing simulation effects:</p>
+
+        <h3>High CPU Requests</h3>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where ScStatus >= 500
+| summarize Count=count() by bin(TimeGenerated, 1m)
+| render timechart</code></pre>
+
+        <h3>Slow Response Times</h3>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where TimeTaken > 5000
+| project TimeGenerated, CsUriStem, TimeTaken, ScStatus
+| order by TimeTaken desc</code></pre>
+
+        <h3>Memory Usage Pattern</h3>
+        <pre><code>AppServicePlatformLogs
+| where TimeGenerated > ago(1h)
+| where Level == "Informational"
+| project TimeGenerated, Message
+| order by TimeGenerated desc</code></pre>
+
+        <h2>Java-Specific Diagnostics</h2>
+
+        <h3>Enable JMX for Remote Monitoring</h3>
+        <p>Add these app settings for JMX access (development only):</p>
+        <pre><code>JAVA_OPTS=-Dcom.sun.management.jmxremote \
+  -Dcom.sun.management.jmxremote.port=9010 \
+  -Dcom.sun.management.jmxremote.local.only=false \
+  -Dcom.sun.management.jmxremote.authenticate=false \
+  -Dcom.sun.management.jmxremote.ssl=false</code></pre>
+
+        <h3>Enable GC Logging</h3>
+        <pre><code>JAVA_OPTS=-Xlog:gc*:file=/home/LogFiles/gc.log:time,level,tags</code></pre>
+
+        <h3>Heap Dumps on OOM</h3>
+        <pre><code>JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError \
+  -XX:HeapDumpPath=/home/LogFiles/heapdump.hprof</code></pre>
+
+        <h2>Simulation → Diagnostic Mapping</h2>
+
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color);">
+                    <th style="padding: 0.75rem; text-align: left;">Simulation</th>
+                    <th style="padding: 0.75rem; text-align: left;">Azure Tool</th>
+                    <th style="padding: 0.75rem; text-align: left;">What to Look For</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 0.75rem;">CPU Stress</td>
+                    <td style="padding: 0.75rem;">AppLens, Metrics</td>
+                    <td style="padding: 0.75rem;">CPU % spike, potential throttling</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Memory Pressure</td>
+                    <td style="padding: 0.75rem;">Metrics, Memory Dump</td>
+                    <td style="padding: 0.75rem;">Memory working set increase, GC frequency</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Thread Starvation</td>
+                    <td style="padding: 0.75rem;">AppLens, Thread Dump</td>
+                    <td style="padding: 0.75rem;">Latency spikes, HTTP queue length</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Slow Request</td>
+                    <td style="padding: 0.75rem;">App Insights</td>
+                    <td style="padding: 0.75rem;">Response time distribution change</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Crash</td>
+                    <td style="padding: 0.75rem;">AppLens, Logs</td>
+                    <td style="padding: 0.75rem;">Instance restarts, availability dips</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Best Practices</h2>
+
+        <div class="note">
+            <h4>Start Small</h4>
+            <p>Begin with short duration simulations (10-30 seconds) and low intensity 
+            (2-4 workers, 100-200MB memory) to understand baseline impact before scaling up.</p>
+        </div>
+
+        <div class="note">
+            <h4>Monitor Before Simulating</h4>
+            <p>Establish a baseline by observing metrics for a few minutes before 
+            starting any simulation. This makes it easier to identify changes.</p>
+        </div>
+
+        <div class="warning">
+            <h4>Production Caution</h4>
+            <p>Never run crash simulations or high-intensity stress tests in production 
+            environments. Use staging/development slots for testing.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Performance Problem Simulator - Java 21</p>
+    </footer>
+</body>
+</html>

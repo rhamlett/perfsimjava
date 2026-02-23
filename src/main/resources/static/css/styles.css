@@ -1,0 +1,701 @@
+/* =============================================================================
+   Performance Problem Simulator - Java Blessed Image
+   CSS Stylesheet
+   ============================================================================= */
+
+:root {
+    --primary-color: #00a86b;
+    --primary-dark: #008f5b;
+    --primary-light: #33b98b;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --success-color: #28a745;
+    --background-color: #1a1a2e;
+    --surface-color: #16213e;
+    --surface-light: #1f3460;
+    --text-color: #e4e4e4;
+    --text-muted: #9a9a9a;
+    --border-color: #2d4a7c;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =============================================================================
+   Header Styles
+   ============================================================================= */
+
+.header {
+    background: linear-gradient(135deg, var(--surface-color) 0%, var(--surface-light) 100%);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid var(--primary-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.header-left h1 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.header-left .subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.connection-status {
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.connection-status.connected {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.connection-status.disconnected {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.connection-status.connecting {
+    background-color: var(--warning-color);
+    color: black;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-links a:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* =============================================================================
+   Dashboard Layout
+   ============================================================================= */
+
+.dashboard {
+    flex: 1;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 300px 1fr 350px;
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
+    max-width: 1800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* =============================================================================
+   Panel Styles
+   ============================================================================= */
+
+.panel {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 1.25rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.panel h2 {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel h3 {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+/* =============================================================================
+   Event Log Panel
+   ============================================================================= */
+
+.event-log-panel {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-log {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 600px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.75rem;
+}
+
+.event {
+    padding: 0.4rem 0.6rem;
+    border-left: 3px solid var(--border-color);
+    margin-bottom: 0.3rem;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.event.info {
+    border-left-color: var(--info-color);
+}
+
+.event.warn {
+    border-left-color: var(--warning-color);
+}
+
+.event.error {
+    border-left-color: var(--danger-color);
+}
+
+.event.success {
+    border-left-color: var(--success-color);
+}
+
+.event .timestamp {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+/* =============================================================================
+   Charts Panel
+   ============================================================================= */
+
+.charts-panel {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.chart-container {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 0.75rem;
+}
+
+.chart-container h3 {
+    text-align: center;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.chart-container canvas {
+    max-height: 150px;
+}
+
+/* =============================================================================
+   Simulations Panel
+   ============================================================================= */
+
+.simulations-panel {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    overflow-y: auto;
+    max-height: 750px;
+}
+
+.active-simulations {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.simulation-list {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.no-simulations {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+.simulation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: var(--surface-light);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.simulation-item .sim-type {
+    font-weight: 500;
+    color: var(--primary-light);
+}
+
+.simulation-item .sim-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.simulation-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.control-group {
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.control-group h3 {
+    margin-bottom: 0.5rem;
+}
+
+.control-group p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+}
+
+.control-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.control-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.control-row input,
+.control-row select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--surface-light);
+    color: var(--text-color);
+    font-size: 0.85rem;
+    width: 120px;
+}
+
+.control-row input:focus,
+.control-row select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* =============================================================================
+   Metrics Panel
+   ============================================================================= */
+
+.metrics-panel {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.metric-card {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.metric-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+}
+
+.metric-value {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+    color: black;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-info {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* =============================================================================
+   Footer
+   ============================================================================= */
+
+.footer {
+    background-color: var(--surface-color);
+    padding: 0.75rem 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* =============================================================================
+   Documentation Pages
+   ============================================================================= */
+
+.docs-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.docs-container h1 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.docs-container h2 {
+    color: var(--primary-light);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.docs-container h3 {
+    color: var(--text-color);
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.docs-container p {
+    margin-bottom: 1rem;
+    line-height: 1.8;
+}
+
+.docs-container ul,
+.docs-container ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.docs-container li {
+    margin-bottom: 0.5rem;
+}
+
+.docs-container code {
+    background-color: var(--surface-light);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9rem;
+}
+
+.docs-container pre {
+    background-color: var(--surface-light);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.docs-container pre code {
+    background: none;
+    padding: 0;
+}
+
+.docs-container .note {
+    background-color: rgba(0, 168, 107, 0.1);
+    border-left: 4px solid var(--primary-color);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.docs-container .warning {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid var(--danger-color);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.api-endpoint {
+    background-color: var(--surface-light);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.api-endpoint .method {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+}
+
+.api-endpoint .method.get {
+    background-color: var(--success-color);
+}
+
+.api-endpoint .method.post {
+    background-color: var(--info-color);
+}
+
+.api-endpoint .method.delete {
+    background-color: var(--danger-color);
+}
+
+.api-endpoint .path {
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+/* =============================================================================
+   Responsive Design
+   ============================================================================= */
+
+@media (max-width: 1400px) {
+    .dashboard {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .event-log-panel {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    .charts-panel {
+        grid-column: 1 / 3;
+        grid-row: 1;
+    }
+
+    .simulations-panel {
+        grid-column: 2;
+        grid-row: 2 / 4;
+    }
+
+    .metrics-panel {
+        grid-column: 1;
+        grid-row: 2;
+    }
+}
+
+@media (max-width: 1000px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .event-log-panel,
+    .charts-panel,
+    .simulations-panel,
+    .metrics-panel {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .header-right {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .control-row {
+        flex-direction: column;
+    }
+
+    .control-row input,
+    .control-row select {
+        width: 100%;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =============================================================================
+   Animations
+   ============================================================================= */
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.event {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* =============================================================================
+   Scrollbar Styling
+   ============================================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}

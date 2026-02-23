@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - Performance Problem Simulator - Java</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1>Performance Problem Simulator</h1>
+            <span class="subtitle">Java Blessed Image (Java|21)</span>
+        </div>
+        <div class="header-right">
+            <nav class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/docs.html">Docs</a>
+                <a href="/azure-diagnostics.html">Azure Diagnostics</a>
+                <a href="/azure-deployment.html">Deployment</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="docs-container">
+        <h1>API Documentation</h1>
+        <p>This document describes the REST API endpoints available in the Performance Problem Simulator.</p>
+
+        <h2>Health Endpoints</h2>
+        
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/health</span>
+            <p>Returns the application health status.</p>
+            <pre><code>{
+    "status": "healthy",
+    "timestamp": "2024-01-01T00:00:00Z",
+    "version": "1.0.0",
+    "runtime": "Java 21"
+}</code></pre>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/health/live</span>
+            <p>Kubernetes liveness probe endpoint. Returns HTTP 200 if the application is alive.</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/health/ready</span>
+            <p>Kubernetes readiness probe endpoint. Returns HTTP 200 if the application is ready to serve traffic.</p>
+        </div>
+
+        <h2>Metrics Endpoints</h2>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/metrics</span>
+            <p>Returns current system metrics including CPU, memory, threads, and GC statistics.</p>
+            <pre><code>{
+    "cpu": {
+        "usagePercent": 25.5,
+        "availableProcessors": 8,
+        "systemLoadAverage": 1.2
+    },
+    "memory": {
+        "heapUsedMb": 128,
+        "heapMaxMb": 512,
+        "heapUsagePercent": 25.0,
+        "nonHeapUsedMb": 64
+    },
+    "thread": {
+        "activeCount": 25,
+        "peakCount": 30,
+        "totalStartedCount": 100
+    },
+    "gc": {
+        "totalCollections": 50,
+        "totalTimeMs": 250
+    },
+    "process": {
+        "pid": 12345,
+        "uptimeSeconds": 3600
+    }
+}</code></pre>
+        </div>
+
+        <h2>CPU Stress Simulation</h2>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/cpu/stress</span>
+            <p>Starts a CPU stress simulation with cryptographic operations.</p>
+            <h4>Request Body:</h4>
+            <pre><code>{
+    "workers": 4,        // Number of worker threads (1-32)
+    "durationMs": 30000  // Duration in milliseconds
+}</code></pre>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method delete">DELETE</span>
+            <span class="path">/api/simulations/cpu/stress/{simulationId}</span>
+            <p>Stops a running CPU stress simulation.</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/simulations/cpu/active</span>
+            <p>Lists all active CPU stress simulations.</p>
+        </div>
+
+        <h2>Memory Pressure Simulation</h2>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/memory/pressure</span>
+            <p>Starts a memory pressure simulation by allocating heap memory.</p>
+            <h4>Request Body:</h4>
+            <pre><code>{
+    "targetMb": 500,     // Target memory allocation in MB
+    "durationMs": 30000  // Duration to hold memory
+}</code></pre>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method delete">DELETE</span>
+            <span class="path">/api/simulations/memory/pressure/{simulationId}</span>
+            <p>Releases memory from a running simulation.</p>
+        </div>
+
+        <h2>Thread Pool Starvation Simulation</h2>
+        
+        <div class="note">
+            <strong>Note:</strong> This is the Java equivalent of "Event Loop Blocking" in Node.js. 
+            Since Java uses a thread-per-request model, blocking multiple servlet threads simulates 
+            the same symptom of request queueing and latency spikes.
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/thread/starvation</span>
+            <p>Starts blocking servlet threads to starve the thread pool.</p>
+            <h4>Request Body:</h4>
+            <pre><code>{
+    "blockedThreadCount": 50,  // Number of threads to block (10-200)
+    "durationMs": 30000        // Duration to block
+}</code></pre>
+        </div>
+
+        <h2>Slow Request Simulation</h2>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/simulations/slow/request</span>
+            <p>Triggers a slow response with configurable delay.</p>
+            <h4>Query Parameters:</h4>
+            <ul>
+                <li><code>delayMs</code> - Response delay in milliseconds (default: 5000)</li>
+                <li><code>pattern</code> - Blocking pattern: SLEEP, EXECUTOR_SATURATION, or SYNC_BLOCKING</li>
+            </ul>
+        </div>
+
+        <h2>Crash Simulation</h2>
+        
+        <div class="warning">
+            <strong>Warning:</strong> These endpoints will crash or terminate the application. 
+            Use only for testing diagnostics and recovery scenarios.
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/crash</span>
+            <p>Triggers a crash of the specified type.</p>
+            <h4>Request Body:</h4>
+            <pre><code>{
+    "type": "FAILFAST"  // FAILFAST, STACKOVERFLOW, EXCEPTION, or OOM
+}</code></pre>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/crash/failfast</span>
+            <p>Immediately exits the JVM with System.exit(1).</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/crash/stackoverflow</span>
+            <p>Causes a StackOverflowError through infinite recursion.</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/crash/exception</span>
+            <p>Throws an unhandled RuntimeException.</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/crash/oom</span>
+            <p>Causes an OutOfMemoryError by allocating excessive memory.</p>
+        </div>
+
+        <h2>Admin Endpoints</h2>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/simulations</span>
+            <p>Lists all active simulations.</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/admin/status</span>
+            <p>Returns admin status overview with metrics and simulation count.</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/admin/events</span>
+            <p>Returns recent event log entries.</p>
+            <h4>Query Parameters:</h4>
+            <ul>
+                <li><code>limit</code> - Maximum number of events to return (default: 50)</li>
+            </ul>
+        </div>
+
+        <h2>WebSocket Topics (STOMP)</h2>
+        
+        <p>Connect to WebSocket at <code>/ws</code> using SockJS and STOMP protocol.</p>
+
+        <h3>Subscribe Topics:</h3>
+        <ul>
+            <li><code>/topic/metrics</code> - System metrics (every 250ms)</li>
+            <li><code>/topic/probe</code> - Probe latency results (every 100ms)</li>
+            <li><code>/topic/events</code> - Event log entries</li>
+            <li><code>/topic/simulations</code> - Simulation lifecycle updates</li>
+        </ul>
+
+        <h2>Technology Stack</h2>
+        <ul>
+            <li><strong>Runtime:</strong> Java 21 (Blessed Image)</li>
+            <li><strong>Framework:</strong> Spring Boot 3.3</li>
+            <li><strong>WebSocket:</strong> STOMP over SockJS</li>
+            <li><strong>Metrics:</strong> JMX MBeans (OperatingSystemMXBean, MemoryMXBean, ThreadMXBean)</li>
+            <li><strong>CPU Stress:</strong> PBKDF2WithHmacSHA512 cryptographic operations</li>
+        </ul>
+    </main>
+
+    <footer class="footer">
+        <p>Performance Problem Simulator - Java 21</p>
+    </footer>
+</body>
+</html>
