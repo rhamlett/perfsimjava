@@ -72,10 +72,16 @@ jobs:
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }}
         
-        # Clear container settings (must happen before setting runtime)
+        # Clear container settings
         az webapp config container delete \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} || true
+        
+        # Remove all DOCKER-related app settings that force container mode
+        az webapp config appsettings delete \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --setting-names DOCKER_REGISTRY_SERVER_URL DOCKER_REGISTRY_SERVER_USERNAME DOCKER_REGISTRY_SERVER_PASSWORD DOCKER_CUSTOM_IMAGE_NAME WEBSITES_ENABLE_APP_SERVICE_STORAGE || true
         
         # Wait for config to propagate
         sleep 10
@@ -88,6 +94,22 @@ jobs:
           --name ${{ env.AZURE_WEBAPP_NAME }} \
           --linux-fx-version "JAVA|21-java21" \
           --web-sockets-enabled true
+        
+        # Ensure app settings for Java
+        az webapp config appsettings set \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --settings WEBSITES_PORT=8080
+    
+    - name: Start App with Java Runtime
+      run: |
+        # Start the app to run with Java runtime before deployment
+        az webapp start \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }}
+        
+        # Wait for app to start with new runtime
+        sleep 30
     
     - name: Rename JAR for deployment
       run: |
@@ -95,10 +117,13 @@ jobs:
         mv "$JAR_FILE" target/app.jar
     
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        package: target/app.jar
+      run: |
+        az webapp deploy \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --src-path target/app.jar \
+          --type jar \
+          --clean true
     
     - name: Set Startup Command
       run: |
@@ -107,7 +132,7 @@ jobs:
           --name ${{ env.AZURE_WEBAPP_NAME }} \
           --startup-file "java -Xms256m -Xmx512m -XX:+UseG1GC -jar /home/site/wwwroot/app.jar --server.port=8080"
     
-    - name: Start App Service
+    - name: Restart App Service
       run: |
-        az webapp start --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
+        az webapp restart --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
         echo "Deployment complete. App will be available at https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
