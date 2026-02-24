@@ -65,19 +65,29 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
+    - name: Stop App Service and Clear Container Config
+      run: |
+        # Stop the app first
+        az webapp stop \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }}
+        
+        # Clear container settings (must happen before setting runtime)
+        az webapp config container delete \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} || true
+        
+        # Wait for config to propagate
+        sleep 10
+    
     - name: Configure App Service for Java 21 SE
       run: |
-        # Switch from container to Java SE runtime stack
+        # Set Java SE runtime stack
         az webapp config set \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
           --linux-fx-version "JAVA|21-java21" \
           --web-sockets-enabled true
-        
-        # Clear any container settings
-        az webapp config container delete \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }} || true
     
     - name: Rename JAR for deployment
       run: |
@@ -97,7 +107,7 @@ jobs:
           --name ${{ env.AZURE_WEBAPP_NAME }} \
           --startup-file "java -Xms256m -Xmx512m -XX:+UseG1GC -jar /home/site/wwwroot/app.jar --server.port=8080"
     
-    - name: Restart App Service
+    - name: Start App Service
       run: |
-        az webapp restart --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
+        az webapp start --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
         echo "Deployment complete. App will be available at https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
