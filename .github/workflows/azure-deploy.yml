@@ -71,3 +71,10 @@ jobs:
       run: |
         JAR_FILE=$(ls target/*.jar | head -1)
         az webapp deploy --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --src-path "$JAR_FILE" --type jar
+    
+    - name: Set Startup Command
+      run: |
+        az webapp config set \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --startup-file "java -Xms256m -Xmx512m -XX:+UseG1GC -jar /home/site/wwwroot/app.jar --server.port=8080"
