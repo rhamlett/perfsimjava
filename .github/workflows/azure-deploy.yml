@@ -65,10 +65,19 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
-    - name: Configure App Service for Java 21
+    - name: Configure App Service for Java 21 SE
       run: |
-        az webapp config set --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --linux-fx-version "JAVA|21-java21"
-        az webapp config set --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --web-sockets-enabled true
+        # Switch from container to Java SE runtime stack
+        az webapp config set \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --linux-fx-version "JAVA|21-java21" \
+          --web-sockets-enabled true
+        
+        # Clear any container settings
+        az webapp config container delete \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} || true
     
     - name: Rename JAR for deployment
       run: |
@@ -76,8 +85,10 @@ jobs:
         mv "$JAR_FILE" target/app.jar
     
     - name: Deploy to Azure Web App
-      run: |
-        az webapp deploy --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --src-path "target/app.jar" --type jar
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        package: target/app.jar
     
     - name: Set Startup Command
       run: |
@@ -89,3 +100,4 @@ jobs:
     - name: Restart App Service
       run: |
         az webapp restart --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
+        echo "Deployment complete. App will be available at https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
