@@ -77,6 +77,8 @@
     </dependencies>
 
     <build>
+        <!-- Output JAR named 'app.jar' for Azure App Service blessed image compatibility -->
+        <finalName>app</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

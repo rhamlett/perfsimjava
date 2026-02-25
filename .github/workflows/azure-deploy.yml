@@ -65,13 +65,35 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
-    - name: Configure Java 21 Runtime
+    - name: Stop App Service (clear all container state)
       run: |
-        # Set Java SE (embedded server) with Java 21 - must be done BEFORE deployment
+        echo "Stopping app to clear stale container configurations..."
+        az webapp stop \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }}
+        
+        # Wait for containers to fully terminate
+        sleep 15
+    
+    - name: Force Java 21 Runtime Configuration
+      run: |
+        # Clear any container configuration that might be interfering
+        az webapp config container delete \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} || true
+        
+        # Clear any appsettings that might reference old containers
+        az webapp config appsettings delete \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --setting-names DOCKER_CUSTOM_IMAGE_NAME DOCKER_REGISTRY_SERVER_URL || true
+        
+        # Set Java SE (embedded server) with Java 21
         az webapp config set \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --linux-fx-version "JAVA|21-java21"
+          --linux-fx-version "JAVA|21-java21" \
+          --startup-file ""
         
         # Verify the setting was applied
         echo "Current configuration:"
