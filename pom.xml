@@ -68,13 +68,6 @@
             <artifactId>micrometer-core</artifactId>
         </dependency>
 
-        <!-- Application Insights (Azure Monitor) -->
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>applicationinsights-runtime-attach</artifactId>
-            <version>3.5.4</version>
-        </dependency>
-
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
