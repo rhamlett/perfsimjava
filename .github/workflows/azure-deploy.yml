@@ -103,12 +103,10 @@ jobs:
           --query "linuxFxVersion" -o tsv
     
     - name: Deploy to Azure Web App
-      run: |
-        az webapp deploy \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --src-path target/app.jar \
-          --type jar
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        package: target/app.jar
     
     - name: Restart App Service
       run: |
