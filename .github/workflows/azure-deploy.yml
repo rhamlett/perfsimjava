@@ -65,12 +65,26 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
-    - name: Configure Java Runtime
+    - name: Force Java 21 Runtime Configuration
       run: |
+        # Clear any container configuration that might be interfering
+        az webapp config container delete \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} || true
+        
+        # Set Java SE (embedded server) with Java 21
         az webapp config set \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --linux-fx-version "JAVA|21-java21"
+          --linux-fx-version "JAVA|21-java21" \
+          --startup-file ""
+        
+        # Verify the setting was applied
+        echo "Current configuration:"
+        az webapp config show \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --query "linuxFxVersion" -o tsv
     
     - name: Rename JAR for deployment
       run: |
