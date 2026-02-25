@@ -88,11 +88,11 @@ jobs:
     
     - name: Configure App Service for Java 25 SE
       run: |
-        # Set Java SE runtime stack
+        # Set Java SE runtime stack (format: JAVA|<version>-java<version>)
         az webapp config set \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --linux-fx-version "JAVA|25" \
+          --linux-fx-version "JAVA|25-java25" \
           --web-sockets-enabled true
         
         # Ensure app settings for Java
@@ -100,16 +100,9 @@ jobs:
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
           --settings WEBSITES_PORT=8080
-    
-    - name: Start App with Java Runtime
-      run: |
-        # Start the app to run with Java runtime before deployment
-        az webapp start \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }}
         
-        # Wait for app to start with new runtime
-        sleep 30
+        # Wait for config to propagate
+        sleep 10
     
     - name: Rename JAR for deployment
       run: |
@@ -125,7 +118,7 @@ jobs:
           --type jar \
           --clean true
     
-    - name: Restart App Service
+    - name: Start App Service
       run: |
-        az webapp restart --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
+        az webapp start --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
         echo "Deployment complete. App will be available at https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
