@@ -3,11 +3,12 @@ package com.microsoft.azure.samples.perfsimjava.service;
 import com.microsoft.azure.samples.perfsimjava.config.AppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -89,7 +90,7 @@ public class ProbeService {
         });
     }
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     public void init() {
         // Determine probe URL
         String hostname = System.getenv("WEBSITE_HOSTNAME");
@@ -111,7 +112,7 @@ public class ProbeService {
         
         scheduler.scheduleAtFixedRate(
                 this::sendProbe,
-                1000,  // Initial delay
+                5000,  // Initial delay - wait for app to fully stabilize
                 intervalMs,
                 TimeUnit.MILLISECONDS
         );
