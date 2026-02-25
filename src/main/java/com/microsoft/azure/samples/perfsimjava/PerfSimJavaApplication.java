@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * =============================================================================
- * PERFORMANCE PROBLEM SIMULATOR - JAVA 25
+ * PERFORMANCE PROBLEM SIMULATOR - JAVA 21
  * =============================================================================
  *
  * PURPOSE:
@@ -22,7 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *   - Crash Simulation: Triggers different failure modes (OOM, StackOverflow, etc.)
  *
  * PORTING NOTES:
- *   This is the Java 25 port of PerfSimNode. Key differences from Node.js:
+ *   This is the Java 21 port of PerfSimNode. Key differences from Node.js:
  *   - Uses thread pools instead of single event loop
  *   - "Event Loop Blocking" becomes "Thread Pool Starvation"
  *   - WebSocket via Spring WebSocket (STOMP/SockJS) instead of Socket.IO
@@ -39,7 +39,7 @@ public class PerfSimJavaApplication {
     public static void main(String[] args) {
         // Print startup banner
         System.out.println("=".repeat(70));
-        System.out.println(" Performance Problem Simulator - Java Blessed Image (Java|25)");
+        System.out.println(" Performance Problem Simulator - Java Blessed Image (Java|21)");
         System.out.println("=".repeat(70));
         System.out.println(" WARNING: This application intentionally causes performance problems!");
         System.out.println(" Use only in controlled environments for training purposes.");

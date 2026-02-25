@@ -110,7 +110,7 @@ public class AdminController {
                 "application", "perfsimjava",
                 "version", "1.0.0",
                 "runtime", "Java " + System.getProperty("java.version"),
-                "framework", "Spring Boot 3.5",
+                "framework", "Spring Boot 3.3",
                 "buildTime", "2024"
         ));
     }

@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  JAVA_VERSION: '25'
+  JAVA_VERSION: '21'
   AZURE_WEBAPP_NAME: perfsimjava2
   AZURE_RESOURCE_GROUP: rhamlettRG
   

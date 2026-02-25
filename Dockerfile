@@ -3,8 +3,8 @@
 # Dockerfile for Azure App Service Linux Container
 # =============================================================================
 
-# Use Microsoft's official Java 25 runtime image (matches Azure blessed image)
-FROM mcr.microsoft.com/openjdk/jdk:25-ubuntu
+# Use Microsoft's official Java 21 runtime image (matches Azure blessed image)
+FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu
 
 # Set working directory
 WORKDIR /app
