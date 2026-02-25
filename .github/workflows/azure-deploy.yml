@@ -65,45 +65,6 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
-    - name: Stop App Service and Clear Container Config
-      run: |
-        # Stop the app first
-        az webapp stop \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }}
-        
-        # Clear container settings
-        az webapp config container delete \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }} || true
-        
-        # Remove all DOCKER-related app settings that force container mode
-        az webapp config appsettings delete \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --setting-names DOCKER_REGISTRY_SERVER_URL DOCKER_REGISTRY_SERVER_USERNAME DOCKER_REGISTRY_SERVER_PASSWORD DOCKER_CUSTOM_IMAGE_NAME WEBSITES_ENABLE_APP_SERVICE_STORAGE || true
-        
-        # Wait for config to propagate
-        sleep 10
-    
-    - name: Configure App Service for Java 25 SE
-      run: |
-        # Set Java SE runtime stack (format: JAVA|<version>-java<version>)
-        az webapp config set \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --linux-fx-version "JAVA|25-java25" \
-          --web-sockets-enabled true
-        
-        # Ensure app settings for Java
-        az webapp config appsettings set \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --settings WEBSITES_PORT=8080
-        
-        # Wait for config to propagate
-        sleep 10
-    
     - name: Rename JAR for deployment
       run: |
         JAR_FILE=$(ls target/*.jar | head -1)
@@ -115,10 +76,9 @@ jobs:
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
           --src-path target/app.jar \
-          --type jar \
-          --clean true
+          --type jar
     
-    - name: Start App Service
+    - name: Restart App Service
       run: |
-        az webapp start --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
+        az webapp restart --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}
         echo "Deployment complete. App will be available at https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
