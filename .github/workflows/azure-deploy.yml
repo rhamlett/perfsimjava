@@ -88,10 +88,11 @@ jobs:
     
     - name: Configure App Service for Java 25 SE
       run: |
-        # Enable web sockets (don't override runtime - already configured in portal)
+        # Set Java SE runtime stack
         az webapp config set \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --linux-fx-version "JAVA|25" \
           --web-sockets-enabled true
         
         # Ensure app settings for Java
