@@ -13,7 +13,7 @@ on:
 
 env:
   JAVA_VERSION: '21'
-  AZURE_WEBAPP_NAME: perfsimjava
+  AZURE_WEBAPP_NAME: perfsimjava2
   AZURE_RESOURCE_GROUP: rhamlettRG
   
 permissions:
