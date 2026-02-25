@@ -65,6 +65,13 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
+    - name: Configure Java Runtime
+      run: |
+        az webapp config set \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_WEBAPP_NAME }} \
+          --linux-fx-version "JAVA|21-java21"
+    
     - name: Rename JAR for deployment
       run: |
         JAR_FILE=$(ls target/*.jar | head -1)
