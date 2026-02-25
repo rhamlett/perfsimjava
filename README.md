@@ -33,7 +33,7 @@ This application allows you to deliberately trigger different types of performan
 ## Technology Stack
 
 - **Runtime**: Java 25 (Blessed Image)
-- **Framework**: Spring Boot 3.3
+- **Framework**: Spring Boot 3.5
 - **Build**: Maven
 - **WebSocket**: STOMP over SockJS
 - **Metrics**: JMX MBeans
