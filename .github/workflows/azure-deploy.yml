@@ -102,11 +102,6 @@ jobs:
           --name ${{ env.AZURE_WEBAPP_NAME }} \
           --query "linuxFxVersion" -o tsv
     
-    - name: Rename JAR for deployment
-      run: |
-        JAR_FILE=$(ls target/*.jar | head -1)
-        mv "$JAR_FILE" target/app.jar
-    
     - name: Deploy to Azure Web App
       run: |
         az webapp deploy \
