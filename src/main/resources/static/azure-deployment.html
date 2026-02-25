@@ -24,12 +24,12 @@
 
     <main class="docs-container">
         <h1>Azure App Service Deployment Guide</h1>
-        <p>This guide covers deploying the Performance Problem Simulator to Azure App Service using the Java 21 Blessed Image.</p>
+        <p>This guide covers deploying the Performance Problem Simulator to Azure App Service using the Java 25 Blessed Image.</p>
 
         <h2>Prerequisites</h2>
         <ul>
             <li>Azure CLI installed and configured</li>
-            <li>Java 21 JDK installed locally</li>
+            <li>Java 25 JDK installed locally</li>
             <li>Maven 3.9+ installed</li>
             <li>An Azure subscription</li>
         </ul>
@@ -60,12 +60,12 @@ az appservice plan create \
     --sku B2 \
     --is-linux
 
-# Create Web App with Java 21
+# Create Web App with Java 25
 az webapp create \
     --name $APP_NAME \
     --resource-group $RESOURCE_GROUP \
     --plan $APP_SERVICE_PLAN \
-    --runtime "JAVA:21-java21"</code></pre>
+    --runtime "JAVA:25-java25"</code></pre>
 
         <h3>Step 3: Deploy the JAR</h3>
         <pre><code># Deploy using ZIP deploy
@@ -98,7 +98,7 @@ az webapp config appsettings set \
         &lt;pricingTier&gt;B2&lt;/pricingTier&gt;
         &lt;runtime&gt;
             &lt;os&gt;Linux&lt;/os&gt;
-            &lt;javaVersion&gt;Java 21&lt;/javaVersion&gt;
+            &lt;javaVersion&gt;Java 25&lt;/javaVersion&gt;
             &lt;webContainer&gt;Java SE&lt;/webContainer&gt;
         &lt;/runtime&gt;
         &lt;deployment&gt;
@@ -136,11 +136,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Java 21
+    - name: Set up Java 25
       uses: actions/setup-java@v4
       with:
         distribution: 'microsoft'
-        java-version: '21'
+        java-version: '25'
         cache: 'maven'
     
     - name: Build with Maven
@@ -274,7 +274,7 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait</code></pre>
     </main>
 
     <footer class="footer">
-        <p>Performance Problem Simulator - Java 21</p>
+        <p>Performance Problem Simulator - Java 25</p>
     </footer>
 </body>
 </html>

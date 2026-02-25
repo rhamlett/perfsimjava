@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: '25'
   AZURE_WEBAPP_NAME: perfsimjava2
   AZURE_RESOURCE_GROUP: rhamlettRG
   
@@ -86,13 +86,13 @@ jobs:
         # Wait for config to propagate
         sleep 10
     
-    - name: Configure App Service for Java 21 SE
+    - name: Configure App Service for Java 25 SE
       run: |
         # Set Java SE runtime stack
         az webapp config set \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --name ${{ env.AZURE_WEBAPP_NAME }} \
-          --linux-fx-version "JAVA|21-java21" \
+          --linux-fx-version "JAVA|25-java25" \
           --web-sockets-enabled true
         
         # Ensure app settings for Java
