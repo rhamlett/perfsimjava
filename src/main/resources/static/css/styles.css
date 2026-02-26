@@ -1278,7 +1278,7 @@ footer a:hover {
 }
 
 .docs-container .note {
-  background-color: rgba(57, 95, 57, 0.1);
+  background-color: rgba(231, 111, 0, 0.1);
   border-left: 4px solid var(--color-primary);
   padding: 1rem;
   margin-bottom: 1rem;

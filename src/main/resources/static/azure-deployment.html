@@ -7,274 +7,249 @@
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <h1>Performance Problem Simulator</h1>
-            <span class="subtitle">Java Blessed Image (Java|21)</span>
-        </div>
-        <div class="header-right">
-            <nav class="nav-links">
-                <a href="/">Dashboard</a>
-                <a href="/docs.html">Docs</a>
-                <a href="/azure-diagnostics.html">Azure Diagnostics</a>
-                <a href="/azure-deployment.html">Deployment</a>
-            </nav>
-        </div>
+    <header>
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1>☕ Performance Problem Simulator</h1>
+        <span class="sku-badge">Java Blessed Image (Java|21)</span>
+        <nav>
+            <a href="/" class="nav-link">🎮 Dashboard</a>
+        </nav>
     </header>
 
-    <main class="docs-container">
-        <h1>Azure App Service Deployment Guide</h1>
-        <p>This guide covers deploying the Performance Problem Simulator to Azure App Service using the Java 21 Blessed Image.</p>
+    <!-- Sidebar Drawer Navigation -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="sidebar-drawer" class="sidebar-drawer">
+        <div class="sidebar-header">
+            <h2>☕ PerfSimJava</h2>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Application</div>
+            <a href="/" class="sidebar-nav-item">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Dashboard<span class="nav-desc">Live metrics & controls</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Documentation</div>
+            <a href="/docs.html" class="sidebar-nav-item">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Documentation<span class="nav-desc">API reference & guides</span></span>
+            </a>
+            <a href="/azure-diagnostics.html" class="sidebar-nav-item">
+                <span class="nav-icon">☁️</span>
+                <span class="nav-label">Azure Diagnostics<span class="nav-desc">Diagnose issues in App Service</span></span>
+            </a>
+            <a href="/azure-deployment.html" class="sidebar-nav-item active">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">Deploy to Azure<span class="nav-desc">GitHub Actions + OIDC setup</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">External</div>
+            <a href="https://github.com/rhamlett/perfsimjava" target="_blank" class="sidebar-nav-item">
+                <span class="nav-icon">🐙</span>
+                <span class="nav-label">GitHub Repository<span class="nav-desc">Source code & issues</span></span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div>Performance Problem Simulator - Java 21</div>
+        </div>
+    </aside>
 
-        <h2>Prerequisites</h2>
+    <div class="app-container">
+    <main class="docs-container">
+        <h1>Deploy to Azure App Service</h1>
+        <p>Deploy the Performance Problem Simulator to Azure App Service using GitHub Actions with OIDC authentication.</p>
+
+        <h2>Overview</h2>
+        <p>This deployment uses <strong>OpenID Connect (OIDC)</strong> for secure, passwordless authentication between GitHub Actions and Azure. No secrets or credentials are stored in your repository.</p>
+
+        <h2>Step 1: Clone the Repository</h2>
+        <p>Fork or clone the repository to your own GitHub account:</p>
+        <ol>
+            <li>Go to <a href="https://github.com/rhamlett/perfsimjava" target="_blank">github.com/rhamlett/perfsimjava</a></li>
+            <li>Click <strong>Fork</strong> to create your own copy</li>
+            <li>Clone your forked repository locally (optional, for local development)</li>
+        </ol>
+
+        <h2>Step 2: Create Azure Resources</h2>
+        <p>In the Azure Portal, create the following resources:</p>
+        
+        <h3>2a. Create a Resource Group</h3>
         <ul>
-            <li>Azure CLI installed and configured</li>
-            <li>Java 21 JDK installed locally</li>
-            <li>Maven 3.9+ installed</li>
-            <li>An Azure subscription</li>
+            <li>Navigate to <strong>Resource Groups</strong> in the Azure Portal</li>
+            <li>Click <strong>Create</strong></li>
+            <li>Name: <code>rg-perfsimjava</code> (or your preferred name)</li>
+            <li>Region: Choose your preferred region</li>
         </ul>
 
-        <h2>Method 1: Deploy via Azure CLI</h2>
+        <h3>2b. Create an App Service Plan</h3>
+        <ul>
+            <li>Navigate to <strong>App Service Plans</strong></li>
+            <li>Click <strong>Create</strong></li>
+            <li>Select your resource group</li>
+            <li>Name: <code>asp-perfsimjava</code></li>
+            <li>Operating System: <strong>Linux</strong></li>
+            <li>Pricing Tier: <strong>B2</strong> or higher recommended</li>
+        </ul>
 
-        <h3>Step 1: Build the Application</h3>
-        <pre><code># Clean and package the application
-mvn clean package -DskipTests
+        <h3>2c. Create an App Service (Web App)</h3>
+        <ul>
+            <li>Navigate to <strong>App Services</strong></li>
+            <li>Click <strong>Create</strong></li>
+            <li>Select your resource group and App Service Plan</li>
+            <li>Name: <code>perfsimjava</code> (must be globally unique)</li>
+            <li>Runtime stack: <strong>Java 21</strong></li>
+            <li>Java web server stack: <strong>Java SE (Embedded Web Server)</strong></li>
+        </ul>
 
-# Verify the JAR was created
-ls target/*.jar</code></pre>
+        <h2>Step 3: Configure Microsoft Entra ID (App Registration)</h2>
+        <p>Create an App Registration for GitHub Actions to authenticate with Azure:</p>
+        
+        <h3>3a. Create the App Registration</h3>
+        <ol>
+            <li>Navigate to <strong>Microsoft Entra ID</strong> → <strong>App registrations</strong></li>
+            <li>Click <strong>New registration</strong></li>
+            <li>Name: <code>github-actions-perfsimjava</code></li>
+            <li>Supported account types: <strong>Accounts in this organizational directory only</strong></li>
+            <li>Click <strong>Register</strong></li>
+        </ol>
 
-        <h3>Step 2: Create Azure Resources</h3>
-        <pre><code># Set variables
-RESOURCE_GROUP="rg-perfsimjava"
-APP_NAME="perfsimjava"
-LOCATION="eastus"
-APP_SERVICE_PLAN="asp-perfsimjava"
+        <h3>3b. Note the Application Details</h3>
+        <p>From the App Registration overview, copy these values (you'll need them for GitHub):</p>
+        <ul>
+            <li><strong>Application (client) ID</strong></li>
+            <li><strong>Directory (tenant) ID</strong></li>
+        </ul>
+        <p>Also get your <strong>Subscription ID</strong> from the Subscriptions page in Azure Portal.</p>
 
-# Create resource group
-az group create --name $RESOURCE_GROUP --location $LOCATION
+        <h2>Step 4: Configure Federated Credentials</h2>
+        <p>Set up OIDC trust between GitHub and your App Registration:</p>
+        
+        <ol>
+            <li>In your App Registration, go to <strong>Certificates & secrets</strong></li>
+            <li>Select the <strong>Federated credentials</strong> tab</li>
+            <li>Click <strong>Add credential</strong></li>
+            <li>Select <strong>GitHub Actions deploying Azure resources</strong></li>
+            <li>Configure the credential:
+                <ul>
+                    <li>Organization: <code>your-github-username</code></li>
+                    <li>Repository: <code>perfsimjava</code></li>
+                    <li>Entity type: <strong>Branch</strong></li>
+                    <li>GitHub branch name: <code>main</code></li>
+                    <li>Name: <code>github-actions-main</code></li>
+                </ul>
+            </li>
+            <li>Click <strong>Add</strong></li>
+        </ol>
 
-# Create App Service Plan (Linux)
-az appservice plan create \
-    --name $APP_SERVICE_PLAN \
-    --resource-group $RESOURCE_GROUP \
-    --sku B2 \
-    --is-linux
+        <h2>Step 5: Assign Azure Permissions</h2>
+        <p>Grant the App Registration permission to deploy to your App Service:</p>
+        
+        <ol>
+            <li>Navigate to your <strong>Resource Group</strong> (<code>rg-perfsimjava</code>)</li>
+            <li>Go to <strong>Access control (IAM)</strong></li>
+            <li>Click <strong>Add</strong> → <strong>Add role assignment</strong></li>
+            <li>Role: <strong>Contributor</strong></li>
+            <li>Members: Select your App Registration (<code>github-actions-perfsimjava</code>)</li>
+            <li>Click <strong>Review + assign</strong></li>
+        </ol>
 
-# Create Web App with Java 21
-az webapp create \
-    --name $APP_NAME \
-    --resource-group $RESOURCE_GROUP \
-    --plan $APP_SERVICE_PLAN \
-    --runtime "JAVA:21-java21"</code></pre>
+        <h2>Step 6: Configure GitHub Secrets</h2>
+        <p>Add the Azure credentials to your GitHub repository:</p>
+        
+        <ol>
+            <li>Go to your forked repository on GitHub</li>
+            <li>Navigate to <strong>Settings</strong> → <strong>Secrets and variables</strong> → <strong>Actions</strong></li>
+            <li>Add these repository secrets:
+                <ul>
+                    <li><code>AZURE_CLIENT_ID</code> – Application (client) ID from Step 3b</li>
+                    <li><code>AZURE_TENANT_ID</code> – Directory (tenant) ID from Step 3b</li>
+                    <li><code>AZURE_SUBSCRIPTION_ID</code> – Your Azure Subscription ID</li>
+                </ul>
+            </li>
+        </ol>
 
-        <h3>Step 3: Deploy the JAR</h3>
-        <pre><code># Deploy using ZIP deploy
-az webapp deploy \
-    --resource-group $RESOURCE_GROUP \
-    --name $APP_NAME \
-    --src-path target/perfsimjava-1.0.0.jar \
-    --type jar</code></pre>
+        <h2>Step 7: Deploy</h2>
+        <p>The included GitHub Actions workflow will automatically deploy when you push to the <code>main</code> branch:</p>
+        <ol>
+            <li>Make any change to your repository (or just trigger the workflow manually)</li>
+            <li>Go to <strong>Actions</strong> tab in GitHub to monitor the deployment</li>
+            <li>Once complete, access your app at <code>https://your-app-name.azurewebsites.net</code></li>
+        </ol>
 
-        <h3>Step 4: Configure App Settings</h3>
-        <pre><code># Set application configuration
-az webapp config appsettings set \
-    --resource-group $RESOURCE_GROUP \
-    --name $APP_NAME \
-    --settings \
-    WEBSITE_WEBDEPLOY_USE_SCM=true \
-    JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"</code></pre>
-
-        <h2>Method 2: Deploy via Maven Plugin</h2>
-
-        <h3>Step 1: Add Azure Maven Plugin to pom.xml</h3>
-        <pre><code>&lt;plugin&gt;
-    &lt;groupId&gt;com.microsoft.azure&lt;/groupId&gt;
-    &lt;artifactId&gt;azure-webapp-maven-plugin&lt;/artifactId&gt;
-    &lt;version&gt;2.12.0&lt;/version&gt;
-    &lt;configuration&gt;
-        &lt;resourceGroup&gt;rg-perfsimjava&lt;/resourceGroup&gt;
-        &lt;appName&gt;perfsimjava&lt;/appName&gt;
-        &lt;region&gt;eastus&lt;/region&gt;
-        &lt;pricingTier&gt;B2&lt;/pricingTier&gt;
-        &lt;runtime&gt;
-            &lt;os&gt;Linux&lt;/os&gt;
-            &lt;javaVersion&gt;Java 21&lt;/javaVersion&gt;
-            &lt;webContainer&gt;Java SE&lt;/webContainer&gt;
-        &lt;/runtime&gt;
-        &lt;deployment&gt;
-            &lt;resources&gt;
-                &lt;resource&gt;
-                    &lt;directory&gt;${project.basedir}/target&lt;/directory&gt;
-                    &lt;includes&gt;
-                        &lt;include&gt;*.jar&lt;/include&gt;
-                    &lt;/includes&gt;
-                &lt;/resource&gt;
-            &lt;/resources&gt;
-        &lt;/deployment&gt;
-    &lt;/configuration&gt;
-&lt;/plugin&gt;</code></pre>
-
-        <h3>Step 2: Deploy</h3>
-        <pre><code># Build and deploy in one command
-mvn clean package azure-webapp:deploy -DskipTests</code></pre>
-
-        <h2>Method 3: Deploy via GitHub Actions</h2>
-
-        <h3>Create Workflow File</h3>
-        <p>Create <code>.github/workflows/azure-deploy.yml</code>:</p>
-        <pre><code>name: Deploy to Azure App Service
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Java 21
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'microsoft'
-        java-version: '21'
-        cache: 'maven'
-    
-    - name: Build with Maven
-      run: mvn clean package -DskipTests
-    
-    - name: Deploy to Azure
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'perfsimjava'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: 'target/*.jar'</code></pre>
-
-        <h2>Post-Deployment Configuration</h2>
-
-        <h3>Enable Application Insights</h3>
-        <pre><code># Create Application Insights resource
-az monitor app-insights component create \
-    --app $APP_NAME-insights \
-    --location $LOCATION \
-    --resource-group $RESOURCE_GROUP
-
-# Get the instrumentation key
-INSTRUMENTATION_KEY=$(az monitor app-insights component show \
-    --app $APP_NAME-insights \
-    --resource-group $RESOURCE_GROUP \
-    --query instrumentationKey -o tsv)
-
-# Add to app settings
-az webapp config appsettings set \
-    --resource-group $RESOURCE_GROUP \
-    --name $APP_NAME \
-    --settings \
-    APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=$INSTRUMENTATION_KEY"</code></pre>
-
-        <h3>Configure Health Probes</h3>
-        <pre><code>az webapp config set \
-    --resource-group $RESOURCE_GROUP \
-    --name $APP_NAME \
-    --health-check-path /health</code></pre>
-
-        <h3>Enable WebSockets</h3>
-        <pre><code>az webapp config set \
-    --resource-group $RESOURCE_GROUP \
-    --name $APP_NAME \
-    --web-sockets-enabled true</code></pre>
-
-        <h3>Recommended JVM Settings</h3>
-        <pre><code>az webapp config appsettings set \
-    --resource-group $RESOURCE_GROUP \
-    --name $APP_NAME \
-    --settings JAVA_OPTS="\
--Xms256m \
--Xmx512m \
--XX:+UseG1GC \
--XX:+HeapDumpOnOutOfMemoryError \
--XX:HeapDumpPath=/home/LogFiles/heapdump.hprof \
--Xlog:gc*:file=/home/LogFiles/gc.log:time,level,tags"</code></pre>
-
-        <h2>Scaling Options</h2>
-
-        <h3>Scale Up (Vertical)</h3>
-        <pre><code># Upgrade to Premium tier for better performance
-az appservice plan update \
-    --name $APP_SERVICE_PLAN \
-    --resource-group $RESOURCE_GROUP \
-    --sku P1V3</code></pre>
-
-        <h3>Scale Out (Horizontal)</h3>
-        <pre><code># Add more instances
-az webapp scale \
-    --name $APP_NAME \
-    --resource-group $RESOURCE_GROUP \
-    --instance-count 3</code></pre>
-
-        <h2>Monitoring Deployment</h2>
-
-        <h3>View Application Logs</h3>
-        <pre><code># Stream logs
-az webapp log tail \
-    --name $APP_NAME \
-    --resource-group $RESOURCE_GROUP
-
-# Download logs
-az webapp log download \
-    --name $APP_NAME \
-    --resource-group $RESOURCE_GROUP \
-    --log-file logs.zip</code></pre>
-
-        <h3>Check Deployment Status</h3>
-        <pre><code># Get deployment history
-az webapp deployment list \
-    --name $APP_NAME \
-    --resource-group $RESOURCE_GROUP
-
-# Browse to app
-az webapp browse \
-    --name $APP_NAME \
-    --resource-group $RESOURCE_GROUP</code></pre>
-
-        <h2>Troubleshooting</h2>
-
-        <h3>Common Issues</h3>
-
-        <div class="note">
-            <h4>Application Not Starting</h4>
-            <p>Check that the JAR file is executable and the main class is correctly specified in the manifest.
-            View logs with <code>az webapp log tail</code> to see startup errors.</p>
-        </div>
-
-        <div class="note">
-            <h4>WebSocket Connection Failed</h4>
-            <p>Ensure WebSockets are enabled on the App Service. Also verify that ARR Affinity is enabled 
-            if using multiple instances.</p>
-        </div>
-
-        <div class="note">
-            <h4>Out of Memory Errors</h4>
-            <p>Increase the heap size in JAVA_OPTS or scale up to a larger SKU. The B2 SKU provides 
-            3.5 GB RAM which should be sufficient for testing.</p>
-        </div>
+        <h2>Post-Deployment</h2>
+        <p>After deployment, consider enabling these features in the Azure Portal:</p>
+        <ul>
+            <li><strong>WebSockets</strong> – Required for real-time dashboard updates (Settings → Configuration → General settings)</li>
+            <li><strong>Application Insights</strong> – For monitoring and diagnostics</li>
+            <li><strong>Health check</strong> – Set path to <code>/health</code> for container health monitoring</li>
+        </ul>
 
         <div class="warning">
-            <h4>Production Warning</h4>
+            <h4>Important</h4>
             <p>This application is designed for testing and diagnostics training. Do not deploy to 
             production environments where simulated failures could impact real users.</p>
         </div>
-
-        <h2>Cleanup</h2>
-        <pre><code># Delete all resources
-az group delete --name $RESOURCE_GROUP --yes --no-wait</code></pre>
     </main>
+    </div>
 
-    <footer class="footer">
-        <p>Performance Problem Simulator - Java 21</p>
+    <footer>
+        <p>Performance Problem Simulator — Educational Tool for Azure App Service Diagnostics</p>
+        <p id="footer-credits"></p>
+        <p id="build-info">Build: Loading...</p>
     </footer>
+
+    <script>
+        // Sidebar navigation toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarDrawer = document.getElementById('sidebar-drawer');
+        const sidebarClose = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            hamburgerBtn.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            sidebarDrawer.classList.add('active');
+        }
+
+        function closeSidebar() {
+            hamburgerBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            sidebarDrawer.classList.remove('active');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        // Load footer info
+        async function loadBuildInfo() {
+            try {
+                const response = await fetch('/api/health/footer');
+                const data = await response.json();
+                
+                const footerCredits = document.getElementById('footer-credits');
+                if (footerCredits) {
+                    if (data.footer) {
+                        footerCredits.innerHTML = data.footer;
+                    } else {
+                        footerCredits.style.display = 'none';
+                    }
+                }
+                
+                const buildInfo = document.getElementById('build-info');
+                if (buildInfo) {
+                    buildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+            } catch (error) {
+                console.log('Could not load footer info');
+            }
+        }
+        loadBuildInfo();
+    </script>
 </body>
 </html>

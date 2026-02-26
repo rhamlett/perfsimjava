@@ -146,6 +146,7 @@ const Dashboard = (function() {
         // Load initial data
         loadSkuInfo();
         loadActiveSimulations();
+        loadBuildInfo();
 
         // Add initial event
         addEvent('success', 'Dashboard initialized');
@@ -358,7 +359,7 @@ const Dashboard = (function() {
      */
     async function loadSkuInfo() {
         try {
-            const response = await fetch('/api/admin/sku');
+            const response = await fetch('/api/health/environment');
             const data = await response.json();
             
             // Update SKU badge in header
@@ -368,16 +369,36 @@ const Dashboard = (function() {
                     ? `SKU: ${data.sku}`
                     : 'SKU: Local';
             }
-            
-            // Update footer
-            const skuEl = document.getElementById('skuInfo');
-            if (skuEl) {
-                skuEl.textContent = data.isAzure 
-                    ? `Azure App Service (${data.sku})`
-                    : 'Local Development';
-            }
         } catch (error) {
             console.error('[Dashboard] Failed to load SKU info:', error);
+        }
+    }
+
+    /**
+     * Loads footer info (credits and build time) from the server
+     */
+    async function loadBuildInfo() {
+        try {
+            const response = await fetch('/api/health/footer');
+            const data = await response.json();
+            
+            // Update footer credits if PAGE_FOOTER env var is set
+            const footerCredits = document.getElementById('footer-credits');
+            if (footerCredits) {
+                if (data.footer) {
+                    footerCredits.innerHTML = data.footer;
+                } else {
+                    footerCredits.style.display = 'none';
+                }
+            }
+            
+            // Update build info
+            const buildInfo = document.getElementById('build-info');
+            if (buildInfo) {
+                buildInfo.textContent = `Build: ${data.buildTime}`;
+            }
+        } catch (error) {
+            console.log('[Dashboard] Could not load footer info');
         }
     }
 

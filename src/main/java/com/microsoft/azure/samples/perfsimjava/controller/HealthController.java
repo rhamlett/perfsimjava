@@ -6,6 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -18,18 +22,25 @@ import java.util.Map;
  *   and Kubernetes liveness/readiness probes.
  *
  * ENDPOINTS:
- *   GET /api/health          → Basic health check
- *   GET /api/health/live     → Liveness probe (is the app running?)
- *   GET /api/health/ready    → Readiness probe (can the app handle traffic?)
+ *   GET /api/health             → Basic health check
+ *   GET /api/health/live        → Liveness probe (is the app running?)
+ *   GET /api/health/ready       → Readiness probe (can the app handle traffic?)
+ *   GET /api/health/footer      → Footer info (PAGE_FOOTER env var and build time)
+ *   GET /api/health/environment → Environment info (SKU, Azure detection)
  */
 @RestController
 @RequestMapping("/api/health")
 public class HealthController {
 
     private final MetricsService metricsService;
+    private final String buildTime;
 
     public HealthController(MetricsService metricsService) {
         this.metricsService = metricsService;
+        // Capture build time at startup
+        this.buildTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(ZoneOffset.UTC)
+                .format(Instant.now()) + " UTC";
     }
 
     /**
@@ -63,5 +74,35 @@ public class HealthController {
     public ResponseEntity<Map<String, String>> readiness() {
         // Could add checks for database, external services, etc.
         return ResponseEntity.ok(Map.of("status", "ready"));
+    }
+
+    /**
+     * Footer info endpoint - returns PAGE_FOOTER env var and build time.
+     * Used by the dashboard to display footer credits and build info.
+     */
+    @GetMapping("/footer")
+    public ResponseEntity<Map<String, Object>> footer() {
+        String pageFooter = System.getenv("PAGE_FOOTER");
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("buildTime", buildTime);
+        response.put("footer", pageFooter); // Will be null if not set
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Environment info endpoint - returns SKU and Azure detection.
+     */
+    @GetMapping("/environment")
+    public ResponseEntity<Map<String, Object>> environment() {
+        String websiteSku = System.getenv("WEBSITE_SKU");
+        String websiteHostname = System.getenv("WEBSITE_HOSTNAME");
+        
+        return ResponseEntity.ok(Map.of(
+                "sku", websiteSku != null ? websiteSku : "Local",
+                "hostname", websiteHostname != null ? websiteHostname : "localhost",
+                "isAzure", websiteHostname != null
+        ));
     }
 }

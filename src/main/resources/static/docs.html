@@ -7,21 +7,59 @@
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <h1>Performance Problem Simulator</h1>
-            <span class="subtitle">Java Blessed Image (Java|21)</span>
-        </div>
-        <div class="header-right">
-            <nav class="nav-links">
-                <a href="/">Dashboard</a>
-                <a href="/docs.html">Docs</a>
-                <a href="/azure-diagnostics.html">Azure Diagnostics</a>
-                <a href="/azure-deployment.html">Deployment</a>
-            </nav>
-        </div>
+    <header>
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1>☕ Performance Problem Simulator</h1>
+        <span class="sku-badge">Java Blessed Image (Java|21)</span>
+        <nav>
+            <a href="/" class="nav-link">🎮 Dashboard</a>
+        </nav>
     </header>
 
+    <!-- Sidebar Drawer Navigation -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="sidebar-drawer" class="sidebar-drawer">
+        <div class="sidebar-header">
+            <h2>☕ PerfSimJava</h2>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Application</div>
+            <a href="/" class="sidebar-nav-item">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Dashboard<span class="nav-desc">Live metrics & controls</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Documentation</div>
+            <a href="/docs.html" class="sidebar-nav-item active">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Documentation<span class="nav-desc">API reference & guides</span></span>
+            </a>
+            <a href="/azure-diagnostics.html" class="sidebar-nav-item">
+                <span class="nav-icon">☁️</span>
+                <span class="nav-label">Azure Diagnostics<span class="nav-desc">Diagnose issues in App Service</span></span>
+            </a>
+            <a href="/azure-deployment.html" class="sidebar-nav-item">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">Deploy to Azure<span class="nav-desc">GitHub Actions + OIDC setup</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">External</div>
+            <a href="https://github.com/rhamlett/perfsimjava" target="_blank" class="sidebar-nav-item">
+                <span class="nav-icon">🐙</span>
+                <span class="nav-label">GitHub Repository<span class="nav-desc">Source code & issues</span></span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div>Performance Problem Simulator - Java 21</div>
+        </div>
+    </aside>
+
+    <div class="app-container">
     <main class="docs-container">
         <h1>API Documentation</h1>
         <p>This document describes the REST API endpoints available in the Performance Problem Simulator.</p>
@@ -248,9 +286,61 @@
             <li><strong>CPU Stress:</strong> PBKDF2WithHmacSHA512 cryptographic operations</li>
         </ul>
     </main>
+    </div>
 
-    <footer class="footer">
-        <p>Performance Problem Simulator - Java 21</p>
+    <footer>
+        <p>Performance Problem Simulator — Educational Tool for Azure App Service Diagnostics</p>
+        <p id="footer-credits"></p>
+        <p id="build-info">Build: Loading...</p>
     </footer>
+
+    <script>
+        // Sidebar navigation toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarDrawer = document.getElementById('sidebar-drawer');
+        const sidebarClose = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            hamburgerBtn.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            sidebarDrawer.classList.add('active');
+        }
+
+        function closeSidebar() {
+            hamburgerBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            sidebarDrawer.classList.remove('active');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        // Load footer info
+        async function loadBuildInfo() {
+            try {
+                const response = await fetch('/api/health/footer');
+                const data = await response.json();
+                
+                const footerCredits = document.getElementById('footer-credits');
+                if (footerCredits) {
+                    if (data.footer) {
+                        footerCredits.innerHTML = data.footer;
+                    } else {
+                        footerCredits.style.display = 'none';
+                    }
+                }
+                
+                const buildInfo = document.getElementById('build-info');
+                if (buildInfo) {
+                    buildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+            } catch (error) {
+                console.log('Could not load footer info');
+            }
+        }
+        loadBuildInfo();
+    </script>
 </body>
 </html>
