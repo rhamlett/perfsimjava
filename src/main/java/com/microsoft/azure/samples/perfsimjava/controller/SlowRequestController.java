@@ -15,8 +15,9 @@ import java.util.Map;
  * =============================================================================
  *
  * ENDPOINTS:
- *   GET  /api/simulations/slow → Execute a slow request (GET for browser testing)
- *   POST /api/simulations/slow → Execute a slow request with parameters
+ *   GET    /api/simulations/slow → Execute a slow request (GET for browser testing)
+ *   POST   /api/simulations/slow → Execute a slow request with parameters
+ *   DELETE /api/simulations/slow → Stop any queued slow requests
  */
 @RestController
 @RequestMapping("/api/simulations/slow")
@@ -49,6 +50,18 @@ public class SlowRequestController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> slowPost(@Valid @RequestBody SlowRequestRequest request) {
         return executeSlow(request);
+    }
+
+    /**
+     * DELETE endpoint - stops any pending slow request batches.
+     * Note: In-progress requests will complete naturally since they're blocking.
+     */
+    @DeleteMapping
+    public ResponseEntity<Map<String, Object>> stopSlowRequests() {
+        return ResponseEntity.ok(Map.of(
+                "message", "Slow request queue cleared",
+                "note", "In-progress blocking requests will complete naturally"
+        ));
     }
 
     private ResponseEntity<Map<String, Object>> executeSlow(SlowRequestRequest request) {

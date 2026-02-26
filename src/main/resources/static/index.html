@@ -207,15 +207,19 @@
                     <p class="control-description">Spawns worker threads running intensive cryptographic operations to stress CPU cores.</p>
                     <form id="cpu-form">
                         <label>
-                            Workers:
-                            <input type="number" id="cpuWorkers" value="4" min="1" max="32">
-                        </label>
-                        <label>
                             Duration (s):
                             <input type="number" id="cpuDuration" value="30" min="1" max="300">
                         </label>
+                        <label>
+                            Intensity:
+                            <select id="cpuIntensity" class="wide-select">
+                                <option value="HIGH" selected>High</option>
+                                <option value="MODERATE">Moderate</option>
+                            </select>
+                        </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-cpu">🔥 Start CPU Stress</button>
+                            <button type="submit" class="btn-trigger btn-cpu">🔥 Trigger CPU Stress</button>
+                            <button type="button" id="stop-cpu" class="btn-stop">⬛ Stop</button>
                         </div>
                     </form>
                 </div>
@@ -271,7 +275,10 @@
                             Delay (s):
                             <input type="number" id="slowDelay" value="5" min="1" max="60">
                         </label>
-                        <button type="submit" class="btn-trigger btn-slow">🐌 Trigger Slow Request</button>
+                        <div class="btn-group">
+                            <button type="submit" class="btn-trigger btn-slow">🐌 Trigger Slow Request</button>
+                            <button type="button" id="stop-slow" class="btn-stop">⬛ Stop</button>
+                        </div>
                     </form>
                 </div>
 
@@ -368,10 +375,14 @@
             startCpuStress();
         });
 
+        document.getElementById('stop-cpu').addEventListener('click', stopCpuStress);
+
         document.getElementById('memory-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            startMemoryPressure();
+            allocateMemory();
         });
+
+        document.getElementById('release-all-memory').addEventListener('click', releaseAllMemory);
 
         document.getElementById('threads-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -382,6 +393,8 @@
             e.preventDefault();
             triggerSlowRequest();
         });
+
+        document.getElementById('stop-slow').addEventListener('click', stopSlowRequests);
 
         document.getElementById('crash-form').addEventListener('submit', (e) => {
             e.preventDefault();

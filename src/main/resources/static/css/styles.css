@@ -1046,13 +1046,24 @@ button:disabled {
 }
 
 .btn-stop {
-  background: var(--color-secondary);
+  background: #dc3545;
+  color: white;
+  flex: 0 0 auto;
+  border: 1px solid #c82333;
+}
+
+.btn-stop:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-release {
+  background: #6c757d;
   color: white;
   flex: 0 0 auto;
   border: 1px solid #5a6268;
 }
 
-.btn-stop:hover:not(:disabled) {
+.btn-release:hover:not(:disabled) {
   background: #5a6268;
 }
 

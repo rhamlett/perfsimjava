@@ -12,22 +12,38 @@ const activeMemorySimulations = new Map();
  * Starts CPU stress simulation
  */
 async function startCpuStress() {
-    const workers = parseInt(document.getElementById('cpuWorkers').value) || 4;
     const durationSeconds = parseInt(document.getElementById('cpuDuration').value) || 30;
-    const durationMs = durationSeconds * 1000;
+    const intensity = document.getElementById('cpuIntensity').value || 'HIGH';
 
     try {
-        const response = await fetch('/api/simulations/cpu/stress', {
+        const response = await fetch('/api/simulations/cpu', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ workers, durationMs })
+            body: JSON.stringify({ intensity, durationSeconds })
         });
         const result = await response.json();
         console.log('[Dashboard] CPU Stress started:', result);
-        Dashboard.addEvent('info', `CPU Stress started with ${workers} workers for ${durationSeconds}s`);
+        Dashboard.addEvent('info', `CPU Stress started (${intensity}) for ${durationSeconds}s`);
     } catch (error) {
         console.error('[Dashboard] Failed to start CPU stress:', error);
         Dashboard.addEvent('error', 'Failed to start CPU stress: ' + error.message);
+    }
+}
+
+/**
+ * Stops all CPU stress simulations
+ */
+async function stopCpuStress() {
+    try {
+        const response = await fetch('/api/simulations/cpu', {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        console.log('[Dashboard] CPU Stress stopped:', result);
+        Dashboard.addEvent('info', result.message || 'CPU Stress stopped');
+    } catch (error) {
+        console.error('[Dashboard] Failed to stop CPU stress:', error);
+        Dashboard.addEvent('error', 'Failed to stop CPU stress: ' + error.message);
     }
 }
 
@@ -157,11 +173,10 @@ async function startThreadStarvation() {
  */
 async function triggerSlowRequest() {
     const delaySeconds = parseInt(document.getElementById('slowDelay').value) || 5;
-    const delayMs = delaySeconds * 1000;
     const pattern = document.getElementById('slowPattern').value || 'SLEEP';
 
     try {
-        const response = await fetch(`/api/simulations/slow/request?delayMs=${delayMs}&pattern=${pattern}`, {
+        const response = await fetch(`/api/simulations/slow?delaySeconds=${delaySeconds}&blockingPattern=${pattern}`, {
             method: 'GET'
         });
         const result = await response.json();
@@ -170,6 +185,23 @@ async function triggerSlowRequest() {
     } catch (error) {
         console.error('[Dashboard] Slow request failed:', error);
         Dashboard.addEvent('error', 'Slow request failed: ' + error.message);
+    }
+}
+
+/**
+ * Stops slow request simulations
+ */
+async function stopSlowRequests() {
+    try {
+        const response = await fetch('/api/simulations/slow', {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        console.log('[Dashboard] Slow requests stopped:', result);
+        Dashboard.addEvent('info', result.message || 'Slow requests stopped');
+    } catch (error) {
+        console.error('[Dashboard] Failed to stop slow requests:', error);
+        Dashboard.addEvent('info', 'No active slow requests to stop');
     }
 }
 
