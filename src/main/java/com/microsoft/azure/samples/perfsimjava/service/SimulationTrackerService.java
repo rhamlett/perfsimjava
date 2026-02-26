@@ -3,6 +3,7 @@ package com.microsoft.azure.samples.perfsimjava.service;
 import com.microsoft.azure.samples.perfsimjava.model.Simulation;
 import com.microsoft.azure.samples.perfsimjava.model.SimulationStatus;
 import com.microsoft.azure.samples.perfsimjava.model.SimulationType;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -35,6 +36,25 @@ import java.util.stream.Collectors;
 public class SimulationTrackerService {
 
     private final Map<String, Simulation> simulations = new ConcurrentHashMap<>();
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public SimulationTrackerService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    /**
+     * Broadcasts simulation update to all WebSocket clients
+     */
+    private void broadcastUpdate(Simulation simulation, String action) {
+        messagingTemplate.convertAndSend("/topic/simulations", Map.of(
+                "action", action,
+                "simulation", Map.of(
+                        "id", simulation.getId(),
+                        "type", simulation.getType().name(),
+                        "status", simulation.getStatus().name()
+                )
+        ));
+    }
 
     /**
      * Creates and registers a new simulation.
@@ -47,6 +67,7 @@ public class SimulationTrackerService {
     public Simulation createSimulation(SimulationType type, Map<String, Object> parameters, int durationSeconds) {
         Simulation simulation = new Simulation(type, parameters, durationSeconds);
         simulations.put(simulation.getId(), simulation);
+        broadcastUpdate(simulation, "started");
         return simulation;
     }
 
@@ -102,6 +123,7 @@ public class SimulationTrackerService {
         Simulation simulation = simulations.get(id);
         if (simulation != null) {
             simulation.complete();
+            broadcastUpdate(simulation, "completed");
         }
         return simulation;
     }
@@ -116,6 +138,7 @@ public class SimulationTrackerService {
         Simulation simulation = simulations.get(id);
         if (simulation != null) {
             simulation.stop();
+            broadcastUpdate(simulation, "stopped");
         }
         return simulation;
     }
@@ -130,6 +153,7 @@ public class SimulationTrackerService {
         Simulation simulation = simulations.get(id);
         if (simulation != null) {
             simulation.fail();
+            broadcastUpdate(simulation, "failed");
         }
         return simulation;
     }
@@ -141,7 +165,11 @@ public class SimulationTrackerService {
      * @return The removed simulation, or null if not found
      */
     public Simulation removeSimulation(String id) {
-        return simulations.remove(id);
+        Simulation simulation = simulations.remove(id);
+        if (simulation != null) {
+            broadcastUpdate(simulation, "removed");
+        }
+        return simulation;
     }
 
     /**

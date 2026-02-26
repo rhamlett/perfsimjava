@@ -149,19 +149,18 @@ function renderActiveMemorySimulations() {
  * Starts thread pool starvation simulation
  */
 async function startThreadStarvation() {
-    const blockedThreadCount = parseInt(document.getElementById('starvationCount').value) || 50;
+    const threadCount = parseInt(document.getElementById('starvationCount').value) || 50;
     const durationSeconds = parseInt(document.getElementById('starvationDuration').value) || 30;
-    const durationMs = durationSeconds * 1000;
 
     try {
         const response = await fetch('/api/simulations/thread/starvation', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ blockedThreadCount, durationMs })
+            body: JSON.stringify({ threadCount, durationSeconds })
         });
         const result = await response.json();
         console.log('[Dashboard] Thread Starvation started:', result);
-        Dashboard.addEvent('warn', `Thread Starvation started with ${blockedThreadCount} threads for ${durationSeconds}s`);
+        Dashboard.addEvent('warn', `Thread Starvation started with ${threadCount} threads for ${durationSeconds}s`);
     } catch (error) {
         console.error('[Dashboard] Failed to start thread starvation:', error);
         Dashboard.addEvent('error', 'Failed to start thread starvation: ' + error.message);
@@ -347,7 +346,7 @@ const Dashboard = (function() {
 
     // Probe visualization history
     const probeHistory = [];
-    const MAX_PROBE_DOTS = 30;
+    const MAX_PROBE_DOTS = 24;
 
     /**
      * Updates probe visualization dots
@@ -549,6 +548,7 @@ const Dashboard = (function() {
         if (type.includes('CPU')) return 'cpu';
         if (type.includes('MEMORY')) return 'memory';
         if (type.includes('THREAD')) return 'threads';
+        if (type.includes('SLOW')) return 'slow';
         return '';
     }
 
@@ -559,8 +559,8 @@ const Dashboard = (function() {
         const typeMap = {
             'CPU_STRESS': '🔥 CPU Stress',
             'MEMORY_PRESSURE': '💾 Memory Pressure',
-            'THREAD_STARVATION': '⏳ Thread Starvation',
-            'SLOW_REQUEST': '🐢 Slow Request',
+            'THREAD_STARVATION': '🧵 Thread Starvation',
+            'SLOW_REQUEST': '🐌 Slow Request',
             'CRASH_FAILFAST': '💥 Crash (Exit)',
             'CRASH_STACKOVERFLOW': '💥 Stack Overflow',
             'CRASH_EXCEPTION': '💥 Exception',

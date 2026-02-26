@@ -21,11 +21,11 @@ import java.util.Map;
  * exhausts the thread pool, causing new requests to queue.
  *
  * ENDPOINTS:
- *   POST /api/simulations/threadstarvation → Trigger thread starvation
- *   GET  /api/simulations/threadstarvation → List active simulations
+ *   POST /api/simulations/thread/starvation → Trigger thread starvation
+ *   GET  /api/simulations/thread/starvation → List active simulations
  */
 @RestController
-@RequestMapping("/api/simulations/threadstarvation")
+@RequestMapping("/api/simulations/thread/starvation")
 public class ThreadStarvationController {
 
     private final ThreadStarvationService threadStarvationService;
