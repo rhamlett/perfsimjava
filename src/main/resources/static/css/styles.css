@@ -519,6 +519,12 @@ section h2, section h3 {
   margin-left: 0.25rem;
 }
 
+.tile-subvalue {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  margin-top: 0.1rem;
+}
+
 .metric-bar {
   height: 4px;
   background: #e1dfdd;

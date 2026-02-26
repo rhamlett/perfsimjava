@@ -402,12 +402,15 @@ const Dashboard = (function() {
         const memEl = document.getElementById('memory-value');
         const memBar = document.getElementById('memory-bar');
         const memTotal = document.getElementById('memory-total');
+        const systemMem = document.getElementById('system-memory');
         if (memEl && metrics.memory) {
             const heapUsed = metrics.memory.heapUsedMb || 0;
             const heapMax = metrics.memory.heapMaxMb || 1000;
+            const totalSystem = metrics.memory.totalSystemMb || 0;
             memEl.textContent = heapUsed.toFixed(0);
             if (memBar) memBar.style.width = Math.min((heapUsed / heapMax) * 100, 100) + '%';
-            if (memTotal) memTotal.textContent = 'of ' + (heapMax / 1024).toFixed(1) + ' GB';
+            if (memTotal) memTotal.textContent = 'of ' + (heapMax / 1024).toFixed(1) + ' GB heap';
+            if (systemMem) systemMem.textContent = 'System: ' + (totalSystem / 1024).toFixed(1) + ' GB';
         }
 
         // Threads Tile
