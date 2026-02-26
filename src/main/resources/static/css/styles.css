@@ -1,19 +1,19 @@
 /* ==========================================================================
-   PerfSimJava Dashboard Styles - Matching PerfSimNode
+   PerfSimJava Dashboard Styles - Java Theme
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   CSS Variables / Theme
+   CSS Variables / Theme (Java Orange & Blue)
    -------------------------------------------------------------------------- */
 :root {
-  --color-primary: #395f39;
-  --color-primary-dark: #395f39;
+  --color-primary: #E76F00;
+  --color-primary-dark: #CC5500;
   --color-success: #1d6f1d;
   --color-warning: #ffb900;
   --color-danger: #d13438;
   --color-secondary: #6c757d;
   
-  --color-bg: #E0EBE0;
+  --color-bg: #E8EEF4;
   --color-card: #ffffff;
   --color-text: #323130;
   --color-text-muted: #605e5c;
@@ -65,7 +65,7 @@ section[id] {
    Header
    -------------------------------------------------------------------------- */
 header {
-  background: #395f39;
+  background: #1E3A5F;
   color: white;
   padding: 0.75rem 1.5rem;
   display: flex;
@@ -91,7 +91,7 @@ header h1 {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  background: #629262;
+  background: #E76F00;
   color: white;
   padding: 0.35rem 1rem;
   border-radius: 20px;
@@ -112,20 +112,20 @@ header nav {
   padding: 0.5rem 1rem;
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  background: #528252;
+  background: #2B4F72;
   transition: background var(--transition-fast);
 }
 
 .nav-link:hover {
-  background: #629262;
+  background: #3D6899;
 }
 
 .nav-link.active {
-  background: #629262;
+  background: #3D6899;
 }
 
 .btn-panel-toggle {
-  background: #629262;
+  background: #E76F00;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -138,7 +138,7 @@ header nav {
 }
 
 .btn-panel-toggle:hover {
-  background: #6ea26e;
+  background: #FF8C00;
 }
 
 .btn-panel-toggle.active {
@@ -213,8 +213,8 @@ header nav {
 }
 
 @keyframes bars-highlight {
-  0% { background: #91de91; }
-  70% { background: #91de91; }
+  0% { background: #FFB347; }
+  70% { background: #FFB347; }
   100% { background: white; }
 }
 
@@ -242,7 +242,7 @@ header nav {
   left: 0;
   width: 280px;
   height: 100vh;
-  background: #335533;
+  background: #1A3353;
   z-index: 300;
   transform: translateX(-100%);
   transition: transform var(--transition-normal);
@@ -306,7 +306,7 @@ header nav {
 
 .sidebar-nav-item:hover {
   background: rgba(255,255,255,0.1);
-  border-left-color: #91de91;
+  border-left-color: #FFB347;
 }
 
 .sidebar-nav-item.active {
@@ -378,7 +378,7 @@ header nav {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #91de91;
+  background: #5CB85C;
   display: inline-block;
 }
 
