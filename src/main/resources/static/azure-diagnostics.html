@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azure Diagnostics - Performance Problem Simulator - Java</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -60,10 +61,20 @@
     </aside>
 
     <div class="app-container">
-    <main class="docs-container">
-        <h1>Azure Diagnostics Guide</h1>
+    <!-- Page Header -->
+    <div class="doc-page-header">
+        <h1><span class="doc-icon">☁️</span> Azure Diagnostics</h1>
+        <p class="doc-subtitle">Guide to diagnosing performance issues with Azure tools</p>
+    </div>
+    
+    <div class="doc-layout">
+    <main class="doc-content">
+        <section id="overview">
+        <h2>Overview</h2>
         <p>This guide explains how to use Azure diagnostic tools to analyze performance issues simulated by this application.</p>
+        </section>
 
+        <section id="applens">
         <h2>AppLens Integration</h2>
         
         <p>This application is designed to work with Azure AppLens by sending health probes every 100ms 
@@ -78,7 +89,9 @@
             <li><strong>Slow Requests:</strong> Long response times, timeout patterns</li>
             <li><strong>Crashes:</strong> Instance restarts, availability drops</li>
         </ul>
+        </section>
 
+        <section id="azure-monitor">
         <h2>Azure Monitor Metrics</h2>
 
         <p>Key metrics to watch in Azure Monitor when running simulations:</p>
@@ -98,7 +111,9 @@
             <li><strong>jvm_gc_pause:</strong> GC pause times</li>
             <li><strong>jvm_threads_live:</strong> Active thread count</li>
         </ul>
+        </section>
 
+        <section id="app-insights">
         <h2>Application Insights</h2>
 
         <p>If Application Insights is configured, you can use these features:</p>
@@ -126,7 +141,9 @@
             <li>Look for red/yellow indicators during simulations</li>
             <li>Check for increased failure rates or latency</li>
         </ol>
+        </section>
 
+        <section id="diagnose-solve">
         <h2>Diagnose and Solve Problems</h2>
 
         <p>Azure App Service provides built-in diagnostic tools:</p>
@@ -147,7 +164,9 @@
             <li><strong>Thread Dump:</strong> Capture thread stacks during starvation</li>
             <li><strong>JFR (Java Flight Recorder):</strong> Profile Java application</li>
         </ul>
+        </section>
 
+        <section id="kql-queries">
         <h2>Log Analytics / KQL Queries</h2>
 
         <p>Useful KQL queries for analyzing simulation effects:</p>
@@ -172,7 +191,9 @@
 | where Level == "Informational"
 | project TimeGenerated, Message
 | order by TimeGenerated desc</code></pre>
+        </section>
 
+        <section id="java-diagnostics">
         <h2>Java-Specific Diagnostics</h2>
 
         <h3>Enable JMX for Remote Monitoring</h3>
@@ -189,7 +210,9 @@
         <h3>Heap Dumps on OOM</h3>
         <pre><code>JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError \
   -XX:HeapDumpPath=/home/LogFiles/heapdump.hprof</code></pre>
+        </section>
 
+        <section id="mapping">
         <h2>Simulation → Diagnostic Mapping</h2>
 
         <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
@@ -228,7 +251,9 @@
                 </tr>
             </tbody>
         </table>
+        </section>
 
+        <section id="best-practices">
         <h2>Best Practices</h2>
 
         <div class="note">
@@ -248,7 +273,28 @@
             <p>Never run crash simulations or high-intensity stress tests in production 
             environments. Use staging/development slots for testing.</p>
         </div>
+        </section>
     </main>
+    
+    <!-- Right-side Table of Contents -->
+    <aside class="doc-toc">
+        <div class="doc-toc-inner">
+            <h2>ON THIS PAGE</h2>
+            <a href="#overview" class="doc-toc-link active"><span class="toc-icon">📄</span> Overview</a>
+            
+            <div class="doc-toc-section-label">AZURE TOOLS</div>
+            <a href="#applens" class="doc-toc-link"><span class="toc-icon">🔍</span> AppLens</a>
+            <a href="#azure-monitor" class="doc-toc-link"><span class="toc-icon">📊</span> Azure Monitor</a>
+            <a href="#app-insights" class="doc-toc-link"><span class="toc-icon">💡</span> Application Insights</a>
+            <a href="#diagnose-solve" class="doc-toc-link"><span class="toc-icon">🔧</span> Diagnose & Solve</a>
+            <a href="#kql-queries" class="doc-toc-link"><span class="toc-icon">📝</span> KQL Queries</a>
+            
+            <div class="doc-toc-section-label">REFERENCE</div>
+            <a href="#java-diagnostics" class="doc-toc-link"><span class="toc-icon">☕</span> Java Diagnostics</a>
+            <a href="#mapping" class="doc-toc-link"><span class="toc-icon">🗺️</span> Diagnostic Mapping</a>
+            <a href="#best-practices" class="doc-toc-link"><span class="toc-icon">✅</span> Best Practices</a>
+        </div>
+    </aside>
     </div>
 
     <footer>
@@ -279,6 +325,30 @@
         hamburgerBtn.addEventListener('click', openSidebar);
         sidebarOverlay.addEventListener('click', closeSidebar);
         sidebarClose.addEventListener('click', closeSidebar);
+
+        // TOC scroll highlighting
+        const tocLinks = document.querySelectorAll('.doc-toc-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        function highlightToc() {
+            let current = '';
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', highlightToc);
+        highlightToc();
 
         // Load footer info
         async function loadBuildInfo() {

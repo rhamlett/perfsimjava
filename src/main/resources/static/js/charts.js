@@ -131,7 +131,7 @@ const ChartsModule = (function() {
                             backgroundColor: colors.cpuLight,
                             fill: true,
                             tension: 0.3,
-                            borderWidth: 2,
+                            borderWidth: 1,
                             pointRadius: 0,
                             yAxisID: 'y'
                         },
@@ -142,7 +142,7 @@ const ChartsModule = (function() {
                             backgroundColor: colors.memoryLight,
                             fill: true,
                             tension: 0.3,
-                            borderWidth: 2,
+                            borderWidth: 1,
                             pointRadius: 0,
                             yAxisID: 'y1'
                         }
@@ -190,7 +190,7 @@ const ChartsModule = (function() {
                             backgroundColor: colors.threadsLight,
                             fill: true,
                             tension: 0.3,
-                            borderWidth: 2,
+                            borderWidth: 1,
                             pointRadius: 0,
                             yAxisID: 'y'
                         },
@@ -201,7 +201,7 @@ const ChartsModule = (function() {
                             backgroundColor: colors.gcLight,
                             fill: true,
                             tension: 0.3,
-                            borderWidth: 2,
+                            borderWidth: 1,
                             pointRadius: 0,
                             yAxisID: 'y1'
                         }
@@ -248,7 +248,7 @@ const ChartsModule = (function() {
                         backgroundColor: colors.latencyLight,
                         fill: true,
                         tension: 0.3,
-                        borderWidth: 2,
+                        borderWidth: 1,
                         pointRadius: 0
                     }]
                 },

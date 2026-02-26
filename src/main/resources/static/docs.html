@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentation - Performance Problem Simulator - Java</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -60,10 +61,29 @@
     </aside>
 
     <div class="app-container">
-    <main class="docs-container">
-        <h1>API Documentation</h1>
-        <p>This document describes the REST API endpoints available in the Performance Problem Simulator.</p>
+    <!-- Page Header -->
+    <div class="doc-page-header">
+        <h1><span class="doc-icon">📚</span> Documentation</h1>
+        <p class="doc-subtitle">Complete API reference and guides for PerfSimJava performance simulation tools</p>
+    </div>
+    
+    <div class="doc-layout">
+    <main class="doc-content">
+        <section id="overview">
+        <h2>Overview</h2>
+        <p>PerfSimJava is an educational tool designed to help Azure support engineers practice diagnosing common Java performance problems. It intentionally generates controllable performance issues that mimic real-world scenarios.</p>
 
+        <h3>Features</h3>
+        <ul>
+            <li><strong>CPU Stress</strong> - Generate high CPU usage at configurable percentages</li>
+            <li><strong>Memory Pressure</strong> - Allocate and retain memory to simulate leaks</li>
+            <li><strong>Thread Starvation</strong> - Block the servlet thread pool with synchronous operations</li>
+            <li><strong>Slow Requests</strong> - Simulate slow HTTP responses</li>
+            <li><strong>Crash Simulation</strong> - Trigger unhandled exceptions or OOM conditions</li>
+        </ul>
+        </section>
+
+        <section id="health-endpoints">
         <h2>Health Endpoints</h2>
         
         <div class="api-endpoint">
@@ -89,7 +109,9 @@
             <span class="path">/health/ready</span>
             <p>Kubernetes readiness probe endpoint. Returns HTTP 200 if the application is ready to serve traffic.</p>
         </div>
+        </section>
 
+        <section id="metrics">
         <h2>Metrics Endpoints</h2>
 
         <div class="api-endpoint">
@@ -123,7 +145,9 @@
     }
 }</code></pre>
         </div>
+        </section>
 
+        <section id="cpu-simulation">
         <h2>CPU Stress Simulation</h2>
 
         <div class="api-endpoint">
@@ -148,7 +172,9 @@
             <span class="path">/api/simulations/cpu/active</span>
             <p>Lists all active CPU stress simulations.</p>
         </div>
+        </section>
 
+        <section id="memory-simulation">
         <h2>Memory Pressure Simulation</h2>
 
         <div class="api-endpoint">
@@ -167,7 +193,9 @@
             <span class="path">/api/simulations/memory/pressure/{simulationId}</span>
             <p>Releases memory from a running simulation.</p>
         </div>
+        </section>
 
+        <section id="thread-simulation">
         <h2>Thread Pool Starvation Simulation</h2>
         
         <div class="note">
@@ -186,7 +214,9 @@
     "durationMs": 30000        // Duration to block
 }</code></pre>
         </div>
+        </section>
 
+        <section id="slow-requests">
         <h2>Slow Request Simulation</h2>
 
         <div class="api-endpoint">
@@ -199,7 +229,9 @@
                 <li><code>pattern</code> - Blocking pattern: SLEEP, EXECUTOR_SATURATION, or SYNC_BLOCKING</li>
             </ul>
         </div>
+        </section>
 
+        <section id="crash-simulation">
         <h2>Crash Simulation</h2>
         
         <div class="warning">
@@ -240,7 +272,9 @@
             <span class="path">/api/simulations/crash/oom</span>
             <p>Causes an OutOfMemoryError by allocating excessive memory.</p>
         </div>
+        </section>
 
+        <section id="admin-endpoints">
         <h2>Admin Endpoints</h2>
 
         <div class="api-endpoint">
@@ -264,7 +298,9 @@
                 <li><code>limit</code> - Maximum number of events to return (default: 50)</li>
             </ul>
         </div>
+        </section>
 
+        <section id="websocket">
         <h2>WebSocket Topics (STOMP)</h2>
         
         <p>Connect to WebSocket at <code>/ws</code> using SockJS and STOMP protocol.</p>
@@ -276,7 +312,9 @@
             <li><code>/topic/events</code> - Event log entries</li>
             <li><code>/topic/simulations</code> - Simulation lifecycle updates</li>
         </ul>
+        </section>
 
+        <section id="tech-stack">
         <h2>Technology Stack</h2>
         <ul>
             <li><strong>Runtime:</strong> Java 21 (Blessed Image)</li>
@@ -285,7 +323,30 @@
             <li><strong>Metrics:</strong> JMX MBeans (OperatingSystemMXBean, MemoryMXBean, ThreadMXBean)</li>
             <li><strong>CPU Stress:</strong> PBKDF2WithHmacSHA512 cryptographic operations</li>
         </ul>
+        </section>
     </main>
+    
+    <!-- Right-side Table of Contents -->
+    <aside class="doc-toc">
+        <div class="doc-toc-inner">
+            <h2>ON THIS PAGE</h2>
+            <a href="#overview" class="doc-toc-link active"><span class="toc-icon">📄</span> Overview</a>
+            
+            <div class="doc-toc-section-label">SIMULATIONS</div>
+            <a href="#cpu-simulation" class="doc-toc-link"><span class="toc-icon">🔥</span> CPU Stress</a>
+            <a href="#memory-simulation" class="doc-toc-link"><span class="toc-icon">📊</span> Memory Pressure</a>
+            <a href="#thread-simulation" class="doc-toc-link"><span class="toc-icon">🟣</span> Thread Starvation</a>
+            <a href="#slow-requests" class="doc-toc-link"><span class="toc-icon">🐢</span> Slow Requests</a>
+            <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Crash Simulation</a>
+            
+            <div class="doc-toc-section-label">REFERENCE</div>
+            <a href="#health-endpoints" class="doc-toc-link"><span class="toc-icon">💚</span> Health Endpoints</a>
+            <a href="#metrics" class="doc-toc-link"><span class="toc-icon">📈</span> Metrics</a>
+            <a href="#admin-endpoints" class="doc-toc-link"><span class="toc-icon">⚙️</span> Admin</a>
+            <a href="#websocket" class="doc-toc-link"><span class="toc-icon">🔌</span> WebSocket</a>
+            <a href="#tech-stack" class="doc-toc-link"><span class="toc-icon">📦</span> Tech Stack</a>
+        </div>
+    </aside>
     </div>
 
     <footer>
@@ -316,6 +377,30 @@
         hamburgerBtn.addEventListener('click', openSidebar);
         sidebarOverlay.addEventListener('click', closeSidebar);
         sidebarClose.addEventListener('click', closeSidebar);
+
+        // TOC scroll highlighting
+        const tocLinks = document.querySelectorAll('.doc-toc-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        function highlightToc() {
+            let current = '';
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', highlightToc);
+        highlightToc();
 
         // Load footer info
         async function loadBuildInfo() {

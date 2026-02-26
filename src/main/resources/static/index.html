@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Performance Problem Simulator - Java Blessed Image (Java|21)</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
@@ -210,8 +211,8 @@
                             <input type="number" id="cpuWorkers" value="4" min="1" max="32">
                         </label>
                         <label>
-                            Duration (ms):
-                            <input type="number" id="cpuDuration" value="30000" min="1000" max="120000">
+                            Duration (s):
+                            <input type="number" id="cpuDuration" value="30" min="1" max="300">
                         </label>
                         <div class="btn-group">
                             <button type="submit" class="btn-trigger btn-cpu">🔥 Start CPU Stress</button>
@@ -221,21 +222,19 @@
 
                 <!-- Memory Pressure -->
                 <div class="control-section memory-section">
-                    <h3>📊 Memory Pressure <span class="info-icon" title="Allocates memory chunks to increase heap usage">ℹ️</span></h3>
-                    <p class="control-description">Allocates memory blocks to simulate memory pressure. Watch for GC activity increases.</p>
+                    <h3>📊 Memory Pressure <span class="info-icon" title="Memory is held until released. Multiple allocations stack. Watch for GC pauses.">ℹ️</span></h3>
+                    <p class="control-description">Allocates memory blocks to simulate memory pressure. Multiple allocations stack - mimics gradual memory leak.</p>
                     <form id="memory-form">
                         <label>
-                            Target (MB):
-                            <input type="number" id="memoryTarget" value="500" min="50" max="2000">
-                        </label>
-                        <label>
-                            Duration (ms):
-                            <input type="number" id="memoryDuration" value="30000" min="1000" max="120000">
+                            Size (MB):
+                            <input type="number" id="memoryTarget" value="512" min="1" max="2000">
                         </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-memory">📈 Start Memory Pressure</button>
+                            <button type="submit" class="btn-trigger btn-memory">📈 Allocate</button>
+                            <button type="button" id="release-all-memory" class="btn-release">🗑️ Release</button>
                         </div>
                     </form>
+                    <div id="memory-active" class="active-simulations"></div>
                 </div>
 
                 <!-- Thread Pool Starvation -->
@@ -248,8 +247,8 @@
                             <input type="number" id="starvationCount" value="50" min="10" max="200">
                         </label>
                         <label>
-                            Duration (ms):
-                            <input type="number" id="starvationDuration" value="30000" min="1000" max="120000">
+                            Duration (s):
+                            <input type="number" id="starvationDuration" value="30" min="1" max="120">
                         </label>
                         <button type="submit" class="btn-trigger btn-threads">🧵 Start Thread Starvation</button>
                     </form>
@@ -269,8 +268,8 @@
                             </select>
                         </label>
                         <label>
-                            Delay (ms):
-                            <input type="number" id="slowDelay" value="5000" min="100" max="60000">
+                            Delay (s):
+                            <input type="number" id="slowDelay" value="5" min="1" max="60">
                         </label>
                         <button type="submit" class="btn-trigger btn-slow">🐌 Trigger Slow Request</button>
                     </form>

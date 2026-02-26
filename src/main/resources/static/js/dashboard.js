@@ -3,6 +3,9 @@
    Dashboard Module (UI Logic)
    ============================================================================= */
 
+// Active memory simulations tracking
+const activeMemorySimulations = new Map();
+
 // Global simulation functions (called by onclick handlers)
 
 /**
@@ -10,7 +13,8 @@
  */
 async function startCpuStress() {
     const workers = parseInt(document.getElementById('cpuWorkers').value) || 4;
-    const durationMs = parseInt(document.getElementById('cpuDuration').value) || 30000;
+    const durationSeconds = parseInt(document.getElementById('cpuDuration').value) || 30;
+    const durationMs = durationSeconds * 1000;
 
     try {
         const response = await fetch('/api/simulations/cpu/stress', {
@@ -20,7 +24,7 @@ async function startCpuStress() {
         });
         const result = await response.json();
         console.log('[Dashboard] CPU Stress started:', result);
-        Dashboard.addEvent('info', `CPU Stress started with ${workers} workers for ${durationMs}ms`);
+        Dashboard.addEvent('info', `CPU Stress started with ${workers} workers for ${durationSeconds}s`);
     } catch (error) {
         console.error('[Dashboard] Failed to start CPU stress:', error);
         Dashboard.addEvent('error', 'Failed to start CPU stress: ' + error.message);
@@ -28,24 +32,100 @@ async function startCpuStress() {
 }
 
 /**
- * Starts memory pressure simulation
+ * Allocates memory (no auto-release)
  */
-async function startMemoryPressure() {
-    const targetMb = parseInt(document.getElementById('memoryTarget').value) || 500;
-    const durationMs = parseInt(document.getElementById('memoryDuration').value) || 30000;
+async function allocateMemory() {
+    const sizeMb = parseInt(document.getElementById('memoryTarget').value) || 512;
 
     try {
-        const response = await fetch('/api/simulations/memory/pressure', {
+        const response = await fetch('/api/simulations/memory', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ targetMb, durationMs })
+            body: JSON.stringify({ sizeMb })
         });
         const result = await response.json();
-        console.log('[Dashboard] Memory Pressure started:', result);
-        Dashboard.addEvent('info', `Memory Pressure started with target ${targetMb}MB for ${durationMs}ms`);
+        console.log('[Dashboard] Memory allocated:', result);
+        
+        // Track the allocation
+        activeMemorySimulations.set(result.id, {
+            id: result.id,
+            sizeMb: sizeMb
+        });
+        renderActiveMemorySimulations();
+        
+        Dashboard.addEvent('info', `Allocated ${sizeMb}MB of memory`);
     } catch (error) {
-        console.error('[Dashboard] Failed to start memory pressure:', error);
-        Dashboard.addEvent('error', 'Failed to start memory pressure: ' + error.message);
+        console.error('[Dashboard] Failed to allocate memory:', error);
+        Dashboard.addEvent('error', 'Failed to allocate memory: ' + error.message);
+    }
+}
+
+/**
+ * Releases a specific memory allocation
+ */
+async function releaseMemory(id) {
+    try {
+        const sim = activeMemorySimulations.get(id);
+        const sizeMb = sim?.sizeMb || 'unknown';
+        
+        const response = await fetch(`/api/simulations/memory/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        console.log('[Dashboard] Memory released:', result);
+        
+        activeMemorySimulations.delete(id);
+        renderActiveMemorySimulations();
+        
+        Dashboard.addEvent('info', result.message || `Released ${sizeMb}MB of memory`);
+    } catch (error) {
+        console.error('[Dashboard] Failed to release memory:', error);
+        Dashboard.addEvent('error', 'Failed to release memory: ' + error.message);
+    }
+}
+
+/**
+ * Releases all memory allocations
+ */
+async function releaseAllMemory() {
+    const ids = Array.from(activeMemorySimulations.keys());
+    if (ids.length === 0) {
+        // Try to release from backend anyway in case of sync issues
+        try {
+            const response = await fetch('/api/simulations/memory', {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            Dashboard.addEvent('info', result.message || 'Memory released');
+        } catch (error) {
+            console.log('No memory to release');
+        }
+        return;
+    }
+    
+    for (const id of ids) {
+        await releaseMemory(id);
+    }
+}
+
+/**
+ * Renders active memory allocations in the panel
+ */
+function renderActiveMemorySimulations() {
+    const container = document.getElementById('memory-active');
+    if (!container) return;
+    
+    if (activeMemorySimulations.size === 0) {
+        container.innerHTML = '';
+    } else {
+        container.innerHTML = Array.from(activeMemorySimulations.values())
+            .map(sim => `
+                <div class="active-simulation">
+                    <span>${sim.sizeMb}MB</span>
+                    <span class="sim-id">${sim.id.slice(0, 8)}...</span>
+                    <button class="btn-stop" onclick="releaseMemory('${sim.id}')">Release</button>
+                </div>
+            `).join('');
     }
 }
 
@@ -54,7 +134,8 @@ async function startMemoryPressure() {
  */
 async function startThreadStarvation() {
     const blockedThreadCount = parseInt(document.getElementById('starvationCount').value) || 50;
-    const durationMs = parseInt(document.getElementById('starvationDuration').value) || 30000;
+    const durationSeconds = parseInt(document.getElementById('starvationDuration').value) || 30;
+    const durationMs = durationSeconds * 1000;
 
     try {
         const response = await fetch('/api/simulations/thread/starvation', {
@@ -64,7 +145,7 @@ async function startThreadStarvation() {
         });
         const result = await response.json();
         console.log('[Dashboard] Thread Starvation started:', result);
-        Dashboard.addEvent('warn', `Thread Starvation started with ${blockedThreadCount} threads for ${durationMs}ms`);
+        Dashboard.addEvent('warn', `Thread Starvation started with ${blockedThreadCount} threads for ${durationSeconds}s`);
     } catch (error) {
         console.error('[Dashboard] Failed to start thread starvation:', error);
         Dashboard.addEvent('error', 'Failed to start thread starvation: ' + error.message);
@@ -75,7 +156,8 @@ async function startThreadStarvation() {
  * Triggers a slow request
  */
 async function triggerSlowRequest() {
-    const delayMs = parseInt(document.getElementById('slowDelay').value) || 5000;
+    const delaySeconds = parseInt(document.getElementById('slowDelay').value) || 5;
+    const delayMs = delaySeconds * 1000;
     const pattern = document.getElementById('slowPattern').value || 'SLEEP';
 
     try {
@@ -84,7 +166,7 @@ async function triggerSlowRequest() {
         });
         const result = await response.json();
         console.log('[Dashboard] Slow Request completed:', result);
-        Dashboard.addEvent('info', `Slow Request completed after ${result.actualDurationMs}ms`);
+        Dashboard.addEvent('info', `Slow Request completed after ${(result.actualDurationMs / 1000).toFixed(1)}s`);
     } catch (error) {
         console.error('[Dashboard] Slow request failed:', error);
         Dashboard.addEvent('error', 'Slow request failed: ' + error.message);

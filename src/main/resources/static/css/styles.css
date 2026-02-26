@@ -1056,6 +1056,40 @@ button:disabled {
   background: #5a6268;
 }
 
+/* Active Memory Simulations */
+.active-simulations {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.active-simulation {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.active-simulation span:first-child {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.active-simulation .sim-id {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  flex: 1;
+}
+
+.active-simulation .btn-stop {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
 .btn-danger {
   background: linear-gradient(135deg, #8b0000 0%, #4a0000 100%);
   color: white;
@@ -1210,8 +1244,155 @@ footer a:hover {
 }
 
 /* --------------------------------------------------------------------------
-   Documentation Pages
+   Documentation Pages - Node-style Layout
    -------------------------------------------------------------------------- */
+
+/* Page header with icon and title */
+.doc-page-header {
+  text-align: center;
+  padding: 2rem 1rem 1.5rem;
+  background: var(--color-bg);
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.doc-page-header h1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 2rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.doc-page-header h1 .doc-icon {
+  font-size: 1.8rem;
+}
+
+.doc-page-header .doc-subtitle {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Two-column layout: content + TOC */
+.doc-layout {
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Main content area */
+.doc-content {
+  flex: 1;
+  max-width: 900px;
+  padding: 2rem;
+  background: var(--color-card);
+  min-height: calc(100vh - 200px);
+}
+
+/* Right-side Table of Contents */
+.doc-toc {
+  width: 280px;
+  flex-shrink: 0;
+  padding: 1.5rem 1rem 1.5rem 0;
+  position: sticky;
+  top: 72px;
+  align-self: flex-start;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+.doc-toc-inner {
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #e0e0e0;
+}
+
+.doc-toc h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.doc-toc-section {
+  margin-bottom: 1.25rem;
+}
+
+.doc-toc-section:last-child {
+  margin-bottom: 0;
+}
+
+.doc-toc-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.doc-toc-section-label:first-child {
+  margin-top: 0;
+}
+
+.doc-toc-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.doc-toc-link:hover {
+  background: var(--color-bg);
+  color: var(--color-primary);
+}
+
+.doc-toc-link.active {
+  background: rgba(231, 111, 0, 0.1);
+  border-left-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.doc-toc-link .toc-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .doc-toc {
+    width: 240px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .doc-toc {
+    display: none;
+  }
+  
+  .doc-content {
+    max-width: 100%;
+  }
+}
+
+/* Legacy docs-container compatibility */
 .docs-container {
   max-width: 1200px;
   margin: 0 auto;
