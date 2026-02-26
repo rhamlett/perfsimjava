@@ -168,15 +168,91 @@ const Dashboard = (function() {
      * Handles probe results from WebSocket
      */
     function handleProbeResult(result) {
-        // Update latency chart (higher frequency - 100ms)
+        // Update latency chart
         if (result.latencyMs !== undefined) {
             ChartsModule.updateLatency(result.latencyMs);
             
-            // Update latency display
-            const latencyEl = document.getElementById('currentLatency');
-            if (latencyEl) {
-                latencyEl.textContent = result.latencyMs.toFixed(0) + ' ms';
+            // Update current latency display
+            const latencyCurrentEl = document.getElementById('latency-current');
+            if (latencyCurrentEl) {
+                latencyCurrentEl.textContent = result.latencyMs.toFixed(1) + 'ms';
+                
+                // Add color class based on threshold
+                latencyCurrentEl.classList.remove('good', 'warning', 'danger');
+                if (result.latencyMs < 150) {
+                    latencyCurrentEl.classList.add('good');
+                } else if (result.latencyMs < 1000) {
+                    latencyCurrentEl.classList.add('warning');
+                } else {
+                    latencyCurrentEl.classList.add('danger');
+                }
             }
+            
+            // Update probe visualization
+            updateProbeVisualization(result.latencyMs);
+            
+            // Update latency stats
+            updateLatencyStats(result.latencyMs);
+        }
+    }
+
+    // Latency history for stats
+    const latencyHistory = [];
+    const MAX_LATENCY_HISTORY = 600; // 60 seconds at 100ms intervals
+    let criticalCount = 0;
+
+    /**
+     * Updates latency statistics
+     */
+    function updateLatencyStats(latency) {
+        latencyHistory.push(latency);
+        if (latencyHistory.length > MAX_LATENCY_HISTORY) {
+            latencyHistory.shift();
+        }
+        
+        // Check for critical
+        if (latency > 30000) {
+            criticalCount++;
+        }
+        
+        // Calculate stats
+        const sum = latencyHistory.reduce((a, b) => a + b, 0);
+        const avg = sum / latencyHistory.length;
+        const max = Math.max(...latencyHistory);
+        
+        // Update display
+        const avgEl = document.getElementById('latency-avg');
+        const maxEl = document.getElementById('latency-max');
+        const critEl = document.getElementById('latency-critical');
+        
+        if (avgEl) avgEl.textContent = avg.toFixed(1) + 'ms';
+        if (maxEl) maxEl.textContent = max.toFixed(1) + 'ms';
+        if (critEl) critEl.textContent = criticalCount;
+    }
+
+    // Probe visualization history
+    const probeHistory = [];
+    const MAX_PROBE_DOTS = 30;
+
+    /**
+     * Updates probe visualization dots
+     */
+    function updateProbeVisualization(latency) {
+        let status = 'good';
+        if (latency >= 30000) status = 'failed';
+        else if (latency >= 1000) status = 'slow';
+        else if (latency >= 150) status = 'degraded';
+        
+        probeHistory.push(status);
+        if (probeHistory.length > MAX_PROBE_DOTS) {
+            probeHistory.shift();
+        }
+        
+        const vizEl = document.getElementById('probe-visualization');
+        if (vizEl) {
+            vizEl.innerHTML = probeHistory.map(s => 
+                `<span class="probe-dot-inline ${s === 'good' ? '' : s}"></span>`
+            ).join('');
         }
     }
 
@@ -196,37 +272,45 @@ const Dashboard = (function() {
     }
 
     /**
-     * Updates the current metrics display
+     * Updates the current metrics display (metric tiles)
      */
     function updateCurrentMetrics(metrics) {
-        // CPU
-        const cpuEl = document.getElementById('currentCpu');
+        // CPU Tile
+        const cpuEl = document.getElementById('cpu-value');
+        const cpuBar = document.getElementById('cpu-bar');
         if (cpuEl && metrics.cpu) {
-            cpuEl.textContent = metrics.cpu.usagePercent.toFixed(1) + '%';
+            const cpuValue = metrics.cpu.usagePercent || 0;
+            cpuEl.textContent = cpuValue.toFixed(1);
+            if (cpuBar) cpuBar.style.width = Math.min(cpuValue, 100) + '%';
         }
 
-        // Memory
-        const memEl = document.getElementById('currentMemory');
+        // Memory Tile
+        const memEl = document.getElementById('memory-value');
+        const memBar = document.getElementById('memory-bar');
+        const memTotal = document.getElementById('memory-total');
         if (memEl && metrics.memory) {
-            memEl.textContent = metrics.memory.heapUsedMb.toFixed(0) + ' MB';
+            const heapUsed = metrics.memory.heapUsedMb || 0;
+            const heapMax = metrics.memory.heapMaxMb || 1000;
+            memEl.textContent = heapUsed.toFixed(0);
+            if (memBar) memBar.style.width = Math.min((heapUsed / heapMax) * 100, 100) + '%';
+            if (memTotal) memTotal.textContent = 'of ' + (heapMax / 1024).toFixed(1) + ' GB';
         }
 
-        // Threads
-        const threadEl = document.getElementById('currentThreads');
+        // Threads Tile
+        const threadEl = document.getElementById('threads-value');
+        const threadBar = document.getElementById('threads-bar');
         if (threadEl && metrics.thread) {
-            threadEl.textContent = metrics.thread.activeCount;
+            const threadCount = metrics.thread.activeCount || 0;
+            threadEl.textContent = threadCount;
+            if (threadBar) threadBar.style.width = Math.min((threadCount / 500) * 100, 100) + '%';
         }
 
-        // GC Count
-        const gcCountEl = document.getElementById('currentGcCount');
-        if (gcCountEl && metrics.gc) {
-            gcCountEl.textContent = metrics.gc.totalCollections;
-        }
-
-        // GC Time
-        const gcTimeEl = document.getElementById('currentGcTime');
-        if (gcTimeEl && metrics.gc) {
-            gcTimeEl.textContent = metrics.gc.totalTimeMs + ' ms';
+        // GC Tile
+        const gcEl = document.getElementById('gc-value');
+        const gcBar = document.getElementById('gc-bar');
+        if (gcEl && metrics.gc) {
+            gcEl.textContent = metrics.gc.totalCollections || 0;
+            if (gcBar) gcBar.style.width = Math.min((metrics.gc.totalCollections / 100) * 100, 100) + '%';
         }
     }
 
@@ -277,6 +361,15 @@ const Dashboard = (function() {
             const response = await fetch('/api/admin/sku');
             const data = await response.json();
             
+            // Update SKU badge in header
+            const skuBadge = document.getElementById('sku-badge');
+            if (skuBadge) {
+                skuBadge.textContent = data.isAzure 
+                    ? `SKU: ${data.sku}`
+                    : 'SKU: Local';
+            }
+            
+            // Update footer
             const skuEl = document.getElementById('skuInfo');
             if (skuEl) {
                 skuEl.textContent = data.isAzure 
@@ -296,15 +389,15 @@ const Dashboard = (function() {
             const response = await fetch('/api/simulations');
             const data = await response.json();
             
-            const listEl = document.getElementById('simulationList');
+            const listEl = document.getElementById('active-simulations-list');
             if (listEl) {
                 if (data.simulations && data.simulations.length > 0) {
-                    listEl.innerHTML = data.simulations.map(sim => `
-                        <div class="simulation-item">
-                            <span class="sim-type">${formatSimType(sim.type)}</span>
-                            <span class="sim-status">${sim.status}</span>
+                    listEl.innerHTML = '<div class="simulations-list">' + data.simulations.map(sim => `
+                        <div class="simulation-badge ${getSimClass(sim.type)}">
+                            <div class="spinner"></div>
+                            <span>${formatSimType(sim.type)}</span>
                         </div>
-                    `).join('');
+                    `).join('') + '</div>';
                 } else {
                     listEl.innerHTML = '<p class="no-simulations">No active simulations</p>';
                 }
@@ -312,6 +405,16 @@ const Dashboard = (function() {
         } catch (error) {
             console.error('[Dashboard] Failed to load simulations:', error);
         }
+    }
+
+    /**
+     * Gets CSS class for simulation type
+     */
+    function getSimClass(type) {
+        if (type.includes('CPU')) return 'cpu';
+        if (type.includes('MEMORY')) return 'memory';
+        if (type.includes('THREAD')) return 'threads';
+        return '';
     }
 
     /**

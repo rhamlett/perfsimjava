@@ -10,73 +10,201 @@
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <h1>Performance Problem Simulator</h1>
-            <span class="subtitle">Java Blessed Image (Java|21)</span>
-        </div>
-        <div class="header-right">
-            <span class="connection-status" id="connectionStatus">Connecting...</span>
-            <nav class="nav-links">
-                <a href="/">Dashboard</a>
-                <a href="/docs.html">Docs</a>
-                <a href="/azure-diagnostics.html">Azure Diagnostics</a>
-                <a href="/azure-deployment.html">Deployment</a>
-            </nav>
-        </div>
+    <header>
+        <button id="hamburger-btn" class="hamburger-btn attention" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1>☕ Performance Problem Simulator - Java Blessed Image (Java|21)</h1>
+        <span id="sku-badge" class="sku-badge">SKU: Local</span>
+        <nav>
+            <button id="toggle-panel" class="btn-panel-toggle">🎮 Simulation Controls</button>
+        </nav>
+        <div id="connection-status" class="status-disconnected">Disconnected</div>
     </header>
 
-    <main class="dashboard">
-        <!-- Event Log Panel -->
-        <section class="panel event-log-panel">
-            <h2>Event Log</h2>
-            <div class="event-log" id="eventLog">
-                <div class="event info">Application started</div>
-            </div>
-        </section>
+    <!-- Sidebar Drawer Navigation -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="sidebar-drawer" class="sidebar-drawer">
+        <div class="sidebar-header">
+            <h2>☕ PerfSimJava</h2>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Application</div>
+            <a href="/" class="sidebar-nav-item active">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Dashboard<span class="nav-desc">Live metrics & controls</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Documentation</div>
+            <a href="/docs.html" class="sidebar-nav-item">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Documentation<span class="nav-desc">API reference & guides</span></span>
+            </a>
+            <a href="/azure-diagnostics.html" class="sidebar-nav-item">
+                <span class="nav-icon">☁️</span>
+                <span class="nav-label">Azure Diagnostics<span class="nav-desc">Diagnose issues in App Service</span></span>
+            </a>
+            <a href="/azure-deployment.html" class="sidebar-nav-item">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">Deploy to Azure<span class="nav-desc">GitHub Actions + OIDC setup</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">External</div>
+            <a href="https://github.com/rhamlett/perfsimjava" target="_blank" class="sidebar-nav-item">
+                <span class="nav-icon">🐙</span>
+                <span class="nav-label">GitHub Repository<span class="nav-desc">Source code & issues</span></span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar-build-info">Build: Loading...</div>
+        </div>
+    </aside>
 
-        <!-- Charts Section -->
-        <section class="panel charts-panel">
-            <h2>System Metrics</h2>
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <h3>CPU Usage</h3>
-                    <canvas id="cpuChart"></canvas>
+    <div class="app-container">
+        <main>
+            <!-- Compact Metric Tiles -->
+            <section id="metrics-section">
+                <div class="metrics-tiles">
+                    <div class="metric-tile cpu">
+                        <div class="tile-content">
+                            <div class="tile-icon">⚡</div>
+                            <div class="tile-info">
+                                <span class="tile-label">CPU Usage <span class="info-icon-small" title="System CPU usage percentage">ⓘ</span></span>
+                                <div class="tile-value"><span id="cpu-value">0.0</span> <span class="tile-unit">%</span></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar"><div class="metric-bar-fill" id="cpu-bar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="metric-tile memory">
+                        <div class="tile-content">
+                            <div class="tile-icon">📊</div>
+                            <div class="tile-info">
+                                <span class="tile-label">Heap Used <span class="info-icon-small" title="JVM heap memory currently in use">ⓘ</span></span>
+                                <div class="tile-value"><span id="memory-value">0</span> <span class="tile-unit">MB</span> <span id="memory-total" class="tile-subtext">of -- GB</span></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar"><div class="metric-bar-fill" id="memory-bar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="metric-tile threads">
+                        <div class="tile-content">
+                            <div class="tile-icon">🧵</div>
+                            <div class="tile-info">
+                                <span class="tile-label">Thread Count <span class="info-icon-small" title="Active JVM threads including daemon threads">ⓘ</span></span>
+                                <div class="tile-value"><span id="threads-value">0</span></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar"><div class="metric-bar-fill" id="threads-bar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="metric-tile latency">
+                        <div class="tile-content">
+                            <div class="tile-icon">📋</div>
+                            <div class="tile-info">
+                                <span class="tile-label">GC Collections <span class="info-icon-small" title="Total garbage collection count since JVM start">ⓘ</span></span>
+                                <div class="tile-value"><span id="gc-value">0</span></div>
+                            </div>
+                        </div>
+                        <div class="metric-bar"><div class="metric-bar-fill" id="gc-bar" style="width: 0%;"></div></div>
+                    </div>
                 </div>
-                <div class="chart-container">
-                    <h3>Memory Usage</h3>
-                    <canvas id="memoryChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3>Thread Count</h3>
-                    <canvas id="threadChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3>Request Latency (ms)</h3>
-                    <canvas id="latencyChart"></canvas>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Simulations Control Panel -->
-        <section class="panel simulations-panel">
-            <h2>Simulations</h2>
-            
+            <!-- Charts Section -->
+            <section id="charts-section">
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>📈 CPU & Memory Over Time</h3>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-color" style="background: #0078d4;"></span> CPU %</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #1d6f1d;"></span> Heap MB</span>
+                        </div>
+                        <canvas id="cpuMemoryChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>🧵 Threads & GC Activity</h3>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-color" style="background: #8764b8;"></span> Threads</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #ffb900;"></span> GC Time (ms)</span>
+                        </div>
+                        <canvas id="threadsGcChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Request Latency Monitor -->
+            <section id="latency-section">
+                <div class="latency-card">
+                    <h3>⏱️ Request Latency Monitor <span id="probe-visualization" class="probe-visualization-inline" title="Probe history: Green=good, Yellow=degraded, Red=critical"></span></h3>
+                    <p class="latency-description">Measures actual response time to a lightweight probe endpoint. Times include server processing and queue time.</p>
+                    
+                    <div class="latency-stats">
+                        <div class="latency-stat">
+                            <span class="stat-label">CURRENT</span>
+                            <span class="stat-value" id="latency-current">0.0ms</span>
+                        </div>
+                        <div class="latency-stat">
+                            <span class="stat-label">AVG (60S)</span>
+                            <span class="stat-value" id="latency-avg">0.0ms</span>
+                        </div>
+                        <div class="latency-stat">
+                            <span class="stat-label">MAX (60S)</span>
+                            <span class="stat-value warning" id="latency-max">0.0ms</span>
+                        </div>
+                        <div class="latency-stat">
+                            <span class="stat-label">CRITICAL (>30S)</span>
+                            <span class="stat-value" id="latency-critical">0</span>
+                        </div>
+                    </div>
+                    <div class="thresholds">
+                        <span class="threshold-label">Thresholds:</span>
+                        <span class="threshold good">● Good (&lt;150ms)</span>
+                        <span class="threshold degraded">● Degraded (150ms-1s)</span>
+                        <span class="threshold severe">● Severe (&gt;1s)</span>
+                        <span class="threshold critical">● Critical (&gt;30s)</span>
+                    </div>
+                    <h4>📊 Response Latency Over Time</h4>
+                    <div class="latency-chart-container">
+                        <canvas id="latencyChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
             <!-- Active Simulations -->
-            <div class="active-simulations" id="activeSimulations">
-                <h3>Active Simulations</h3>
-                <div class="simulation-list" id="simulationList">
-                    <p class="no-simulations">No active simulations</p>
+            <section id="active-section">
+                <div class="active-card">
+                    <h3>🏃 Active Simulations</h3>
+                    <div id="active-simulations-list">
+                        <p class="no-simulations">No active simulations</p>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Simulation Controls -->
-            <div class="simulation-controls">
+            <!-- Event Log -->
+            <section id="events-section">
+                <div class="event-log-card">
+                    <h3>📜 Event Log</h3>
+                    <div id="eventLog" class="event-log"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Side Panel for Simulation Controls -->
+        <aside id="simulation-panel" class="side-panel">
+            <div class="panel-header">
+                <h2>🎮 Simulation Controls</h2>
+                <button id="close-panel" class="close-btn">✕</button>
+            </div>
+            <div class="panel-warning">
+                ⚠️ These buttons intentionally cause performance problems!
+            </div>
+            <div class="panel-content">
                 <!-- CPU Stress -->
-                <div class="control-group">
-                    <h3>🔥 CPU Stress</h3>
-                    <p>Spawns worker threads performing cryptographic operations.</p>
-                    <div class="control-row">
+                <div class="control-section cpu-section">
+                    <h3>🔥 CPU Stress <span class="info-icon" title="Spawns worker threads performing cryptographic operations">ℹ️</span></h3>
+                    <p class="control-description">Spawns worker threads running intensive cryptographic operations to stress CPU cores.</p>
+                    <form id="cpu-form">
                         <label>
                             Workers:
                             <input type="number" id="cpuWorkers" value="4" min="1" max="32">
@@ -85,32 +213,36 @@
                             Duration (ms):
                             <input type="number" id="cpuDuration" value="30000" min="1000" max="120000">
                         </label>
-                    </div>
-                    <button class="btn btn-danger" onclick="startCpuStress()">Start CPU Stress</button>
+                        <div class="btn-group">
+                            <button type="submit" class="btn-trigger btn-cpu">🔥 Start CPU Stress</button>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Memory Pressure -->
-                <div class="control-group">
-                    <h3>💾 Memory Pressure</h3>
-                    <p>Allocates memory chunks to increase heap usage.</p>
-                    <div class="control-row">
+                <div class="control-section memory-section">
+                    <h3>📊 Memory Pressure <span class="info-icon" title="Allocates memory chunks to increase heap usage">ℹ️</span></h3>
+                    <p class="control-description">Allocates memory blocks to simulate memory pressure. Watch for GC activity increases.</p>
+                    <form id="memory-form">
                         <label>
-                            Target MB:
+                            Target (MB):
                             <input type="number" id="memoryTarget" value="500" min="50" max="2000">
                         </label>
                         <label>
                             Duration (ms):
                             <input type="number" id="memoryDuration" value="30000" min="1000" max="120000">
                         </label>
-                    </div>
-                    <button class="btn btn-warning" onclick="startMemoryPressure()">Start Memory Pressure</button>
+                        <div class="btn-group">
+                            <button type="submit" class="btn-trigger btn-memory">📈 Start Memory Pressure</button>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Thread Pool Starvation -->
-                <div class="control-group">
-                    <h3>⏳ Thread Pool Starvation</h3>
-                    <p>Blocks servlet threads to starve the thread pool (Java equivalent of Event Loop Blocking).</p>
-                    <div class="control-row">
+                <div class="control-section threads-section">
+                    <h3>🧵 Thread Pool Starvation <span class="info-icon" title="Blocks servlet threads to starve the thread pool (Java equivalent of Event Loop Blocking)">⚠️</span></h3>
+                    <p class="control-description">Blocks servlet threads to simulate thread pool exhaustion. Server becomes unresponsive to new requests.</p>
+                    <form id="threads-form">
                         <label>
                             Blocked Threads:
                             <input type="number" id="starvationCount" value="50" min="10" max="200">
@@ -119,89 +251,150 @@
                             Duration (ms):
                             <input type="number" id="starvationDuration" value="30000" min="1000" max="120000">
                         </label>
-                    </div>
-                    <button class="btn btn-warning" onclick="startThreadStarvation()">Start Thread Starvation</button>
+                        <button type="submit" class="btn-trigger btn-threads">🧵 Start Thread Starvation</button>
+                    </form>
                 </div>
 
-                <!-- Slow Request -->
-                <div class="control-group">
-                    <h3>🐢 Slow Request</h3>
-                    <p>Creates artificially slow HTTP responses.</p>
-                    <div class="control-row">
-                        <label>
-                            Delay (ms):
-                            <input type="number" id="slowDelay" value="5000" min="100" max="60000">
-                        </label>
+                <!-- Slow Requests -->
+                <div class="control-section slow-section">
+                    <h3>🐌 Slow Requests <span class="info-icon" title="Creates artificially slow HTTP responses">ℹ️</span></h3>
+                    <p class="control-description">Creates artificially slow HTTP responses with different blocking patterns.</p>
+                    <form id="slow-form">
                         <label>
                             Pattern:
-                            <select id="slowPattern">
+                            <select id="slowPattern" class="wide-select">
                                 <option value="SLEEP">Sleep</option>
                                 <option value="EXECUTOR_SATURATION">Executor Saturation</option>
                                 <option value="SYNC_BLOCKING">Sync Blocking</option>
                             </select>
                         </label>
-                    </div>
-                    <button class="btn btn-info" onclick="triggerSlowRequest()">Trigger Slow Request</button>
+                        <label>
+                            Delay (ms):
+                            <input type="number" id="slowDelay" value="5000" min="100" max="60000">
+                        </label>
+                        <button type="submit" class="btn-trigger btn-slow">🐌 Trigger Slow Request</button>
+                    </form>
                 </div>
 
                 <!-- Crash Simulation -->
-                <div class="control-group">
-                    <h3>💥 Crash Simulation</h3>
-                    <p>Triggers various crash scenarios for testing diagnostics.</p>
-                    <div class="control-row">
+                <div class="control-section crash-section">
+                    <h3>💥 Application Crash <span class="info-icon" title="Process terminates immediately. Azure App Service auto-restarts.">⚠️</span></h3>
+                    <p class="control-description">Terminates the JVM process. Azure auto-restarts - observe the recovery in Event Log.</p>
+                    <form id="crash-form">
                         <label>
                             Crash Type:
-                            <select id="crashType">
+                            <select id="crashType" class="wide-select">
                                 <option value="FAILFAST">Fail Fast (Exit)</option>
                                 <option value="STACKOVERFLOW">Stack Overflow</option>
-                                <option value="EXCEPTION">Unhandled Exception</option>
+                                <option value="EXCEPTION" selected>Unhandled Exception</option>
                                 <option value="OOM">Out of Memory</option>
                             </select>
                         </label>
-                    </div>
-                    <button class="btn btn-danger" onclick="triggerCrash()">⚠️ Trigger Crash</button>
+                        <button type="submit" class="btn-danger btn-crash">💥 Trigger Crash</button>
+                    </form>
+                    <p class="crash-warning">⚠️ This will TERMINATE the app!</p>
                 </div>
             </div>
-        </section>
+        </aside>
+    </div>
 
-        <!-- Current Metrics Panel -->
-        <section class="panel metrics-panel">
-            <h2>Current Metrics</h2>
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-label">CPU Usage</div>
-                    <div class="metric-value" id="currentCpu">--%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Heap Used</div>
-                    <div class="metric-value" id="currentMemory">-- MB</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Thread Count</div>
-                    <div class="metric-value" id="currentThreads">--</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Probe Latency</div>
-                    <div class="metric-value" id="currentLatency">-- ms</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">GC Count</div>
-                    <div class="metric-value" id="currentGcCount">--</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">GC Time</div>
-                    <div class="metric-value" id="currentGcTime">-- ms</div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <p>Performance Problem Simulator - Java 21 | <span id="skuInfo">Loading...</span></p>
+    <footer>
+        <p>Performance Problem Simulator — Educational Tool for Azure App Service Diagnostics</p>
+        <p id="build-info">Java 21 | <span id="skuInfo">Loading...</span></p>
     </footer>
 
     <script src="/js/charts.js"></script>
     <script src="/js/socket-client.js"></script>
     <script src="/js/dashboard.js"></script>
+    <script>
+        // Sidebar drawer toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarDrawer = document.getElementById('sidebar-drawer');
+        const sidebarClose = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            hamburgerBtn.classList.remove('attention');
+            hamburgerBtn.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            sidebarDrawer.classList.add('active');
+        }
+
+        function closeSidebar() {
+            hamburgerBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            sidebarDrawer.classList.remove('active');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSidebar();
+        });
+
+        // Side panel toggle
+        const togglePanelBtn = document.getElementById('toggle-panel');
+        const simulationPanel = document.getElementById('simulation-panel');
+        const closePanelBtn = document.getElementById('close-panel');
+
+        function openPanel() {
+            simulationPanel.classList.add('open');
+            document.body.classList.add('panel-open');
+            togglePanelBtn.classList.add('active');
+        }
+
+        function closePanel() {
+            simulationPanel.classList.remove('open');
+            document.body.classList.remove('panel-open');
+            togglePanelBtn.classList.remove('active');
+        }
+
+        togglePanelBtn.addEventListener('click', () => {
+            if (simulationPanel.classList.contains('open')) {
+                closePanel();
+            } else {
+                openPanel();
+            }
+        });
+
+        closePanelBtn.addEventListener('click', closePanel);
+
+        // Form submissions
+        document.getElementById('cpu-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            startCpuStress();
+        });
+
+        document.getElementById('memory-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            startMemoryPressure();
+        });
+
+        document.getElementById('threads-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            startThreadStarvation();
+        });
+
+        document.getElementById('slow-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            triggerSlowRequest();
+        });
+
+        document.getElementById('crash-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            triggerCrash();
+        });
+
+        // Sync build info to sidebar when it updates
+        const buildInfoEl = document.getElementById('build-info');
+        const sidebarBuildInfo = document.getElementById('sidebar-build-info');
+        const observer = new MutationObserver(() => {
+            sidebarBuildInfo.textContent = buildInfoEl.textContent;
+        });
+        observer.observe(buildInfoEl, { childList: true, characterData: true, subtree: true });
+    </script>
 </body>
 </html>

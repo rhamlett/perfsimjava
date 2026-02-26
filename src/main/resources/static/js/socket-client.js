@@ -51,17 +51,22 @@ const SocketClient = (function() {
      * Updates the connection status UI
      */
     function updateConnectionStatus(status) {
-        const statusEl = document.getElementById('connectionStatus');
+        const statusEl = document.getElementById('connection-status');
         if (statusEl) {
-            statusEl.className = 'connection-status ' + status;
+            // Remove all status classes
+            statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting');
+            
             switch (status) {
                 case 'connected':
+                    statusEl.classList.add('status-connected');
                     statusEl.textContent = 'Connected';
                     break;
                 case 'disconnected':
+                    statusEl.classList.add('status-disconnected');
                     statusEl.textContent = 'Disconnected';
                     break;
                 case 'connecting':
+                    statusEl.classList.add('status-reconnecting');
                     statusEl.textContent = 'Connecting...';
                     break;
             }

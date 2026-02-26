@@ -1,6 +1,6 @@
 /* =============================================================================
    Performance Problem Simulator - Java Blessed Image
-   Charts Module (Chart.js Integration)
+   Charts Module (Chart.js Integration) - Updated for new layout
    ============================================================================= */
 
 const ChartsModule = (function() {
@@ -8,27 +8,26 @@ const ChartsModule = (function() {
 
     // Chart configuration
     const MAX_DATA_POINTS = 60;
-    const CHART_UPDATE_INTERVAL = 250; // ms for most charts
-    const LATENCY_UPDATE_INTERVAL = 100; // ms for request latency
 
-    // Chart colors
+    // Chart colors matching PerfSimNode
     const colors = {
-        primary: '#00a86b',
-        primaryLight: 'rgba(0, 168, 107, 0.3)',
-        danger: '#dc3545',
-        dangerLight: 'rgba(220, 53, 69, 0.3)',
-        warning: '#ffc107',
-        warningLight: 'rgba(255, 193, 7, 0.3)',
-        info: '#17a2b8',
-        infoLight: 'rgba(23, 162, 184, 0.3)',
-        text: '#e4e4e4',
-        grid: '#2d4a7c'
+        cpu: '#0078d4',
+        cpuLight: 'rgba(0, 120, 212, 0.2)',
+        memory: '#1d6f1d',
+        memoryLight: 'rgba(29, 111, 29, 0.2)',
+        threads: '#8764b8',
+        threadsLight: 'rgba(135, 100, 184, 0.2)',
+        gc: '#ffb900',
+        gcLight: 'rgba(255, 185, 0, 0.2)',
+        latency: '#1d6f1d',
+        latencyLight: 'rgba(29, 111, 29, 0.2)',
+        text: '#323130',
+        grid: '#e1dfdd'
     };
 
     // Chart instances
-    let cpuChart = null;
-    let memoryChart = null;
-    let threadChart = null;
+    let cpuMemoryChart = null;
+    let threadsGcChart = null;
     let latencyChart = null;
 
     // Data buffers
@@ -36,21 +35,34 @@ const ChartsModule = (function() {
         cpu: [],
         memory: [],
         threads: [],
+        gc: [],
         latency: []
     };
 
     // Labels buffer
     let labels = [];
+    let timeLabels = [];
+
+    /**
+     * Formats time for x-axis labels
+     */
+    function formatTime(date) {
+        return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
 
     /**
      * Creates common chart options
      */
-    function getCommonOptions(yAxisLabel, suggestedMax = 100) {
+    function getCommonOptions() {
         return {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
                 duration: 0
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
             },
             plugins: {
                 legend: {
@@ -59,20 +71,28 @@ const ChartsModule = (function() {
             },
             scales: {
                 x: {
-                    display: false
-                },
-                y: {
-                    beginAtZero: true,
-                    suggestedMax: suggestedMax,
+                    display: true,
                     grid: {
                         color: colors.grid,
                         lineWidth: 0.5
                     },
                     ticks: {
                         color: colors.text,
-                        font: {
-                            size: 10
-                        }
+                        font: { size: 9 },
+                        maxTicksLimit: 6,
+                        maxRotation: 0
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    position: 'left',
+                    grid: {
+                        color: colors.grid,
+                        lineWidth: 0.5
+                    },
+                    ticks: {
+                        color: colors.text,
+                        font: { size: 10 }
                     }
                 }
             }
@@ -83,75 +103,134 @@ const ChartsModule = (function() {
      * Initializes all charts
      */
     function init() {
-        // Initialize labels
-        for (let i = 0; i < MAX_DATA_POINTS; i++) {
+        // Initialize labels and data buffers
+        const now = new Date();
+        for (let i = MAX_DATA_POINTS - 1; i >= 0; i--) {
+            const time = new Date(now.getTime() - i * 1000);
+            timeLabels.push(formatTime(time));
             labels.push('');
             dataBuffers.cpu.push(0);
             dataBuffers.memory.push(0);
             dataBuffers.threads.push(0);
+            dataBuffers.gc.push(0);
             dataBuffers.latency.push(0);
         }
 
-        // CPU Chart
-        const cpuCtx = document.getElementById('cpuChart');
-        if (cpuCtx) {
-            cpuChart = new Chart(cpuCtx, {
+        // CPU & Memory Combined Chart
+        const cpuMemoryCtx = document.getElementById('cpuMemoryChart');
+        if (cpuMemoryCtx) {
+            cpuMemoryChart = new Chart(cpuMemoryCtx, {
                 type: 'line',
                 data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dataBuffers.cpu,
-                        borderColor: colors.primary,
-                        backgroundColor: colors.primaryLight,
-                        fill: true,
-                        tension: 0.3,
-                        borderWidth: 2,
-                        pointRadius: 0
-                    }]
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'CPU %',
+                            data: dataBuffers.cpu,
+                            borderColor: colors.cpu,
+                            backgroundColor: colors.cpuLight,
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Memory MB',
+                            data: dataBuffers.memory,
+                            borderColor: colors.memory,
+                            backgroundColor: colors.memoryLight,
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y1'
+                        }
+                    ]
                 },
-                options: getCommonOptions('CPU %', 100)
+                options: {
+                    ...getCommonOptions(),
+                    scales: {
+                        ...getCommonOptions().scales,
+                        y: {
+                            ...getCommonOptions().scales.y,
+                            suggestedMax: 100,
+                            title: {
+                                display: false
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                color: colors.text,
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
             });
         }
 
-        // Memory Chart
-        const memoryCtx = document.getElementById('memoryChart');
-        if (memoryCtx) {
-            memoryChart = new Chart(memoryCtx, {
+        // Threads & GC Combined Chart
+        const threadsGcCtx = document.getElementById('threadsGcChart');
+        if (threadsGcCtx) {
+            threadsGcChart = new Chart(threadsGcCtx, {
                 type: 'line',
                 data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dataBuffers.memory,
-                        borderColor: colors.warning,
-                        backgroundColor: colors.warningLight,
-                        fill: true,
-                        tension: 0.3,
-                        borderWidth: 2,
-                        pointRadius: 0
-                    }]
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'Threads',
+                            data: dataBuffers.threads,
+                            borderColor: colors.threads,
+                            backgroundColor: colors.threadsLight,
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'GC Time (ms)',
+                            data: dataBuffers.gc,
+                            borderColor: colors.gc,
+                            backgroundColor: colors.gcLight,
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y1'
+                        }
+                    ]
                 },
-                options: getCommonOptions('Memory MB', 1000)
-            });
-        }
-
-        // Thread Chart
-        const threadCtx = document.getElementById('threadChart');
-        if (threadCtx) {
-            threadChart = new Chart(threadCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dataBuffers.threads,
-                        borderColor: colors.info,
-                        backgroundColor: colors.infoLight,
-                        fill: true,
-                        tension: 0.3,
-                        borderWidth: 2,
-                        pointRadius: 0
-                    }]
-                },
-                options: getCommonOptions('Threads', 500)
+                options: {
+                    ...getCommonOptions(),
+                    scales: {
+                        ...getCommonOptions().scales,
+                        y: {
+                            ...getCommonOptions().scales.y,
+                            suggestedMax: 500,
+                            title: {
+                                display: false
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                color: colors.text,
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
             });
         }
 
@@ -161,18 +240,28 @@ const ChartsModule = (function() {
             latencyChart = new Chart(latencyCtx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: timeLabels,
                     datasets: [{
+                        label: 'Latency (ms)',
                         data: dataBuffers.latency,
-                        borderColor: colors.danger,
-                        backgroundColor: colors.dangerLight,
+                        borderColor: colors.latency,
+                        backgroundColor: colors.latencyLight,
                         fill: true,
                         tension: 0.3,
                         borderWidth: 2,
                         pointRadius: 0
                     }]
                 },
-                options: getCommonOptions('Latency ms', 200)
+                options: {
+                    ...getCommonOptions(),
+                    scales: {
+                        ...getCommonOptions().scales,
+                        y: {
+                            ...getCommonOptions().scales.y,
+                            suggestedMax: 200
+                        }
+                    }
+                }
             });
         }
 
@@ -190,40 +279,62 @@ const ChartsModule = (function() {
     }
 
     /**
-     * Updates CPU chart with new value
+     * Updates time labels
+     */
+    function updateTimeLabels() {
+        const now = new Date();
+        timeLabels.push(formatTime(now));
+        if (timeLabels.length > MAX_DATA_POINTS) {
+            timeLabels.shift();
+        }
+    }
+
+    /**
+     * Updates CPU value
      */
     function updateCpu(value) {
         updateBuffer(dataBuffers.cpu, value);
-        if (cpuChart) {
-            cpuChart.data.datasets[0].data = dataBuffers.cpu;
-            cpuChart.update('none');
+        if (cpuMemoryChart) {
+            cpuMemoryChart.data.datasets[0].data = dataBuffers.cpu;
+            cpuMemoryChart.update('none');
         }
     }
 
     /**
-     * Updates Memory chart with new value
+     * Updates Memory value
      */
     function updateMemory(value) {
         updateBuffer(dataBuffers.memory, value);
-        if (memoryChart) {
-            memoryChart.data.datasets[0].data = dataBuffers.memory;
-            memoryChart.update('none');
+        if (cpuMemoryChart) {
+            cpuMemoryChart.data.datasets[1].data = dataBuffers.memory;
+            cpuMemoryChart.update('none');
         }
     }
 
     /**
-     * Updates Thread chart with new value
+     * Updates Thread count
      */
     function updateThreads(value) {
         updateBuffer(dataBuffers.threads, value);
-        if (threadChart) {
-            threadChart.data.datasets[0].data = dataBuffers.threads;
-            threadChart.update('none');
+        if (threadsGcChart) {
+            threadsGcChart.data.datasets[0].data = dataBuffers.threads;
+            threadsGcChart.update('none');
         }
     }
 
     /**
-     * Updates Latency chart with new value
+     * Updates GC time
+     */
+    function updateGc(value) {
+        updateBuffer(dataBuffers.gc, value);
+        if (threadsGcChart) {
+            threadsGcChart.data.datasets[1].data = dataBuffers.gc;
+            threadsGcChart.update('none');
+        }
+    }
+
+    /**
+     * Updates Latency value
      */
     function updateLatency(value) {
         updateBuffer(dataBuffers.latency, value);
@@ -237,6 +348,8 @@ const ChartsModule = (function() {
      * Updates all charts with metrics data
      */
     function updateAll(metrics) {
+        updateTimeLabels();
+        
         if (metrics.cpu) {
             updateCpu(metrics.cpu.usagePercent || 0);
         }
@@ -246,15 +359,28 @@ const ChartsModule = (function() {
         if (metrics.thread) {
             updateThreads(metrics.thread.activeCount || 0);
         }
+        if (metrics.gc) {
+            updateGc(metrics.gc.totalTimeMs || 0);
+        }
+        
+        // Update chart labels
+        if (cpuMemoryChart) {
+            cpuMemoryChart.data.labels = timeLabels;
+        }
+        if (threadsGcChart) {
+            threadsGcChart.data.labels = timeLabels;
+        }
+        if (latencyChart) {
+            latencyChart.data.labels = timeLabels;
+        }
     }
 
     /**
      * Destroys all charts
      */
     function destroy() {
-        if (cpuChart) cpuChart.destroy();
-        if (memoryChart) memoryChart.destroy();
-        if (threadChart) threadChart.destroy();
+        if (cpuMemoryChart) cpuMemoryChart.destroy();
+        if (threadsGcChart) threadsGcChart.destroy();
         if (latencyChart) latencyChart.destroy();
     }
 
@@ -264,6 +390,7 @@ const ChartsModule = (function() {
         updateCpu,
         updateMemory,
         updateThreads,
+        updateGc,
         updateLatency,
         updateAll,
         destroy
