@@ -73,6 +73,7 @@ public class MemoryPressureService {
      */
     public Simulation allocate(MemoryPressureRequest request) {
         int sizeMb = request.getSizeMb();
+        logger.info("=== ALLOCATE CALLED: sizeMb={} ===", sizeMb);
 
         // Create simulation record (no auto-expiry for memory allocations)
         Map<String, Object> params = Map.of(
@@ -168,6 +169,9 @@ public class MemoryPressureService {
      * Allocates memory asynchronously in chunks.
      */
     private void allocateMemoryAsync(String simulationId, int sizeMb) {
+        logger.info("=== ALLOCATION START: {} chunks of {}MB each for simulation {} ===", 
+                    sizeMb, CHUNK_SIZE / (1024*1024), simulationId);
+        
         MemoryAllocation allocation = allocations.get(simulationId);
         if (allocation == null) {
             return;
@@ -191,10 +195,14 @@ public class MemoryPressureService {
 
                 // Small yield to not block completely
                 if (i % 100 == 0) {
+                    logger.info("Allocation progress: {}/{} chunks", i, sizeMb);
                     Thread.sleep(1);
                 }
             }
 
+            logger.info("=== ALLOCATION COMPLETE: {} chunks actually allocated, list size={} ===", 
+                        sizeMb, allocation.data.size());
+            
             // Log completion
             eventLogService.info(
                     EventLogEntry.EventType.MEMORY_ALLOCATED,

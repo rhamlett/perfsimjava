@@ -4,6 +4,8 @@ import com.microsoft.azure.samples.perfsimjava.model.Simulation;
 import com.microsoft.azure.samples.perfsimjava.model.dto.MemoryPressureRequest;
 import com.microsoft.azure.samples.perfsimjava.service.MemoryPressureService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,7 @@ import java.util.Map;
 @RequestMapping("/api/simulations/memory")
 public class MemoryController {
 
+    private static final Logger logger = LoggerFactory.getLogger(MemoryController.class);
     private final MemoryPressureService memoryPressureService;
 
     public MemoryController(MemoryPressureService memoryPressureService) {
@@ -37,6 +40,7 @@ public class MemoryController {
      */
     @PostMapping
     public ResponseEntity<Map<String, Object>> allocate(@Valid @RequestBody MemoryPressureRequest request) {
+        logger.info("=== MEMORY CONTROLLER: POST /api/simulations/memory called, sizeMb={} ===", request.getSizeMb());
         Simulation simulation = memoryPressureService.allocate(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(

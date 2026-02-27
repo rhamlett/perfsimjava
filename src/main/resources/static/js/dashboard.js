@@ -50,8 +50,22 @@ async function stopCpuStress() {
 /**
  * Allocates memory (no auto-release)
  */
+let isAllocating = false;
+
 async function allocateMemory() {
+    // Prevent double-submission
+    if (isAllocating) {
+        console.log('[Dashboard] Allocation already in progress, ignoring');
+        return;
+    }
+    isAllocating = true;
+    console.log('[Dashboard] === ALLOCATE MEMORY CALLED ===');
+    
+    const btn = document.querySelector('#memory-form button[type="submit"]');
+    if (btn) btn.disabled = true;
+    
     const sizeMb = parseInt(document.getElementById('memoryTarget').value) || 512;
+    console.log('[Dashboard] Requesting allocation of', sizeMb, 'MB');
 
     try {
         const response = await fetch('/api/simulations/memory', {
@@ -60,19 +74,24 @@ async function allocateMemory() {
             body: JSON.stringify({ sizeMb })
         });
         const result = await response.json();
-        console.log('[Dashboard] Memory allocated:', result);
+        console.log('[Dashboard] Memory allocation response:', result);
         
         // Track the allocation
         activeMemorySimulations.set(result.id, {
             id: result.id,
             sizeMb: sizeMb
         });
+        console.log('[Dashboard] Active allocations count:', activeMemorySimulations.size, 
+                    'Total MB tracked:', Array.from(activeMemorySimulations.values()).reduce((sum, s) => sum + s.sizeMb, 0));
         renderActiveMemorySimulations();
         
         Dashboard.addEvent('info', `Allocated ${sizeMb}MB of memory`);
     } catch (error) {
         console.error('[Dashboard] Failed to allocate memory:', error);
         Dashboard.addEvent('error', 'Failed to allocate memory: ' + error.message);
+    } finally {
+        isAllocating = false;
+        if (btn) btn.disabled = false;
     }
 }
 
