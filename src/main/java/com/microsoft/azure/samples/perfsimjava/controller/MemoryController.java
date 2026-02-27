@@ -115,4 +115,18 @@ public class MemoryController {
     public ResponseEntity<Map<String, Object>> diagnostics() {
         return ResponseEntity.ok(memoryPressureService.getDiagnostics());
     }
+
+    /**
+     * Diagnostics with forced GC first - shows true live memory.
+     */
+    @GetMapping("/diagnostics/gc")
+    public ResponseEntity<Map<String, Object>> diagnosticsWithGc() {
+        System.gc();
+        try {
+            Thread.sleep(100); // Give GC time to run
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return ResponseEntity.ok(memoryPressureService.getDiagnostics());
+    }
 }
