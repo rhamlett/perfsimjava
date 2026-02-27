@@ -1,6 +1,5 @@
 package com.microsoft.azure.samples.perfsimjava.model.dto;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 /**
@@ -9,7 +8,6 @@ import jakarta.validation.constraints.Min;
 public class MemoryPressureRequest {
 
     @Min(value = 1, message = "Size must be at least 1 MB")
-    @Max(value = 65536, message = "Size cannot exceed 65536 MB")
     private int sizeMb = 512;
 
     public int getSizeMb() {

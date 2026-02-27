@@ -209,7 +209,7 @@
                     <form id="cpu-form">
                         <label>
                             Duration (s):
-                            <input type="number" id="cpuDuration" value="30" min="1" max="300">
+                            <input type="number" id="cpuDuration" value="30" min="1">
                         </label>
                         <label>
                             Intensity:
@@ -232,7 +232,7 @@
                     <form id="memory-form">
                         <label>
                             Size (MB):
-                            <input type="number" id="memoryTarget" value="512" min="1" max="2000">
+                            <input type="number" id="memoryTarget" value="512" min="1">
                         </label>
                         <div class="btn-group">
                             <button type="submit" class="btn-trigger btn-memory">☑️ Allocate</button>
@@ -248,13 +248,16 @@
                     <form id="threads-form">
                         <label>
                             Blocked Threads:
-                            <input type="number" id="starvationCount" value="50" min="10" max="200">
+                            <input type="number" id="starvationCount" value="1" min="1">
                         </label>
                         <label>
                             Duration (s):
-                            <input type="number" id="starvationDuration" value="30" min="1" max="120">
+                            <input type="number" id="starvationDuration" value="10" min="1">
                         </label>
-                        <button type="submit" class="btn-trigger btn-threads">🧵 Start Thread Starvation</button>
+                        <div class="btn-group">
+                            <button type="submit" class="btn-trigger btn-threads">🧵 Start Thread Starvation</button>
+                            <button type="button" id="stop-threads" class="btn-stop">⬛ Stop</button>
+                        </div>
                     </form>
                 </div>
 
@@ -273,7 +276,7 @@
                         </label>
                         <label>
                             Delay (s):
-                            <input type="number" id="slowDelay" value="5" min="1" max="60">
+                            <input type="number" id="slowDelay" value="5" min="1">
                         </label>
                         <div class="btn-group">
                             <button type="submit" class="btn-trigger btn-slow">🐌 Trigger Slow Request</button>
@@ -388,6 +391,8 @@
             e.preventDefault();
             startThreadStarvation();
         });
+
+        document.getElementById('stop-threads').addEventListener('click', stopThreadStarvation);
 
         document.getElementById('slow-form').addEventListener('submit', (e) => {
             e.preventDefault();

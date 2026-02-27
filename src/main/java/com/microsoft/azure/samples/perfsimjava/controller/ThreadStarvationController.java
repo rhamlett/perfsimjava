@@ -69,4 +69,15 @@ public class ThreadStarvationController {
                 "count", simulations.size()
         ));
     }
+    
+    /**
+     * Stops all active thread starvation simulations.
+     */
+    @DeleteMapping
+    public ResponseEntity<Map<String, Object>> stopAll() {
+        threadStarvationService.stopAll();
+        return ResponseEntity.ok(Map.of(
+                "message", "All thread starvation simulations stopped"
+        ));
+    }
 }

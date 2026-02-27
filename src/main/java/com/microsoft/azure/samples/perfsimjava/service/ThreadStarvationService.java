@@ -14,10 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * =============================================================================
@@ -64,6 +66,10 @@ public class ThreadStarvationService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    
+    // Track active executors and stop flags for each simulation
+    private final Map<String, ExecutorService> activeExecutors = new ConcurrentHashMap<>();
+    private final Map<String, AtomicBoolean> stopFlags = new ConcurrentHashMap<>();
 
     public ThreadStarvationService(SimulationTrackerService simulationTracker, 
                                    EventLogService eventLogService) {
@@ -92,6 +98,9 @@ public class ThreadStarvationService {
                 params,
                 durationSeconds
         );
+        
+        // Initialize stop flag
+        stopFlags.put(simulation.getId(), new AtomicBoolean(false));
 
         // Log the start with warning
         eventLogService.warn(
@@ -124,6 +133,10 @@ public class ThreadStarvationService {
                         SimulationType.THREAD_STARVATION,
                         null
                 );
+            } finally {
+                // Cleanup
+                stopFlags.remove(simulation.getId());
+                activeExecutors.remove(simulation.getId());
             }
         });
 
@@ -137,8 +150,11 @@ public class ThreadStarvationService {
             throws InterruptedException {
         
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        activeExecutors.put(simulationId, executor);
+        
         CountDownLatch latch = new CountDownLatch(threadCount);
         long endTime = System.currentTimeMillis() + (durationSeconds * 1000L);
+        AtomicBoolean stopFlag = stopFlags.get(simulationId);
 
         // Submit blocking tasks
         List<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -146,7 +162,7 @@ public class ThreadStarvationService {
             final int threadNum = i;
             futures.add(CompletableFuture.runAsync(() -> {
                 try {
-                    blockThread(endTime, threadNum);
+                    blockThread(endTime, threadNum, stopFlag);
                 } finally {
                     latch.countDown();
                 }
@@ -159,15 +175,15 @@ public class ThreadStarvationService {
     }
 
     /**
-     * Blocks a thread with CPU-intensive work until the end time.
+     * Blocks a thread with CPU-intensive work until the end time or stopped.
      * This simulates a sync-over-async anti-pattern where servlet threads
      * are held by blocking operations.
      */
-    private void blockThread(long endTime, int threadNum) {
+    private void blockThread(long endTime, int threadNum, AtomicBoolean stopFlag) {
         try {
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
 
-            while (System.currentTimeMillis() < endTime) {
+            while (System.currentTimeMillis() < endTime && (stopFlag == null || !stopFlag.get())) {
                 // Perform blocking crypto work
                 PBEKeySpec spec = new PBEKeySpec(
                         "password".toCharArray(),
@@ -181,6 +197,41 @@ public class ThreadStarvationService {
         } catch (Exception e) {
             logger.warn("Thread {} blocking work failed: {}", threadNum, e.getMessage());
         }
+    }
+    
+    /**
+     * Stops all active thread starvation simulations.
+     */
+    public void stopAll() {
+        List<String> simulationIds = new ArrayList<>(stopFlags.keySet());
+        for (String id : simulationIds) {
+            stop(id);
+        }
+    }
+    
+    /**
+     * Stops a specific thread starvation simulation.
+     */
+    public boolean stop(String simulationId) {
+        AtomicBoolean stopFlag = stopFlags.get(simulationId);
+        if (stopFlag != null) {
+            stopFlag.set(true);
+        }
+        
+        ExecutorService executor = activeExecutors.get(simulationId);
+        if (executor != null) {
+            executor.shutdownNow();
+            simulationTracker.completeSimulation(simulationId);
+            eventLogService.info(
+                    EventLogEntry.EventType.SIMULATION_STOPPED,
+                    "Thread starvation simulation stopped by user",
+                    simulationId,
+                    SimulationType.THREAD_STARVATION,
+                    null
+            );
+            return true;
+        }
+        return false;
     }
 
     /**

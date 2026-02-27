@@ -1,6 +1,5 @@
 package com.microsoft.azure.samples.perfsimjava.model.dto;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 /**
@@ -26,17 +25,14 @@ public class SlowRequestRequest {
     }
 
     @Min(value = 1, message = "Delay must be at least 1 second")
-    @Max(value = 300, message = "Delay cannot exceed 300 seconds")
     private int delaySeconds = 10;
 
     private BlockingPattern blockingPattern = BlockingPattern.SLEEP;
 
     @Min(value = 1, message = "Interval must be at least 1 second")
-    @Max(value = 60, message = "Interval cannot exceed 60 seconds")
     private int intervalSeconds = 5;
 
     @Min(value = 1, message = "Max requests must be at least 1")
-    @Max(value = 100, message = "Max requests cannot exceed 100")
     private int maxRequests = 3;
 
     public int getDelaySeconds() {

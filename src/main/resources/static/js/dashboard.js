@@ -45,6 +45,23 @@ async function stopCpuStress() {
 }
 
 /**
+ * Stops all thread starvation simulations
+ */
+async function stopThreadStarvation() {
+    try {
+        const response = await fetch('/api/simulations/thread/starvation', {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        console.log('[Dashboard] Thread Starvation stopped:', result);
+        Dashboard.addEvent('info', result.message || 'Thread Starvation stopped');
+    } catch (error) {
+        console.error('[Dashboard] Failed to stop thread starvation:', error);
+        Dashboard.addEvent('error', 'Failed to stop thread starvation: ' + error.message);
+    }
+}
+
+/**
  * Allocates memory (no auto-release)
  */
 let isAllocating = false;

@@ -1,6 +1,5 @@
 package com.microsoft.azure.samples.perfsimjava.model.dto;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -18,7 +17,6 @@ public class CpuStressRequest {
     private Intensity intensity;
 
     @Min(value = 1, message = "Duration must be at least 1 second")
-    @Max(value = 86400, message = "Duration cannot exceed 86400 seconds (24 hours)")
     private int durationSeconds = 30;
 
     public Intensity getIntensity() {
