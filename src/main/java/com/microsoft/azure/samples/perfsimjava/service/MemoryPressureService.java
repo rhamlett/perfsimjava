@@ -74,6 +74,8 @@ public class MemoryPressureService {
     public Simulation allocate(MemoryPressureRequest request) {
         int sizeMb = request.getSizeMb();
         logger.info("=== ALLOCATE CALLED: sizeMb={} ===", sizeMb);
+        logger.info("=== EXISTING ALLOCATIONS BEFORE THIS REQUEST: count={}, totalMB={} ===", 
+                    allocations.size(), getTotalAllocatedMb());
 
         // Create simulation record (no auto-expiry for memory allocations)
         Map<String, Object> params = Map.of(
@@ -98,6 +100,8 @@ public class MemoryPressureService {
         // Initialize allocation tracking
         MemoryAllocation allocation = new MemoryAllocation(sizeMb);
         allocations.put(simulation.getId(), allocation);
+        
+        logger.info("=== ALLOCATIONS AFTER ADDING NEW: count={} ===", allocations.size());
 
         // Perform allocation asynchronously in chunks
         allocator.submit(() -> allocateMemoryAsync(simulation.getId(), sizeMb));
@@ -171,12 +175,14 @@ public class MemoryPressureService {
     private void allocateMemoryAsync(String simulationId, int sizeMb) {
         logger.info("=== ALLOCATION START: {} chunks of {}MB each for simulation {} ===", 
                     sizeMb, CHUNK_SIZE / (1024*1024), simulationId);
+        logger.info("=== CHUNK_SIZE in bytes: {} ===", CHUNK_SIZE);
         
         MemoryAllocation allocation = allocations.get(simulationId);
         if (allocation == null) {
             return;
         }
 
+        long totalBytesAllocated = 0;
         try {
             for (int i = 0; i < sizeMb; i++) {
                 // Check if still active
@@ -187,6 +193,8 @@ public class MemoryPressureService {
 
                 // Allocate 1MB chunk
                 byte[] chunk = new byte[CHUNK_SIZE];
+                totalBytesAllocated += chunk.length;
+                
                 // Fill with data to ensure it's actually allocated
                 for (int j = 0; j < chunk.length; j += 4096) {
                     chunk[j] = (byte) (i % 256);
@@ -195,13 +203,14 @@ public class MemoryPressureService {
 
                 // Small yield to not block completely
                 if (i % 100 == 0) {
-                    logger.info("Allocation progress: {}/{} chunks", i, sizeMb);
+                    logger.info("Allocation progress: {}/{} chunks, bytes so far: {}", i, sizeMb, totalBytesAllocated);
                     Thread.sleep(1);
                 }
             }
 
-            logger.info("=== ALLOCATION COMPLETE: {} chunks actually allocated, list size={} ===", 
-                        sizeMb, allocation.data.size());
+            logger.info("=== ALLOCATION COMPLETE ===");
+            logger.info("=== Requested: {}MB, Chunks created: {}, Total bytes: {} ({} MB) ===", 
+                        sizeMb, allocation.data.size(), totalBytesAllocated, totalBytesAllocated / (1024*1024));
             
             // Log completion
             eventLogService.info(
