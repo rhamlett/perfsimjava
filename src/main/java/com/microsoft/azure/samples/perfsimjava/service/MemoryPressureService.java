@@ -51,7 +51,10 @@ import java.util.concurrent.Executors;
 public class MemoryPressureService {
 
     private static final Logger logger = LoggerFactory.getLogger(MemoryPressureService.class);
-    private static final int CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+    // Use slightly under 1MB to avoid G1 GC "humongous object" allocation
+    // G1 uses 1MB regions; objects > 50% of region size are "humongous" and waste space
+    // 1MB = 1048576 bytes, minus 64 bytes for object header/alignment = 1048512
+    private static final int CHUNK_SIZE = 1024 * 1024 - 64; // ~1MB chunks (fits in one G1 region)
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
@@ -73,9 +76,6 @@ public class MemoryPressureService {
      */
     public Simulation allocate(MemoryPressureRequest request) {
         int sizeMb = request.getSizeMb();
-        logger.info("=== ALLOCATE CALLED: sizeMb={} ===", sizeMb);
-        logger.info("=== EXISTING ALLOCATIONS BEFORE THIS REQUEST: count={}, totalMB={} ===", 
-                    allocations.size(), getTotalAllocatedMb());
 
         // Create simulation record (no auto-expiry for memory allocations)
         Map<String, Object> params = Map.of(
@@ -100,8 +100,6 @@ public class MemoryPressureService {
         // Initialize allocation tracking
         MemoryAllocation allocation = new MemoryAllocation(sizeMb);
         allocations.put(simulation.getId(), allocation);
-        
-        logger.info("=== ALLOCATIONS AFTER ADDING NEW: count={} ===", allocations.size());
 
         // Perform allocation asynchronously in chunks
         allocator.submit(() -> allocateMemoryAsync(simulation.getId(), sizeMb));
@@ -170,86 +168,14 @@ public class MemoryPressureService {
     }
 
     /**
-     * Gets total ACTUAL bytes allocated in data lists.
-     */
-    public long getActualAllocatedBytes() {
-        return allocations.values().stream()
-                .mapToLong(a -> a.data.stream().mapToLong(chunk -> chunk.length).sum())
-                .sum();
-    }
-
-    /**
-     * Gets diagnostic info about all allocations.
-     */
-    public Map<String, Object> getDiagnostics() {
-        Map<String, Object> diag = new java.util.LinkedHashMap<>();
-        
-        // JVM memory info (Runtime method)
-        Runtime rt = Runtime.getRuntime();
-        diag.put("runtime_totalMemoryMb", rt.totalMemory() / (1024 * 1024));
-        diag.put("runtime_freeMemoryMb", rt.freeMemory() / (1024 * 1024));
-        diag.put("runtime_usedMemoryMb", (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024));
-        diag.put("runtime_maxMemoryMb", rt.maxMemory() / (1024 * 1024));
-        
-        // JVM memory info (MemoryMXBean - same as dashboard)
-        java.lang.management.MemoryMXBean memoryBean = java.lang.management.ManagementFactory.getMemoryMXBean();
-        java.lang.management.MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
-        diag.put("mxbean_heapUsedMb", heapUsage.getUsed() / (1024 * 1024));
-        diag.put("mxbean_heapCommittedMb", heapUsage.getCommitted() / (1024 * 1024));
-        diag.put("mxbean_heapMaxMb", heapUsage.getMax() / (1024 * 1024));
-        
-        // Allocation tracking info
-        diag.put("allocationsCount", allocations.size());
-        diag.put("requestedTotalMb", getTotalAllocatedMb());
-        diag.put("actualTotalBytes", getActualAllocatedBytes());
-        diag.put("actualTotalMb", getActualAllocatedBytes() / (1024 * 1024));
-        diag.put("chunkSizeBytes", CHUNK_SIZE);
-        diag.put("chunkSizeMb", CHUNK_SIZE / (1024 * 1024));
-        
-        // Calculated expected vs actual
-        long baseline = 30; // Approximate baseline MB
-        long expectedUsedMb = baseline + (getActualAllocatedBytes() / (1024 * 1024));
-        long actualUsedMb = heapUsage.getUsed() / (1024 * 1024);
-        diag.put("expectedUsedMb", expectedUsedMb);
-        diag.put("actualUsedMb", actualUsedMb);
-        diag.put("unexplainedMb", actualUsedMb - expectedUsedMb);
-        
-        // Per-allocation details
-        allocations.forEach((id, alloc) -> {
-            String prefix = "alloc_" + id.substring(0, 8);
-            diag.put(prefix + "_requestedMb", alloc.sizeMb);
-            diag.put(prefix + "_chunksCount", alloc.data.size());
-            long actualBytes = alloc.data.stream().mapToLong(c -> c.length).sum();
-            diag.put(prefix + "_actualBytes", actualBytes);
-            diag.put(prefix + "_actualMb", actualBytes / (1024 * 1024));
-            
-            // Check if all chunks are the expected size
-            long unexpectedSizeChunks = alloc.data.stream()
-                    .filter(c -> c.length != CHUNK_SIZE)
-                    .count();
-            diag.put(prefix + "_unexpectedSizeChunks", unexpectedSizeChunks);
-        });
-        
-        return diag;
-    }
-
-    /**
      * Allocates memory asynchronously in chunks.
      */
     private void allocateMemoryAsync(String simulationId, int sizeMb) {
-        java.lang.management.MemoryMXBean memoryBean = java.lang.management.ManagementFactory.getMemoryMXBean();
-        long heapBefore = memoryBean.getHeapMemoryUsage().getUsed() / (1024 * 1024);
-        
-        logger.info("=== ALLOCATION START ===");
-        logger.info("=== Requested: {} MB, ChunkSize: {} bytes ===", sizeMb, CHUNK_SIZE);
-        logger.info("=== Heap BEFORE allocation: {} MB ===", heapBefore);
-        
         MemoryAllocation allocation = allocations.get(simulationId);
         if (allocation == null) {
             return;
         }
 
-        long totalBytesAllocated = 0;
         try {
             for (int i = 0; i < sizeMb; i++) {
                 // Check if still active
@@ -258,9 +184,8 @@ public class MemoryPressureService {
                     return;
                 }
 
-                // Allocate 1MB chunk
+                // Allocate ~1MB chunk (slightly under to avoid G1 humongous allocation)
                 byte[] chunk = new byte[CHUNK_SIZE];
-                totalBytesAllocated += chunk.length;
                 
                 // Fill with data to ensure it's actually allocated
                 for (int j = 0; j < chunk.length; j += 4096) {
@@ -268,23 +193,13 @@ public class MemoryPressureService {
                 }
                 allocation.data.add(chunk);
 
-                // Log progress every 100 chunks with heap status
+                // Yield occasionally to prevent blocking
                 if (i % 100 == 0) {
-                    long heapNow = memoryBean.getHeapMemoryUsage().getUsed() / (1024 * 1024);
-                    logger.info("Progress: {}/{} chunks, allocated: {} MB, heap now: {} MB, heap delta: {} MB", 
-                                i, sizeMb, totalBytesAllocated / (1024 * 1024), heapNow, heapNow - heapBefore);
                     Thread.sleep(1);
                 }
             }
 
-            long heapAfter = memoryBean.getHeapMemoryUsage().getUsed() / (1024 * 1024);
-            logger.info("=== ALLOCATION COMPLETE ===");
-            logger.info("=== Requested: {} MB ===", sizeMb);
-            logger.info("=== Chunks created: {} ===", allocation.data.size());
-            logger.info("=== Total bytes allocated: {} ({} MB) ===", totalBytesAllocated, totalBytesAllocated / (1024*1024));
-            logger.info("=== Heap BEFORE: {} MB ===", heapBefore);
-            logger.info("=== Heap AFTER: {} MB ===", heapAfter);
-            logger.info("=== Heap DELTA: {} MB (expected: {} MB) ===", heapAfter - heapBefore, sizeMb);
+            logger.info("Memory allocation complete: {} MB ({} chunks)", sizeMb, allocation.data.size());
             
             // Log completion
             eventLogService.info(

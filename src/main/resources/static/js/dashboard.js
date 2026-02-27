@@ -3,9 +3,6 @@
    Dashboard Module (UI Logic)
    ============================================================================= */
 
-// Active memory simulations tracking
-const activeMemorySimulations = new Map();
-
 // Global simulation functions (called by onclick handlers)
 
 /**
@@ -59,13 +56,11 @@ async function allocateMemory() {
         return;
     }
     isAllocating = true;
-    console.log('[Dashboard] === ALLOCATE MEMORY CALLED ===');
     
     const btn = document.querySelector('#memory-form button[type="submit"]');
     if (btn) btn.disabled = true;
     
     const sizeMb = parseInt(document.getElementById('memoryTarget').value) || 512;
-    console.log('[Dashboard] Requesting allocation of', sizeMb, 'MB');
 
     try {
         const response = await fetch('/api/simulations/memory', {
@@ -74,17 +69,7 @@ async function allocateMemory() {
             body: JSON.stringify({ sizeMb })
         });
         const result = await response.json();
-        console.log('[Dashboard] Memory allocation response:', result);
-        
-        // Track the allocation
-        activeMemorySimulations.set(result.id, {
-            id: result.id,
-            sizeMb: sizeMb
-        });
-        console.log('[Dashboard] Active allocations count:', activeMemorySimulations.size, 
-                    'Total MB tracked:', Array.from(activeMemorySimulations.values()).reduce((sum, s) => sum + s.sizeMb, 0));
-        renderActiveMemorySimulations();
-        
+        console.log('[Dashboard] Memory allocated:', result);
         Dashboard.addEvent('info', `Allocated ${sizeMb}MB of memory`);
     } catch (error) {
         console.error('[Dashboard] Failed to allocate memory:', error);
@@ -96,71 +81,19 @@ async function allocateMemory() {
 }
 
 /**
- * Releases a specific memory allocation
+ * Releases all memory allocations
  */
-async function releaseMemory(id) {
+async function releaseAllMemory() {
     try {
-        const sim = activeMemorySimulations.get(id);
-        const sizeMb = sim?.sizeMb || 'unknown';
-        
-        const response = await fetch(`/api/simulations/memory/${id}`, {
+        const response = await fetch('/api/simulations/memory', {
             method: 'DELETE'
         });
         const result = await response.json();
         console.log('[Dashboard] Memory released:', result);
-        
-        activeMemorySimulations.delete(id);
-        renderActiveMemorySimulations();
-        
-        Dashboard.addEvent('info', result.message || `Released ${sizeMb}MB of memory`);
+        Dashboard.addEvent('info', result.message || 'Memory released');
     } catch (error) {
         console.error('[Dashboard] Failed to release memory:', error);
         Dashboard.addEvent('error', 'Failed to release memory: ' + error.message);
-    }
-}
-
-/**
- * Releases all memory allocations
- */
-async function releaseAllMemory() {
-    const ids = Array.from(activeMemorySimulations.keys());
-    if (ids.length === 0) {
-        // Try to release from backend anyway in case of sync issues
-        try {
-            const response = await fetch('/api/simulations/memory', {
-                method: 'DELETE'
-            });
-            const result = await response.json();
-            Dashboard.addEvent('info', result.message || 'Memory released');
-        } catch (error) {
-            console.log('No memory to release');
-        }
-        return;
-    }
-    
-    for (const id of ids) {
-        await releaseMemory(id);
-    }
-}
-
-/**
- * Renders active memory allocations in the panel
- */
-function renderActiveMemorySimulations() {
-    const container = document.getElementById('memory-active');
-    if (!container) return;
-    
-    if (activeMemorySimulations.size === 0) {
-        container.innerHTML = '';
-    } else {
-        container.innerHTML = Array.from(activeMemorySimulations.values())
-            .map(sim => `
-                <div class="active-simulation">
-                    <span>${sim.sizeMb}MB</span>
-                    <span class="sim-id">${sim.id.slice(0, 8)}...</span>
-                    <button class="btn-stop" onclick="releaseMemory('${sim.id}')">Release</button>
-                </div>
-            `).join('');
     }
 }
 

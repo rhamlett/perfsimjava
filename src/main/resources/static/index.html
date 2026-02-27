@@ -228,17 +228,17 @@
                 <!-- Memory Pressure -->
                 <div class="control-section memory-section">
                     <h3>📊 Memory Pressure <span class="info-icon" title="Memory is held until released. Multiple allocations stack. Watch for GC pauses.">ℹ️</span></h3>
-                    <p class="control-description">Allocates memory blocks to simulate memory pressure. Multiple allocations stack - mimics gradual memory leak.</p>
+                    <p class="control-description">Allocates Buffer blocks filled with random data. Multiple allocations stack - mimics gradual memory leak.</p>
                     <form id="memory-form">
                         <label>
                             Size (MB):
                             <input type="number" id="memoryTarget" value="512" min="1" max="2000">
                         </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-memory">📈 Allocate</button>
+                            <button type="submit" class="btn-trigger btn-memory">☑️ Allocate</button>
+                            <button type="button" id="release-memory" class="btn-release">🗑️ Release</button>
                         </div>
                     </form>
-                    <div id="memory-active" class="active-simulations"></div>
                 </div>
 
                 <!-- Thread Pool Starvation -->
@@ -381,6 +381,8 @@
             e.preventDefault();
             allocateMemory();
         });
+
+        document.getElementById('release-memory').addEventListener('click', releaseAllMemory);
 
         document.getElementById('threads-form').addEventListener('submit', (e) => {
             e.preventDefault();
