@@ -107,4 +107,12 @@ public class MemoryController {
                 "totalAllocatedMb", totalMb
         ));
     }
+
+    /**
+     * Diagnostics endpoint - shows actual allocated bytes vs requested.
+     */
+    @GetMapping("/diagnostics")
+    public ResponseEntity<Map<String, Object>> diagnostics() {
+        return ResponseEntity.ok(memoryPressureService.getDiagnostics());
+    }
 }

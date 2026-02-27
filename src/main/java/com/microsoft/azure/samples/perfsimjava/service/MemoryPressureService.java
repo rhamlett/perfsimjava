@@ -161,12 +161,61 @@ public class MemoryPressureService {
     }
 
     /**
-     * Gets total memory currently allocated.
+     * Gets total memory currently allocated (based on requested size).
      */
     public int getTotalAllocatedMb() {
         return allocations.values().stream()
                 .mapToInt(a -> a.sizeMb)
                 .sum();
+    }
+
+    /**
+     * Gets total ACTUAL bytes allocated in data lists.
+     */
+    public long getActualAllocatedBytes() {
+        return allocations.values().stream()
+                .mapToLong(a -> a.data.stream().mapToLong(chunk -> chunk.length).sum())
+                .sum();
+    }
+
+    /**
+     * Gets diagnostic info about all allocations.
+     */
+    public Map<String, Object> getDiagnostics() {
+        Map<String, Object> diag = new java.util.LinkedHashMap<>();
+        
+        // JVM memory info
+        Runtime rt = Runtime.getRuntime();
+        diag.put("jvm_totalMemoryMb", rt.totalMemory() / (1024 * 1024));
+        diag.put("jvm_freeMemoryMb", rt.freeMemory() / (1024 * 1024));
+        diag.put("jvm_usedMemoryMb", (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024));
+        diag.put("jvm_maxMemoryMb", rt.maxMemory() / (1024 * 1024));
+        
+        // Allocation tracking info
+        diag.put("allocationsCount", allocations.size());
+        diag.put("requestedTotalMb", getTotalAllocatedMb());
+        diag.put("actualTotalBytes", getActualAllocatedBytes());
+        diag.put("actualTotalMb", getActualAllocatedBytes() / (1024 * 1024));
+        diag.put("chunkSizeBytes", CHUNK_SIZE);
+        diag.put("chunkSizeMb", CHUNK_SIZE / (1024 * 1024));
+        
+        // Per-allocation details
+        allocations.forEach((id, alloc) -> {
+            String prefix = "alloc_" + id.substring(0, 8);
+            diag.put(prefix + "_requestedMb", alloc.sizeMb);
+            diag.put(prefix + "_chunksCount", alloc.data.size());
+            long actualBytes = alloc.data.stream().mapToLong(c -> c.length).sum();
+            diag.put(prefix + "_actualBytes", actualBytes);
+            diag.put(prefix + "_actualMb", actualBytes / (1024 * 1024));
+            
+            // Check if all chunks are the expected size
+            long unexpectedSizeChunks = alloc.data.stream()
+                    .filter(c -> c.length != CHUNK_SIZE)
+                    .count();
+            diag.put(prefix + "_unexpectedSizeChunks", unexpectedSizeChunks);
+        });
+        
+        return diag;
     }
 
     /**
