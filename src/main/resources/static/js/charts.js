@@ -213,7 +213,6 @@ const ChartsModule = (function() {
                         ...getCommonOptions().scales,
                         y: {
                             ...getCommonOptions().scales.y,
-                            suggestedMax: 500,
                             title: {
                                 display: false
                             }
