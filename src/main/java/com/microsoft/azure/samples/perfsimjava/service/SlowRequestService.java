@@ -59,7 +59,7 @@ public class SlowRequestService {
     @Value("${server.port:8080}")
     private int serverPort;
     
-    // Scheduler for spawning requests at intervals
+    // Scheduler for spawning requests
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     
     // HTTP client for internal requests
@@ -82,7 +82,7 @@ public class SlowRequestService {
      */
     public Simulation trigger(SlowRequestRequest request) {
         int delaySeconds = request.getDelaySeconds();
-        int intervalSeconds = request.getIntervalSeconds();
+        double intervalSeconds = request.getIntervalSeconds();
         int maxRequests = request.getMaxRequests();
         SlowRequestRequest.BlockingPattern pattern = request.getBlockingPattern();
 
@@ -97,7 +97,7 @@ public class SlowRequestService {
         Simulation simulation = simulationTracker.createSimulation(
                 SimulationType.SLOW_REQUEST,
                 params,
-                delaySeconds * maxRequests + intervalSeconds * (maxRequests - 1)
+                (int)(delaySeconds * maxRequests + intervalSeconds * (maxRequests - 1))
         );
 
         // Initialize stop flag
@@ -105,10 +105,13 @@ public class SlowRequestService {
 
         // Log the start
         String patternDesc = getPatternDescription(pattern);
+        String logMessage = maxRequests == 1 
+                ? String.format("Slow request: %ds blocking (%s)", delaySeconds, patternDesc)
+                : String.format("Slow requests: %d requests at %.2fs intervals, %ds each (%s)", 
+                        maxRequests, intervalSeconds, delaySeconds, patternDesc);
         eventLogService.warn(
                 EventLogEntry.EventType.SIMULATION_STARTED,
-                String.format("Slow requests: %d requests at %ds intervals, %ds each (%s)", 
-                        maxRequests, intervalSeconds, delaySeconds, patternDesc),
+                logMessage,
                 simulation.getId(),
                 SimulationType.SLOW_REQUEST,
                 params
@@ -121,7 +124,7 @@ public class SlowRequestService {
         
         for (int i = 0; i < maxRequests; i++) {
             final int requestNum = i + 1;
-            long delayMs = (long) i * intervalSeconds * 1000;
+            long delayMs = (long)(i * intervalSeconds * 1000);
             
             scheduler.schedule(() -> {
                 if (stopFlag.get()) {

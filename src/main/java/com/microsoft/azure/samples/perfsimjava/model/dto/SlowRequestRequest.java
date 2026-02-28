@@ -25,15 +25,14 @@ public class SlowRequestRequest {
     }
 
     @Min(value = 1, message = "Delay must be at least 1 second")
-    private int delaySeconds = 10;
+    private int delaySeconds = 60;
 
-    private BlockingPattern blockingPattern = BlockingPattern.SLEEP;
+    private BlockingPattern blockingPattern = BlockingPattern.SYNC_BLOCKING;
 
-    @Min(value = 1, message = "Interval must be at least 1 second")
-    private int intervalSeconds = 5;
+    private double intervalSeconds = 1;
 
     @Min(value = 1, message = "Max requests must be at least 1")
-    private int maxRequests = 3;
+    private int maxRequests = 1;
 
     public int getDelaySeconds() {
         return delaySeconds;
@@ -51,11 +50,11 @@ public class SlowRequestRequest {
         this.blockingPattern = blockingPattern;
     }
 
-    public int getIntervalSeconds() {
+    public double getIntervalSeconds() {
         return intervalSeconds;
     }
 
-    public void setIntervalSeconds(int intervalSeconds) {
+    public void setIntervalSeconds(double intervalSeconds) {
         this.intervalSeconds = intervalSeconds;
     }
 
