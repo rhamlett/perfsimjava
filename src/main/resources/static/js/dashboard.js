@@ -251,7 +251,7 @@ const Dashboard = (function() {
      * Handles probe results from WebSocket
      */
     function handleProbeResult(result) {
-        // Update latency chart
+        // Update latency chart immediately at probe rate (100ms)
         if (result.latencyMs !== undefined) {
             ChartsModule.updateLatency(result.latencyMs);
             
