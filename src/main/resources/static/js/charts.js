@@ -31,6 +31,17 @@ const ChartsModule = (function() {
     let threadsGcChart = null;
     let latencyChart = null;
 
+    // Display update intervals (fixed rate, independent of data arrival)
+    let upperChartsInterval = null;
+    let latencyChartInterval = null;
+
+    // Latest values (updated by WebSocket, rendered by intervals)
+    let latestCpu = 0;
+    let latestMemory = 0;
+    let latestThreads = 0;
+    let latestGc = 0;
+    let latestLatency = 0;
+
     // Data buffers
     const dataBuffers = {
         cpu: [],
@@ -43,7 +54,7 @@ const ChartsModule = (function() {
     // Labels buffer
     let labels = [];
     let timeLabels = [];
-    let latencyTimeLabels = [];  // Separate labels for latency chart (100ms rate)
+    let latencyTimeLabels = [];
 
     /**
      * Formats time for x-axis labels
@@ -267,6 +278,56 @@ const ChartsModule = (function() {
         }
 
         console.log('[Charts] Initialized all charts');
+
+        // Start fixed-rate display updates (independent of data arrival)
+        // Upper charts: 250ms display rate
+        upperChartsInterval = setInterval(renderUpperCharts, 250);
+        // Latency chart: 100ms display rate
+        latencyChartInterval = setInterval(renderLatencyChart, 100);
+    }
+
+    /**
+     * Renders upper charts at fixed 250ms rate
+     */
+    function renderUpperCharts() {
+        updateTimeLabels();
+        updateBuffer(dataBuffers.cpu, latestCpu);
+        updateBuffer(dataBuffers.memory, latestMemory);
+        updateBuffer(dataBuffers.threads, latestThreads);
+        updateBuffer(dataBuffers.gc, latestGc);
+
+        if (cpuMemoryChart) {
+            cpuMemoryChart.data.labels = timeLabels;
+            cpuMemoryChart.data.datasets[0].data = dataBuffers.cpu;
+            cpuMemoryChart.data.datasets[1].data = dataBuffers.memory;
+            cpuMemoryChart.update('none');
+        }
+        if (threadsGcChart) {
+            threadsGcChart.data.labels = timeLabels;
+            threadsGcChart.data.datasets[0].data = dataBuffers.threads;
+            threadsGcChart.data.datasets[1].data = dataBuffers.gc;
+            threadsGcChart.update('none');
+        }
+    }
+
+    /**
+     * Renders latency chart at fixed 100ms rate
+     */
+    function renderLatencyChart() {
+        const now = new Date();
+        latencyTimeLabels.push(formatTime(now));
+        if (latencyTimeLabels.length > MAX_LATENCY_DATA_POINTS) {
+            latencyTimeLabels.shift();
+        }
+        dataBuffers.latency.push(latestLatency);
+        if (dataBuffers.latency.length > MAX_LATENCY_DATA_POINTS) {
+            dataBuffers.latency.shift();
+        }
+        if (latencyChart) {
+            latencyChart.data.labels = latencyTimeLabels;
+            latencyChart.data.datasets[0].data = dataBuffers.latency;
+            latencyChart.update('none');
+        }
     }
 
     /**
@@ -291,109 +352,64 @@ const ChartsModule = (function() {
     }
 
     /**
-     * Updates CPU value
+     * Updates CPU value (stores latest, rendered by interval)
      */
     function updateCpu(value) {
-        updateBuffer(dataBuffers.cpu, value);
-        if (cpuMemoryChart) {
-            cpuMemoryChart.data.datasets[0].data = dataBuffers.cpu;
-            cpuMemoryChart.update('none');
-        }
+        latestCpu = value;
     }
 
     /**
-     * Updates Memory value
+     * Updates Memory value (stores latest, rendered by interval)
      */
     function updateMemory(value) {
-        updateBuffer(dataBuffers.memory, value);
-        if (cpuMemoryChart) {
-            cpuMemoryChart.data.datasets[1].data = dataBuffers.memory;
-            cpuMemoryChart.update('none');
-        }
+        latestMemory = value;
     }
 
     /**
-     * Updates Thread count
+     * Updates Thread count (stores latest, rendered by interval)
      */
     function updateThreads(value) {
-        updateBuffer(dataBuffers.threads, value);
-        if (threadsGcChart) {
-            threadsGcChart.data.datasets[0].data = dataBuffers.threads;
-            threadsGcChart.update('none');
-        }
+        latestThreads = value;
     }
 
     /**
-     * Updates GC time
+     * Updates GC time (stores latest, rendered by interval)
      */
     function updateGc(value) {
-        updateBuffer(dataBuffers.gc, value);
-        if (threadsGcChart) {
-            threadsGcChart.data.datasets[1].data = dataBuffers.gc;
-            threadsGcChart.update('none');
-        }
+        latestGc = value;
     }
 
     /**
-     * Updates latency time labels (called at 100ms rate)
-     */
-    function updateLatencyTimeLabels() {
-        const now = new Date();
-        latencyTimeLabels.push(formatTime(now));
-        if (latencyTimeLabels.length > MAX_LATENCY_DATA_POINTS) {
-            latencyTimeLabels.shift();
-        }
-    }
-
-    /**
-     * Updates Latency value
+     * Updates Latency value (stores latest, rendered by interval)
      */
     function updateLatency(value) {
-        updateLatencyTimeLabels();  // Update labels at same 100ms rate as data
-        dataBuffers.latency.push(value);
-        if (dataBuffers.latency.length > MAX_LATENCY_DATA_POINTS) {
-            dataBuffers.latency.shift();
-        }
-        if (latencyChart) {
-            latencyChart.data.labels = latencyTimeLabels;
-            latencyChart.data.datasets[0].data = dataBuffers.latency;
-            latencyChart.update('none');
-        }
+        latestLatency = value;
     }
 
     /**
-     * Updates all charts with metrics data
+     * Updates all metrics (stores latest values, rendered by intervals)
      */
     function updateAll(metrics) {
-        updateTimeLabels();
-        
         if (metrics.cpu) {
-            updateCpu(metrics.cpu.usagePercent || 0);
+            latestCpu = metrics.cpu.usagePercent || 0;
         }
         if (metrics.memory) {
-            updateMemory(metrics.memory.heapUsedMb || 0);
+            latestMemory = metrics.memory.heapUsedMb || 0;
         }
         if (metrics.thread) {
-            updateThreads(metrics.thread.activeCount || 0);
+            latestThreads = metrics.thread.activeCount || 0;
         }
         if (metrics.gc) {
-            updateGc(metrics.gc.totalTimeMs || 0);
+            latestGc = metrics.gc.totalTimeMs || 0;
         }
-        
-        // Update chart labels (upper charts only - latency has its own)
-        if (cpuMemoryChart) {
-            cpuMemoryChart.data.labels = timeLabels;
-        }
-        if (threadsGcChart) {
-            threadsGcChart.data.labels = timeLabels;
-        }
-        // Note: latency chart labels are updated in updateLatency() at 100ms rate
     }
 
     /**
-     * Destroys all charts
+     * Destroys all charts and stops intervals
      */
     function destroy() {
+        if (upperChartsInterval) clearInterval(upperChartsInterval);
+        if (latencyChartInterval) clearInterval(latencyChartInterval);
         if (cpuMemoryChart) cpuMemoryChart.destroy();
         if (threadsGcChart) threadsGcChart.destroy();
         if (latencyChart) latencyChart.destroy();

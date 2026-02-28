@@ -670,7 +670,10 @@ section h2, section h3 {
 
 .stat-value.good { color: var(--color-success); }
 .stat-value.warning { color: var(--color-warning); }
+.stat-value.degraded { color: var(--color-warning); }
+.stat-value.severe { color: var(--color-danger); }
 .stat-value.danger { color: var(--color-danger); }
+.stat-value.critical { color: #8b0000; }
 
 .thresholds {
   display: flex;

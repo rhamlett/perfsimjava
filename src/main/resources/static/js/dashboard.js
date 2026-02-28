@@ -289,14 +289,16 @@ const Dashboard = (function() {
             if (latencyCurrentEl) {
                 latencyCurrentEl.textContent = result.latencyMs.toFixed(1) + 'ms';
                 
-                // Add color class based on threshold
-                latencyCurrentEl.classList.remove('good', 'warning', 'danger');
+                // Add color class based on threshold (matches advertised thresholds)
+                latencyCurrentEl.classList.remove('good', 'degraded', 'severe', 'critical');
                 if (result.latencyMs < 150) {
-                    latencyCurrentEl.classList.add('good');
+                    latencyCurrentEl.classList.add('good');      // Good (<150ms)
                 } else if (result.latencyMs < 1000) {
-                    latencyCurrentEl.classList.add('warning');
+                    latencyCurrentEl.classList.add('degraded'); // Degraded (150ms-1s)
+                } else if (result.latencyMs < 30000) {
+                    latencyCurrentEl.classList.add('severe');   // Severe (>1s)
                 } else {
-                    latencyCurrentEl.classList.add('danger');
+                    latencyCurrentEl.classList.add('critical'); // Critical (>30s)
                 }
             }
             
@@ -332,14 +334,33 @@ const Dashboard = (function() {
         const avg = sum / latencyHistory.length;
         const max = Math.max(...latencyHistory);
         
-        // Update display
+        // Update display with color classes matching thresholds
         const avgEl = document.getElementById('latency-avg');
         const maxEl = document.getElementById('latency-max');
         const critEl = document.getElementById('latency-critical');
         
-        if (avgEl) avgEl.textContent = avg.toFixed(1) + 'ms';
-        if (maxEl) maxEl.textContent = max.toFixed(1) + 'ms';
-        if (critEl) critEl.textContent = criticalCount;
+        if (avgEl) {
+            avgEl.textContent = avg.toFixed(1) + 'ms';
+            avgEl.classList.remove('good', 'degraded', 'severe', 'critical');
+            if (avg < 150) avgEl.classList.add('good');
+            else if (avg < 1000) avgEl.classList.add('degraded');
+            else if (avg < 30000) avgEl.classList.add('severe');
+            else avgEl.classList.add('critical');
+        }
+        if (maxEl) {
+            maxEl.textContent = max.toFixed(1) + 'ms';
+            maxEl.classList.remove('good', 'degraded', 'severe', 'critical');
+            if (max < 150) maxEl.classList.add('good');
+            else if (max < 1000) maxEl.classList.add('degraded');
+            else if (max < 30000) maxEl.classList.add('severe');
+            else maxEl.classList.add('critical');
+        }
+        if (critEl) {
+            critEl.textContent = criticalCount;
+            critEl.classList.remove('good', 'critical');
+            if (criticalCount > 0) critEl.classList.add('critical');
+            else critEl.classList.add('good');
+        }
     }
 
     // Probe visualization history
