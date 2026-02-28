@@ -51,6 +51,17 @@ public class ConnectionPoolController {
     }
 
     /**
+     * Executes a single query (internal endpoint).
+     * This blocks the servlet thread waiting for a connection from the pool.
+     *
+     * POST /api/simulations/connection-pool/query
+     */
+    @PostMapping("/query")
+    public ResponseEntity<Map<String, Object>> executeQuery() {
+        return ResponseEntity.ok(connectionPoolService.executeQuery());
+    }
+
+    /**
      * Lists active connection pool simulations.
      *
      * GET /api/simulations/connection-pool

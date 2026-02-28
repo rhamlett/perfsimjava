@@ -6,8 +6,14 @@ import com.microsoft.azure.samples.perfsimjava.model.SimulationType;
 import com.microsoft.azure.samples.perfsimjava.model.dto.ConnectionPoolRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -24,21 +30,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   performance issues in Java applications using JDBC.
  *
  * HOW IT WORKS:
+ *   - Spawns many internal HTTP requests that each try to acquire a "connection"
  *   - A Semaphore simulates a fixed-size connection pool (like HikariCP)
- *   - Each "query" acquires a permit, holds it for the query duration, then releases
- *   - When pool is exhausted, new requests wait or timeout
- *   - Thread dumps show threads WAITING on the semaphore (looks like real pool exhaustion)
+ *   - When pool is exhausted, SERVLET THREADS block waiting for connections
+ *   - This causes actual latency impact because servlet threads are consumed
+ *
+ * KEY DIFFERENCE FROM BACKGROUND EXECUTION:
+ *   Real JDBC pool exhaustion blocks the servlet thread making the DB call.
+ *   By using internal HTTP requests, we ensure servlet threads are the ones
+ *   waiting on the semaphore, causing real latency impact.
  *
  * DIAGNOSTIC VALUE:
- *   - Thread dumps: Multiple threads in TIMED_WAITING state on Semaphore.tryAcquire
- *   - Application Insights: Request timeouts, increased latency
+ *   - Thread dumps: Servlet threads in TIMED_WAITING on Semaphore.tryAcquire
+ *   - Latency spikes: Probe requests queue behind blocked threads
  *   - Common real-world scenario: HikariCP, Tomcat JDBC, C3P0 pool exhaustion
- *
- * REAL-WORLD PARALLELS:
- *   - Slow database queries holding connections too long
- *   - Connection leaks (connections not returned to pool)
- *   - Undersized pool for traffic volume
- *   - Deadlocked database connections
  */
 @Service
 public class ConnectionPoolService {
@@ -48,20 +53,31 @@ public class ConnectionPoolService {
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
 
+    @Value("${server.port:8080}")
+    private int serverPort;
+
     // Simulated connection pool - configurable size
     private volatile Semaphore connectionPool;
     private volatile int currentPoolSize = 10;
+    private volatile int currentQueryDuration = 30;
+    private volatile int currentTimeout = 5;
     
     // Track active simulations
     private final Map<String, AtomicBoolean> stopFlags = new ConcurrentHashMap<>();
     
-    // Executor for running concurrent queries
-    private final ExecutorService queryExecutor = Executors.newCachedThreadPool();
+    // Scheduler for spawning requests
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    
+    // HTTP client for internal requests (bypasses browser connection limit)
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
     
     // Track statistics
     private final AtomicInteger activeConnections = new AtomicInteger(0);
     private final AtomicInteger timedOutRequests = new AtomicInteger(0);
     private final AtomicInteger successfulQueries = new AtomicInteger(0);
+    private final AtomicInteger pendingQueries = new AtomicInteger(0);
 
     public ConnectionPoolService(SimulationTrackerService simulationTracker,
                                   EventLogService eventLogService) {
@@ -72,7 +88,7 @@ public class ConnectionPoolService {
 
     /**
      * Triggers a connection pool exhaustion simulation.
-     * Spawns multiple concurrent "queries" that hold connections.
+     * Spawns internal HTTP requests that block servlet threads on the pool.
      */
     public Simulation trigger(ConnectionPoolRequest request) {
         int poolSize = request.getPoolSize();
@@ -80,15 +96,16 @@ public class ConnectionPoolService {
         int concurrentQueries = request.getConcurrentQueries();
         int connectionTimeoutSeconds = request.getConnectionTimeoutSeconds();
 
-        // Reset pool with new size if changed
-        if (poolSize != currentPoolSize) {
-            currentPoolSize = poolSize;
-            connectionPool = new Semaphore(poolSize);
-        }
+        // Reset pool with new size
+        currentPoolSize = poolSize;
+        currentQueryDuration = queryDurationSeconds;
+        currentTimeout = connectionTimeoutSeconds;
+        connectionPool = new Semaphore(poolSize);
         
         // Reset statistics
         timedOutRequests.set(0);
         successfulQueries.set(0);
+        pendingQueries.set(concurrentQueries);
 
         // Create simulation record
         Map<String, Object> params = Map.of(
@@ -121,74 +138,124 @@ public class ConnectionPoolService {
                 params
         );
 
-        // Track completion
-        AtomicInteger completedQueries = new AtomicInteger(0);
+        // Spawn all queries immediately via internal HTTP requests
+        // This blocks SERVLET threads, not background threads
+        String queryUrl = String.format("http://localhost:%d/api/simulations/connection-pool/query", serverPort);
         
-        // Spawn concurrent queries
         for (int i = 0; i < concurrentQueries; i++) {
+            if (stopFlag.get()) break;
+            
             final int queryNum = i + 1;
             
-            queryExecutor.submit(() -> {
-                if (stopFlag.get()) return;
-                
-                boolean acquired = false;
-                try {
-                    logger.debug("[ConnectionPool] Query {} waiting for connection...", queryNum);
-                    
-                    // Try to acquire a "connection" from the pool
-                    acquired = connectionPool.tryAcquire(connectionTimeoutSeconds, TimeUnit.SECONDS);
-                    
-                    if (!acquired) {
-                        // Connection timeout - this is what we want to demonstrate!
-                        timedOutRequests.incrementAndGet();
-                        logger.info("[ConnectionPool] Query {} TIMED OUT waiting for connection", queryNum);
-                        return;
-                    }
-                    
-                    if (stopFlag.get()) {
-                        connectionPool.release();
-                        return;
-                    }
-                    
-                    // Got a connection - simulate slow query
-                    activeConnections.incrementAndGet();
-                    logger.debug("[ConnectionPool] Query {} executing (active: {})", 
-                            queryNum, activeConnections.get());
-                    
-                    // Simulate the slow database query
-                    long endTime = System.currentTimeMillis() + (queryDurationSeconds * 1000L);
-                    while (System.currentTimeMillis() < endTime && !stopFlag.get()) {
-                        Thread.sleep(100); // Check stop flag periodically
-                    }
-                    
-                    successfulQueries.incrementAndGet();
-                    logger.debug("[ConnectionPool] Query {} completed", queryNum);
-                    
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    logger.debug("[ConnectionPool] Query {} interrupted", queryNum);
-                } finally {
-                    if (acquired) {
-                        activeConnections.decrementAndGet();
-                        connectionPool.release();
-                    }
-                    
-                    // Check if all queries completed
-                    if (completedQueries.incrementAndGet() >= concurrentQueries) {
-                        completeSimulation(simId);
-                    }
+            // Small stagger to avoid thundering herd (10ms between each)
+            scheduler.schedule(() -> {
+                if (stopFlag.get()) {
+                    checkCompletion(simId, concurrentQueries);
+                    return;
                 }
-            });
+                
+                try {
+                    HttpRequest httpRequest = HttpRequest.newBuilder()
+                            .uri(URI.create(queryUrl))
+                            .POST(HttpRequest.BodyPublishers.noBody())
+                            .timeout(Duration.ofSeconds(queryDurationSeconds + connectionTimeoutSeconds + 10))
+                            .build();
+                    
+                    // Fire and forget - the servlet thread handles the blocking
+                    httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+                            .whenComplete((response, error) -> {
+                                if (error != null) {
+                                    logger.debug("[ConnectionPool] Query {} failed: {}", queryNum, error.getMessage());
+                                }
+                                checkCompletion(simId, concurrentQueries);
+                            });
+                            
+                } catch (Exception e) {
+                    logger.debug("[ConnectionPool] Query {} spawn failed: {}", queryNum, e.getMessage());
+                    checkCompletion(simId, concurrentQueries);
+                }
+            }, i * 10L, TimeUnit.MILLISECONDS);
         }
 
         return simulation;
     }
 
     /**
+     * Executes a single query (called by internal HTTP endpoint).
+     * This method runs on a SERVLET THREAD and blocks waiting for a connection.
+     */
+    public Map<String, Object> executeQuery() {
+        AtomicBoolean anyStopFlag = stopFlags.values().stream().findFirst().orElse(null);
+        if (anyStopFlag != null && anyStopFlag.get()) {
+            return Map.of("status", "stopped", "acquired", false);
+        }
+        
+        boolean acquired = false;
+        try {
+            logger.debug("[ConnectionPool] Servlet thread waiting for connection...");
+            
+            // This blocks the SERVLET THREAD - the key to causing latency!
+            acquired = connectionPool.tryAcquire(currentTimeout, TimeUnit.SECONDS);
+            
+            if (!acquired) {
+                // Connection timeout
+                timedOutRequests.incrementAndGet();
+                logger.debug("[ConnectionPool] Query TIMED OUT after {}s", currentTimeout);
+                return Map.of("status", "timeout", "acquired", false);
+            }
+            
+            // Check stop flag after acquiring
+            if (anyStopFlag != null && anyStopFlag.get()) {
+                connectionPool.release();
+                return Map.of("status", "stopped", "acquired", false);
+            }
+            
+            // Got a connection - simulate slow query (still blocking servlet thread!)
+            activeConnections.incrementAndGet();
+            logger.debug("[ConnectionPool] Executing query (active connections: {})", activeConnections.get());
+            
+            // Simulate the slow database query
+            long endTime = System.currentTimeMillis() + (currentQueryDuration * 1000L);
+            while (System.currentTimeMillis() < endTime) {
+                if (anyStopFlag != null && anyStopFlag.get()) {
+                    break;
+                }
+                Thread.sleep(100); // Check stop flag periodically
+            }
+            
+            successfulQueries.incrementAndGet();
+            return Map.of("status", "success", "acquired", true, "durationMs", currentQueryDuration * 1000);
+            
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Map.of("status", "interrupted", "acquired", acquired);
+        } finally {
+            if (acquired) {
+                activeConnections.decrementAndGet();
+                connectionPool.release();
+            }
+            pendingQueries.decrementAndGet();
+        }
+    }
+
+    /**
+     * Checks if simulation is complete.
+     */
+    private void checkCompletion(String simulationId, int totalQueries) {
+        int remaining = pendingQueries.get();
+        if (remaining <= 0) {
+            completeSimulation(simulationId);
+        }
+    }
+
+    /**
      * Completes the simulation and logs results.
      */
     private void completeSimulation(String simulationId) {
-        stopFlags.remove(simulationId);
+        if (stopFlags.remove(simulationId) == null) {
+            return; // Already completed
+        }
+        
         simulationTracker.completeSimulation(simulationId);
         
         String summary = String.format("Pool exhaustion complete: %d successful, %d timed out",
@@ -214,12 +281,20 @@ public class ConnectionPoolService {
                 flag.set(true);
             }
             simulationTracker.completeSimulation(id);
-            stopFlags.remove(id);
         }
         
-        // Reset pool
+        // Wait briefly for threads to see stop flag
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        // Clear flags and reset pool
+        stopFlags.clear();
         connectionPool = new Semaphore(currentPoolSize);
         activeConnections.set(0);
+        pendingQueries.set(0);
         
         eventLogService.info(
                 EventLogEntry.EventType.SIMULATION_STOPPED,
@@ -239,6 +314,7 @@ public class ConnectionPoolService {
                 "availableConnections", connectionPool.availablePermits(),
                 "activeConnections", activeConnections.get(),
                 "waitingThreads", connectionPool.getQueueLength(),
+                "pendingQueries", pendingQueries.get(),
                 "successfulQueries", successfulQueries.get(),
                 "timedOutRequests", timedOutRequests.get()
         );
