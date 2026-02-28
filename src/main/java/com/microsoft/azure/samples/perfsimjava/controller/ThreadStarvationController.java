@@ -17,12 +17,14 @@ import java.util.Map;
  * =============================================================================
  *
  * This is the Java equivalent of "Event Loop Blocking" in Node.js.
- * In Java's thread-per-request model, blocking multiple servlet threads
- * exhausts the thread pool, causing new requests to queue.
+ * The dashboard spawns N concurrent requests to /block, each tying up
+ * one Tomcat servlet thread until the server's thread pool is exhausted.
  *
  * ENDPOINTS:
- *   POST /api/simulations/thread/starvation → Trigger thread starvation
- *   GET  /api/simulations/thread/starvation → List active simulations
+ *   POST   /api/simulations/thread/starvation       → Create simulation record
+ *   POST   /api/simulations/thread/starvation/block → Block calling servlet thread
+ *   GET    /api/simulations/thread/starvation       → List active simulations
+ *   DELETE /api/simulations/thread/starvation       → Stop all simulations
  */
 @RestController
 @RequestMapping("/api/simulations/thread/starvation")
@@ -35,7 +37,8 @@ public class ThreadStarvationController {
     }
 
     /**
-     * Triggers thread starvation simulation.
+     * Creates a thread starvation simulation record.
+     * Returns the simulation ID - client then spawns N requests to /block.
      */
     @PostMapping
     public ResponseEntity<Map<String, Object>> trigger(@Valid @RequestBody ThreadStarvationRequest request) {
@@ -44,10 +47,30 @@ public class ThreadStarvationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "id", simulation.getId(),
                 "type", simulation.getType(),
-                "message", String.format("Thread starvation triggered for %ds with %d threads",
-                        request.getDurationSeconds(), request.getThreadCount()),
-                "parameters", simulation.getParameters(),
-                "warning", "Server may become unresponsive during this simulation!"
+                "durationSeconds", request.getDurationSeconds(),
+                "threadCount", request.getThreadCount(),
+                "message", String.format("Simulation created - spawn %d requests to /block endpoint",
+                        request.getThreadCount()),
+                "parameters", simulation.getParameters()
+        ));
+    }
+
+    /**
+     * Blocks the calling servlet thread.
+     * Each request to this endpoint ties up one Tomcat thread.
+     * The dashboard spawns N concurrent requests to exhaust the thread pool.
+     */
+    @PostMapping("/block")
+    public ResponseEntity<Map<String, Object>> block(
+            @RequestParam String simulationId,
+            @RequestParam int durationSeconds) {
+        
+        boolean completed = threadStarvationService.blockServletThread(simulationId, durationSeconds);
+        
+        return ResponseEntity.ok(Map.of(
+                "simulationId", simulationId,
+                "completed", completed,
+                "message", completed ? "Block completed" : "Block interrupted or simulation stopped"
         ));
     }
 
@@ -64,7 +87,8 @@ public class ThreadStarvationController {
                         "type", sim.getType(),
                         "status", sim.getStatus(),
                         "parameters", sim.getParameters(),
-                        "startedAt", sim.getStartedAt().toString()
+                        "startedAt", sim.getStartedAt().toString(),
+                        "activeBlockers", threadStarvationService.getActiveBlockerCount(sim.getId())
                 )).toList(),
                 "count", simulations.size()
         ));

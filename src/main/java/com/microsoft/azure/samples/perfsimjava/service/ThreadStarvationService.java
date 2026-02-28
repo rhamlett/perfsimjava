@@ -10,16 +10,11 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * =============================================================================
@@ -31,33 +26,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *   This is the Java equivalent of "Event Loop Blocking" in Node.js, but with
  *   different mechanics due to Java's thread-per-request model.
  *
- * HOW IT WORKS IN NODE.JS vs JAVA:
- *   Node.js (single-threaded event loop):
- *   - One thread handles ALL requests
- *   - Blocking = server completely unresponsive
- *   - Even 1 blocking operation stops everything
+ * HOW IT WORKS:
+ *   The dashboard makes N concurrent HTTP requests to the /block endpoint.
+ *   Each request blocks its Tomcat servlet thread with CPU-intensive work.
+ *   When blocked threads approach Tomcat's max-threads (200), new requests queue.
+ *   The probe endpoint starts timing out, showing latency spikes.
  *
- *   Java (thread-per-request model):
- *   - Each request gets its own thread from a pool (e.g., Tomcat default: 200)
- *   - Blocking one thread only affects that one request
- *   - To exhaust the pool, need to block MANY threads simultaneously
- *   - Once pool is exhausted, new requests queue and eventually timeout
- *
- * SIMULATION APPROACH:
- *   1. Spawn N threads that run blocking operations
- *   2. Each thread performs synchronous crypto work (PBKDF2)
- *   3. Threads hold their servlet thread for the full duration
- *   4. When threadCount >= Tomcat's max-threads, new requests queue
- *   5. Dashboard shows latency spikes as requests wait in queue
- *
- * PORTING NOTES:
- *   - Node.js: pbkdf2Sync in main thread blocks everything
- *   - Python asyncio: time.sleep() blocks, asyncio.sleep() doesn't
- *   - C#: Thread.Sleep() in request handler, ASP.NET has limited threads
- *   - PHP: usleep() blocks the current request handler
- *
- *   The key insight: in thread-per-request models, you need to exhaust
- *   the thread pool to see the same effect as blocking Node's event loop.
+ * WHY THIS APPROACH:
+ *   Creating a separate ExecutorService does NOT block servlet threads!
+ *   We must block INSIDE the HTTP request handler to tie up Tomcat's pool.
  */
 @Service
 public class ThreadStarvationService {
@@ -67,9 +44,9 @@ public class ThreadStarvationService {
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
     
-    // Track active executors and stop flags for each simulation
-    private final Map<String, ExecutorService> activeExecutors = new ConcurrentHashMap<>();
+    // Track active simulations and their stop flags
     private final Map<String, AtomicBoolean> stopFlags = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> activeBlockers = new ConcurrentHashMap<>();
 
     public ThreadStarvationService(SimulationTrackerService simulationTracker, 
                                    EventLogService eventLogService) {
@@ -78,10 +55,8 @@ public class ThreadStarvationService {
     }
 
     /**
-     * Triggers thread starvation by blocking multiple servlet threads.
-     *
-     * @param request The starvation parameters
-     * @return The simulation result (completes when done)
+     * Creates a thread starvation simulation record.
+     * The actual blocking is done via concurrent HTTP requests to /block endpoint.
      */
     public Simulation trigger(ThreadStarvationRequest request) {
         int durationSeconds = request.getDurationSeconds();
@@ -99,116 +74,118 @@ public class ThreadStarvationService {
                 durationSeconds
         );
         
-        // Initialize stop flag
+        // Initialize tracking
         stopFlags.put(simulation.getId(), new AtomicBoolean(false));
+        activeBlockers.put(simulation.getId(), new AtomicInteger(0));
 
         // Log the start with warning
         eventLogService.warn(
                 EventLogEntry.EventType.SIMULATION_STARTED,
-                String.format("Thread starvation started for %ds with %d threads - server may become unresponsive!",
-                        durationSeconds, threadCount),
+                String.format("Thread starvation started - %d requests will block servlet threads for %ds",
+                        threadCount, durationSeconds),
                 simulation.getId(),
                 SimulationType.THREAD_STARVATION,
                 params
         );
 
-        // Run the blocking simulation asynchronously
-        CompletableFuture.runAsync(() -> {
-            try {
-                runBlockingSimulation(simulation.getId(), durationSeconds, threadCount);
-                simulationTracker.completeSimulation(simulation.getId());
-                eventLogService.info(
-                        EventLogEntry.EventType.SIMULATION_COMPLETED,
-                        "Thread starvation simulation completed",
-                        simulation.getId(),
-                        SimulationType.THREAD_STARVATION,
-                        null
-                );
-            } catch (Exception e) {
-                simulationTracker.failSimulation(simulation.getId());
-                eventLogService.error(
-                        EventLogEntry.EventType.SIMULATION_FAILED,
-                        "Thread starvation failed: " + e.getMessage(),
-                        simulation.getId(),
-                        SimulationType.THREAD_STARVATION,
-                        null
-                );
-            } finally {
-                // Cleanup
-                stopFlags.remove(simulation.getId());
-                activeExecutors.remove(simulation.getId());
-            }
-        });
-
         return simulation;
     }
 
     /**
-     * Runs the blocking simulation by spawning threads that hold resources.
+     * Blocks the calling servlet thread with CPU-intensive work.
+     * Called from the /block HTTP endpoint - each call ties up one Tomcat thread.
+     * 
+     * @param simulationId The simulation to associate with
+     * @param durationSeconds How long to block
+     * @return true if blocked successfully, false if stopped early
      */
-    private void runBlockingSimulation(String simulationId, int durationSeconds, int threadCount) 
-            throws InterruptedException {
-        
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-        activeExecutors.put(simulationId, executor);
-        
-        CountDownLatch latch = new CountDownLatch(threadCount);
-        long endTime = System.currentTimeMillis() + (durationSeconds * 1000L);
+    public boolean blockServletThread(String simulationId, int durationSeconds) {
         AtomicBoolean stopFlag = stopFlags.get(simulationId);
-
-        // Submit blocking tasks
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
-        for (int i = 0; i < threadCount; i++) {
-            final int threadNum = i;
-            futures.add(CompletableFuture.runAsync(() -> {
-                try {
-                    blockThread(endTime, threadNum, stopFlag);
-                } finally {
-                    latch.countDown();
-                }
-            }, executor));
+        AtomicInteger blockerCount = activeBlockers.get(simulationId);
+        
+        if (stopFlag == null || stopFlag.get()) {
+            return false; // Simulation stopped or doesn't exist
         }
-
-        // Wait for all threads to complete
-        latch.await(durationSeconds + 5, TimeUnit.SECONDS);
-        executor.shutdownNow();
-    }
-
-    /**
-     * Blocks a thread with CPU-intensive work until the end time or stopped.
-     * This simulates a sync-over-async anti-pattern where servlet threads
-     * are held by blocking operations.
-     */
-    private void blockThread(long endTime, int threadNum, AtomicBoolean stopFlag) {
+        
+        // Track active blocker count
+        if (blockerCount != null) {
+            blockerCount.incrementAndGet();
+        }
+        
         try {
+            long endTime = System.currentTimeMillis() + (durationSeconds * 1000L);
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-
-            while (System.currentTimeMillis() < endTime && (stopFlag == null || !stopFlag.get())) {
-                // Perform blocking crypto work
+            
+            // Block this servlet thread with CPU work until duration expires or stopped
+            while (System.currentTimeMillis() < endTime && !stopFlag.get()) {
                 PBEKeySpec spec = new PBEKeySpec(
                         "password".toCharArray(),
                         "salt".getBytes(),
-                        5000,   // iterations - shorter for more frequent checks
-                        256     // key length
+                        10000,  // iterations - CPU intensive
+                        256
                 );
                 factory.generateSecret(spec);
                 spec.clearPassword();
             }
+            
+            return !stopFlag.get(); // Return true if completed normally
+            
         } catch (Exception e) {
-            logger.warn("Thread {} blocking work failed: {}", threadNum, e.getMessage());
+            logger.warn("Block operation failed: {}", e.getMessage());
+            return false;
+        } finally {
+            if (blockerCount != null) {
+                int remaining = blockerCount.decrementAndGet();
+                
+                // Check if this was the last blocker
+                if (remaining <= 0 && stopFlags.containsKey(simulationId)) {
+                    completeSimulation(simulationId);
+                }
+            }
         }
     }
-    
+
+    /**
+     * Checks if a simulation is still active.
+     */
+    public boolean isSimulationActive(String simulationId) {
+        AtomicBoolean stopFlag = stopFlags.get(simulationId);
+        return stopFlag != null && !stopFlag.get();
+    }
+
+    /**
+     * Gets the count of currently blocking threads for a simulation.
+     */
+    public int getActiveBlockerCount(String simulationId) {
+        AtomicInteger count = activeBlockers.get(simulationId);
+        return count != null ? count.get() : 0;
+    }
+
+    /**
+     * Completes a simulation and cleans up.
+     */
+    private void completeSimulation(String simulationId) {
+        stopFlags.remove(simulationId);
+        activeBlockers.remove(simulationId);
+        simulationTracker.completeSimulation(simulationId);
+        eventLogService.info(
+                EventLogEntry.EventType.SIMULATION_COMPLETED,
+                "Thread starvation simulation completed",
+                simulationId,
+                SimulationType.THREAD_STARVATION,
+                null
+        );
+    }
+
     /**
      * Stops all active thread starvation simulations.
      */
     public void stopAll() {
-        List<String> simulationIds = new ArrayList<>(stopFlags.keySet());
-        for (String id : simulationIds) {
+        for (String id : stopFlags.keySet()) {
             stop(id);
         }
     }
-    
+
     /**
      * Stops a specific thread starvation simulation.
      */
@@ -216,11 +193,6 @@ public class ThreadStarvationService {
         AtomicBoolean stopFlag = stopFlags.get(simulationId);
         if (stopFlag != null) {
             stopFlag.set(true);
-        }
-        
-        ExecutorService executor = activeExecutors.get(simulationId);
-        if (executor != null) {
-            executor.shutdownNow();
             simulationTracker.completeSimulation(simulationId);
             eventLogService.info(
                     EventLogEntry.EventType.SIMULATION_STOPPED,
@@ -229,6 +201,9 @@ public class ThreadStarvationService {
                     SimulationType.THREAD_STARVATION,
                     null
             );
+            // Cleanup will happen when last blocker exits
+            stopFlags.remove(simulationId);
+            activeBlockers.remove(simulationId);
             return true;
         }
         return false;

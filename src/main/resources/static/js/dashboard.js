@@ -115,21 +115,50 @@ async function releaseAllMemory() {
 }
 
 /**
- * Starts thread pool starvation simulation
+ * Starts thread pool starvation simulation.
+ * Creates a simulation record, then spawns N concurrent requests to /block
+ * which actually tie up Tomcat's servlet threads.
  */
 async function startThreadStarvation() {
     const threadCount = parseInt(document.getElementById('starvationCount').value) || 50;
     const durationSeconds = parseInt(document.getElementById('starvationDuration').value) || 30;
 
     try {
+        // Step 1: Create simulation record
         const response = await fetch('/api/simulations/thread/starvation', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ threadCount, durationSeconds })
         });
         const result = await response.json();
-        console.log('[Dashboard] Thread Starvation started:', result);
-        Dashboard.addEvent('warn', `Thread Starvation started with ${threadCount} threads for ${durationSeconds}s`);
+        console.log('[Dashboard] Thread Starvation simulation created:', result);
+        Dashboard.addEvent('warn', `Spawning ${threadCount} blocking requests for ${durationSeconds}s...`);
+        
+        // Step 2: Spawn N concurrent requests to /block endpoint
+        // Each request ties up one Tomcat servlet thread
+        const simulationId = result.id;
+        const blockPromises = [];
+        
+        for (let i = 0; i < threadCount; i++) {
+            const blockPromise = fetch(
+                `/api/simulations/thread/starvation/block?simulationId=${simulationId}&durationSeconds=${durationSeconds}`,
+                { method: 'POST' }
+            ).catch(err => {
+                // Ignore individual failures (expected under heavy load)
+                console.log(`[Dashboard] Block request ${i} error (expected under load):`, err.message);
+            });
+            blockPromises.push(blockPromise);
+        }
+        
+        console.log(`[Dashboard] Spawned ${threadCount} blocking requests`);
+        
+        // Don't await all promises - they complete when duration expires
+        // This allows the dashboard to remain responsive
+        Promise.all(blockPromises).then(() => {
+            console.log('[Dashboard] All blocking requests completed');
+            Dashboard.addEvent('info', 'Thread starvation simulation completed');
+        });
+        
     } catch (error) {
         console.error('[Dashboard] Failed to start thread starvation:', error);
         Dashboard.addEvent('error', 'Failed to start thread starvation: ' + error.message);

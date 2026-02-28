@@ -42,6 +42,7 @@ const ChartsModule = (function() {
     // Labels buffer
     let labels = [];
     let timeLabels = [];
+    let latencyTimeLabels = [];  // Separate labels for latency chart (100ms rate)
 
     /**
      * Formats time for x-axis labels
@@ -239,7 +240,7 @@ const ChartsModule = (function() {
             latencyChart = new Chart(latencyCtx, {
                 type: 'line',
                 data: {
-                    labels: timeLabels,
+                    labels: latencyTimeLabels,
                     datasets: [{
                         label: 'Latency (ms)',
                         data: dataBuffers.latency,
@@ -333,11 +334,24 @@ const ChartsModule = (function() {
     }
 
     /**
+     * Updates latency time labels (called at 100ms rate)
+     */
+    function updateLatencyTimeLabels() {
+        const now = new Date();
+        latencyTimeLabels.push(formatTime(now));
+        if (latencyTimeLabels.length > MAX_DATA_POINTS) {
+            latencyTimeLabels.shift();
+        }
+    }
+
+    /**
      * Updates Latency value
      */
     function updateLatency(value) {
+        updateLatencyTimeLabels();  // Update labels at same 100ms rate as data
         updateBuffer(dataBuffers.latency, value);
         if (latencyChart) {
+            latencyChart.data.labels = latencyTimeLabels;
             latencyChart.data.datasets[0].data = dataBuffers.latency;
             latencyChart.update('none');
         }
@@ -362,16 +376,14 @@ const ChartsModule = (function() {
             updateGc(metrics.gc.totalTimeMs || 0);
         }
         
-        // Update chart labels
+        // Update chart labels (upper charts only - latency has its own)
         if (cpuMemoryChart) {
             cpuMemoryChart.data.labels = timeLabels;
         }
         if (threadsGcChart) {
             threadsGcChart.data.labels = timeLabels;
         }
-        if (latencyChart) {
-            latencyChart.data.labels = timeLabels;
-        }
+        // Note: latency chart labels are updated in updateLatency() at 100ms rate
     }
 
     /**
