@@ -6,13 +6,17 @@ import com.microsoft.azure.samples.perfsimjava.model.SimulationType;
 import com.microsoft.azure.samples.perfsimjava.model.dto.ThreadStarvationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,14 +31,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   different mechanics due to Java's thread-per-request model.
  *
  * HOW IT WORKS:
- *   The dashboard makes N concurrent HTTP requests to the /block endpoint.
+ *   The server spawns N internal HTTP requests to a /block endpoint on itself.
  *   Each request blocks its Tomcat servlet thread with CPU-intensive work.
  *   When blocked threads approach Tomcat's max-threads (200), new requests queue.
  *   The probe endpoint starts timing out, showing latency spikes.
  *
- * WHY THIS APPROACH:
- *   Creating a separate ExecutorService does NOT block servlet threads!
- *   We must block INSIDE the HTTP request handler to tie up Tomcat's pool.
+ * WHY INTERNAL REQUESTS:
+ *   Browsers limit concurrent connections to ~6 per domain (HTTP/1.1 limit).
+ *   By spawning requests server-side, we bypass this browser limitation.
  */
 @Service
 public class ThreadStarvationService {
@@ -43,6 +47,17 @@ public class ThreadStarvationService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    
+    @Value("${server.port:8080}")
+    private int serverPort;
+    
+    // HTTP client for internal requests (unlimited connections)
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
+    
+    // Executor for spawning internal requests (not for blocking - just to initiate)
+    private final ExecutorService requestSpawner = Executors.newCachedThreadPool();
     
     // Track active simulations and their stop flags
     private final Map<String, AtomicBoolean> stopFlags = new ConcurrentHashMap<>();
@@ -55,8 +70,8 @@ public class ThreadStarvationService {
     }
 
     /**
-     * Creates a thread starvation simulation record.
-     * The actual blocking is done via concurrent HTTP requests to /block endpoint.
+     * Creates and triggers a thread starvation simulation.
+     * Spawns N internal HTTP requests to the /block endpoint.
      */
     public Simulation trigger(ThreadStarvationRequest request) {
         int durationSeconds = request.getDurationSeconds();
@@ -78,15 +93,40 @@ public class ThreadStarvationService {
         stopFlags.put(simulation.getId(), new AtomicBoolean(false));
         activeBlockers.put(simulation.getId(), new AtomicInteger(0));
 
-        // Log the start with warning
+        // Log the start
         eventLogService.warn(
                 EventLogEntry.EventType.SIMULATION_STARTED,
-                String.format("Thread starvation started - %d requests will block servlet threads for %ds",
+                String.format("Thread starvation started - spawning %d blocking requests for %ds",
                         threadCount, durationSeconds),
                 simulation.getId(),
                 SimulationType.THREAD_STARVATION,
                 params
         );
+
+        // Spawn internal HTTP requests to block servlet threads
+        String simulationId = simulation.getId();
+        String blockUrl = String.format("http://localhost:%d/api/simulations/thread/starvation/block?simulationId=%s&durationSeconds=%d",
+                serverPort, simulationId, durationSeconds);
+        
+        logger.info("[ThreadStarvation] Spawning {} internal requests to {}", threadCount, blockUrl);
+        
+        for (int i = 0; i < threadCount; i++) {
+            final int requestNum = i;
+            requestSpawner.submit(() -> {
+                try {
+                    HttpRequest httpRequest = HttpRequest.newBuilder()
+                            .uri(URI.create(blockUrl))
+                            .POST(HttpRequest.BodyPublishers.noBody())
+                            .timeout(Duration.ofSeconds(durationSeconds + 30))
+                            .build();
+                    
+                    httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+                } catch (Exception e) {
+                    logger.debug("[ThreadStarvation] Request {} failed (may be expected): {}", 
+                            requestNum, e.getMessage());
+                }
+            });
+        }
 
         return simulation;
     }
