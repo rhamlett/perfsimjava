@@ -244,12 +244,15 @@ const Dashboard = (function() {
      */
     function handleMetrics(metrics) {
         // Check for PID change (server restart)
-        if (metrics.process && metrics.process.pid) {
+        if (metrics.process) {
             const currentPid = metrics.process.pid;
-            if (lastKnownPid !== null && lastKnownPid !== currentPid) {
+            console.log('[Dashboard] PID check - current:', currentPid, 'lastKnown:', lastKnownPid);
+            if (lastKnownPid !== null && currentPid !== undefined && lastKnownPid !== currentPid) {
                 addEvent('warn', `Server restarted! New PID: ${currentPid} (was ${lastKnownPid})`);
             }
-            lastKnownPid = currentPid;
+            if (currentPid !== undefined) {
+                lastKnownPid = currentPid;
+            }
         }
         
         // Update charts
