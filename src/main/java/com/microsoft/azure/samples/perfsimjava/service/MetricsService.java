@@ -1,6 +1,7 @@
 package com.microsoft.azure.samples.perfsimjava.service;
 
 import com.microsoft.azure.samples.perfsimjava.config.AppConfig;
+import com.microsoft.azure.samples.perfsimjava.model.EventLogEntry;
 import com.microsoft.azure.samples.perfsimjava.model.SystemMetrics;
 import com.sun.management.OperatingSystemMXBean;
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ public class MetricsService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final AppConfig config;
+    private final EventLogService eventLogService;
 
     private final OperatingSystemMXBean osBean;
     private final MemoryMXBean memoryBean;
@@ -60,9 +62,10 @@ public class MetricsService {
     private final long processId;
     private final Instant startTime;
 
-    public MetricsService(SimpMessagingTemplate messagingTemplate, AppConfig config) {
+    public MetricsService(SimpMessagingTemplate messagingTemplate, AppConfig config, EventLogService eventLogService) {
         this.messagingTemplate = messagingTemplate;
         this.config = config;
+        this.eventLogService = eventLogService;
 
         // Initialize MXBeans
         this.osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
@@ -77,6 +80,19 @@ public class MetricsService {
         long totalMemMb = (long) (osBean.getTotalMemorySize() / BYTES_TO_MB);
         int cpuCount = osBean.getAvailableProcessors();
         logger.info("[Metrics] Host memory: {} MB, CPU cores: {}", totalMemMb, cpuCount);
+        
+        // Log server startup event with PID
+        eventLogService.info(
+                EventLogEntry.EventType.SERVER_STARTED,
+                String.format("Server started (PID: %d)", processId)
+        );
+    }
+    
+    /**
+     * Gets the current process ID.
+     */
+    public long getProcessId() {
+        return processId;
     }
 
     /**

@@ -208,6 +208,7 @@ const Dashboard = (function() {
 
     const MAX_EVENTS = 100;
     const eventLog = [];
+    let lastKnownPid = null;
 
     /**
      * Initializes the dashboard
@@ -242,6 +243,15 @@ const Dashboard = (function() {
      * Handles metrics updates from WebSocket
      */
     function handleMetrics(metrics) {
+        // Check for PID change (server restart)
+        if (metrics.process && metrics.process.pid) {
+            const currentPid = metrics.process.pid;
+            if (lastKnownPid !== null && lastKnownPid !== currentPid) {
+                addEvent('warn', `Server restarted! New PID: ${currentPid} (was ${lastKnownPid})`);
+            }
+            lastKnownPid = currentPid;
+        }
+        
         // Update charts
         ChartsModule.updateAll(metrics);
 

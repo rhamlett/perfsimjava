@@ -138,10 +138,15 @@ public class CrashService {
 
     /**
      * Unhandled runtime exception.
+     * We log the exception, then exit the process since throwing from an executor
+     * thread doesn't actually crash the JVM.
      */
     private void crashWithException() {
         logger.error("Crash: Unhandled Exception");
-        throw new RuntimeException("Intentional crash: Unhandled exception simulation");
+        RuntimeException ex = new RuntimeException("Intentional crash: Unhandled exception simulation");
+        logger.error("Fatal exception - terminating process", ex);
+        // Throwing from executor thread doesn't crash JVM, so we force exit
+        System.exit(1);
     }
 
     /**
