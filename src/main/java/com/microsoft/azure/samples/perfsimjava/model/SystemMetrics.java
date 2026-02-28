@@ -203,6 +203,7 @@ public class SystemMetrics {
      */
     public static class ProcessMetrics {
         private long pid;
+        private long jvmStartTime;
         private long uptimeSeconds;
         private int gcCount;
         private long gcTimeMs;
@@ -213,6 +214,14 @@ public class SystemMetrics {
 
         public void setPid(long pid) {
             this.pid = pid;
+        }
+
+        public long getJvmStartTime() {
+            return jvmStartTime;
+        }
+
+        public void setJvmStartTime(long jvmStartTime) {
+            this.jvmStartTime = jvmStartTime;
         }
 
         public long getUptimeSeconds() {

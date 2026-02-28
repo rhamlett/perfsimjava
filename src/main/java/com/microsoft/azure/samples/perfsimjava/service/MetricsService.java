@@ -61,6 +61,7 @@ public class MetricsService {
     private final ThreadMXBean threadBean;
     private final long processId;
     private final Instant startTime;
+    private final long jvmStartTime;
 
     public MetricsService(SimpMessagingTemplate messagingTemplate, AppConfig config, EventLogService eventLogService) {
         this.messagingTemplate = messagingTemplate;
@@ -73,6 +74,8 @@ public class MetricsService {
         this.threadBean = ManagementFactory.getThreadMXBean();
         this.processId = ProcessHandle.current().pid();
         this.startTime = Instant.now();
+        // JVM start time - unique identifier for this JVM instance (millis since epoch)
+        this.jvmStartTime = ManagementFactory.getRuntimeMXBean().getStartTime();
     }
 
     @PostConstruct
@@ -81,10 +84,10 @@ public class MetricsService {
         int cpuCount = osBean.getAvailableProcessors();
         logger.info("[Metrics] Host memory: {} MB, CPU cores: {}", totalMemMb, cpuCount);
         
-        // Log server startup event with PID
+        // Log server startup event with JVM start time
         eventLogService.info(
                 EventLogEntry.EventType.SERVER_STARTED,
-                String.format("Server started (PID: %d)", processId)
+                String.format("Server started (JVM: %d, PID: %d)", jvmStartTime, processId)
         );
     }
     
@@ -146,6 +149,7 @@ public class MetricsService {
         // Process metrics
         SystemMetrics.ProcessMetrics process = new SystemMetrics.ProcessMetrics();
         process.setPid(processId);
+        process.setJvmStartTime(jvmStartTime);
         process.setUptimeSeconds(Duration.between(startTime, Instant.now()).getSeconds());
 
         // GC metrics

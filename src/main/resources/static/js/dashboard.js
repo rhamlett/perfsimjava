@@ -208,7 +208,7 @@ const Dashboard = (function() {
 
     const MAX_EVENTS = 100;
     const eventLog = [];
-    let lastKnownPid = null;
+    let lastKnownJvmStartTime = null;
 
     /**
      * Initializes the dashboard
@@ -243,16 +243,15 @@ const Dashboard = (function() {
      * Handles metrics updates from WebSocket
      */
     function handleMetrics(metrics) {
-        // Check for PID change (server restart)
-        if (metrics.process) {
-            const currentPid = metrics.process.pid;
-            console.log('[Dashboard] PID check - current:', currentPid, 'lastKnown:', lastKnownPid);
-            if (lastKnownPid !== null && currentPid !== undefined && lastKnownPid !== currentPid) {
-                addEvent('warn', `Server restarted! New PID: ${currentPid} (was ${lastKnownPid})`);
+        // Check for JVM start time change (server restart)
+        if (metrics.process && metrics.process.jvmStartTime) {
+            const currentJvmStartTime = metrics.process.jvmStartTime;
+            if (lastKnownJvmStartTime !== null && lastKnownJvmStartTime !== currentJvmStartTime) {
+                const prevTime = new Date(lastKnownJvmStartTime).toLocaleTimeString();
+                const newTime = new Date(currentJvmStartTime).toLocaleTimeString();
+                addEvent('warn', `Server restarted! Started at ${newTime} (previously ${prevTime})`);
             }
-            if (currentPid !== undefined) {
-                lastKnownPid = currentPid;
-            }
+            lastKnownJvmStartTime = currentJvmStartTime;
         }
         
         // Update charts
