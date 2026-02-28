@@ -7,7 +7,8 @@ const ChartsModule = (function() {
     'use strict';
 
     // Chart configuration
-    const MAX_DATA_POINTS = 60;
+    const MAX_DATA_POINTS = 60;  // Upper charts: 60 points at 250ms = 15 seconds
+    const MAX_LATENCY_DATA_POINTS = 150;  // Latency chart: 150 points at 100ms = 15 seconds (same visual pacing)
 
     // Chart colors matching PerfSimNode
     const colors = {
@@ -339,7 +340,7 @@ const ChartsModule = (function() {
     function updateLatencyTimeLabels() {
         const now = new Date();
         latencyTimeLabels.push(formatTime(now));
-        if (latencyTimeLabels.length > MAX_DATA_POINTS) {
+        if (latencyTimeLabels.length > MAX_LATENCY_DATA_POINTS) {
             latencyTimeLabels.shift();
         }
     }
@@ -349,7 +350,10 @@ const ChartsModule = (function() {
      */
     function updateLatency(value) {
         updateLatencyTimeLabels();  // Update labels at same 100ms rate as data
-        updateBuffer(dataBuffers.latency, value);
+        dataBuffers.latency.push(value);
+        if (dataBuffers.latency.length > MAX_LATENCY_DATA_POINTS) {
+            dataBuffers.latency.shift();
+        }
         if (latencyChart) {
             latencyChart.data.labels = latencyTimeLabels;
             latencyChart.data.datasets[0].data = dataBuffers.latency;
