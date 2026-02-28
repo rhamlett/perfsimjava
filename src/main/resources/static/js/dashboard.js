@@ -249,7 +249,13 @@ const Dashboard = (function() {
             if (lastKnownJvmStartTime !== null && lastKnownJvmStartTime !== currentJvmStartTime) {
                 const prevTime = new Date(lastKnownJvmStartTime).toLocaleTimeString();
                 const newTime = new Date(currentJvmStartTime).toLocaleTimeString();
-                addEvent('warn', `Server restarted! Started at ${newTime} (previously ${prevTime})`);
+                // Use crash styling for restart notification
+                addEventToLog({
+                    level: 'WARN',
+                    message: `APPLICATION RESTARTED! Started at ${newTime} (previously ${prevTime}). This may indicate an unexpected crash (OOM, StackOverflow, etc.)`,
+                    timestamp: new Date().toISOString(),
+                    simulationType: 'CRASH_EXCEPTION'
+                });
             }
             lastKnownJvmStartTime = currentJvmStartTime;
         }
