@@ -6,13 +6,20 @@ import com.microsoft.azure.samples.perfsimjava.model.SimulationType;
 import com.microsoft.azure.samples.perfsimjava.model.dto.SlowRequestRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * =============================================================================
@@ -40,12 +47,6 @@ import java.util.concurrent.ForkJoinPool;
  *      Runs CPU-intensive work synchronously on the request thread.
  *      Similar to JDBC calls or synchronous I/O blocking a thread.
  *      The thread cannot serve other requests while blocked.
- *
- * PORTING NOTES:
- *   - Node.js: setTimeout (non-blocking), libuv saturation, worker threads
- *   - Python: asyncio.sleep (non-blocking), ThreadPoolExecutor saturation
- *   - C#: Task.Delay (non-blocking), ThreadPool saturation
- *   - PHP: sleep() blocks, no equivalent for pool saturation
  */
 @Service
 public class SlowRequestService {
@@ -54,6 +55,20 @@ public class SlowRequestService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    
+    @Value("${server.port:8080}")
+    private int serverPort;
+    
+    // Scheduler for spawning requests at intervals
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    
+    // HTTP client for internal requests
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
+    
+    // Track active simulations for stopping
+    private final Map<String, AtomicBoolean> stopFlags = new ConcurrentHashMap<>();
 
     public SlowRequestService(SimulationTrackerService simulationTracker,
                               EventLogService eventLogService) {
@@ -62,67 +77,134 @@ public class SlowRequestService {
     }
 
     /**
-     * Executes a slow request with the specified blocking pattern.
-     *
-     * @param request The slow request parameters
-     * @return The completed simulation
+     * Starts a slow request simulation that spawns multiple requests at intervals.
+     * Returns immediately - requests execute in background.
      */
-    public Simulation delay(SlowRequestRequest request) {
+    public Simulation trigger(SlowRequestRequest request) {
         int delaySeconds = request.getDelaySeconds();
+        int intervalSeconds = request.getIntervalSeconds();
+        int maxRequests = request.getMaxRequests();
         SlowRequestRequest.BlockingPattern pattern = request.getBlockingPattern();
 
         // Create simulation record
         Map<String, Object> params = Map.of(
                 "type", SimulationType.SLOW_REQUEST,
                 "delaySeconds", delaySeconds,
+                "intervalSeconds", intervalSeconds,
+                "maxRequests", maxRequests,
                 "blockingPattern", pattern.name()
         );
         Simulation simulation = simulationTracker.createSimulation(
                 SimulationType.SLOW_REQUEST,
                 params,
-                delaySeconds
+                delaySeconds * maxRequests + intervalSeconds * (maxRequests - 1)
         );
+
+        // Initialize stop flag
+        stopFlags.put(simulation.getId(), new AtomicBoolean(false));
 
         // Log the start
         String patternDesc = getPatternDescription(pattern);
-        eventLogService.info(
+        eventLogService.warn(
                 EventLogEntry.EventType.SIMULATION_STARTED,
-                String.format("Slow request started: %ds delay (%s)", delaySeconds, patternDesc),
+                String.format("Slow requests: %d requests at %ds intervals, %ds each (%s)", 
+                        maxRequests, intervalSeconds, delaySeconds, patternDesc),
                 simulation.getId(),
                 SimulationType.SLOW_REQUEST,
                 params
         );
 
+        // Spawn requests at intervals using internal HTTP calls
+        String blockUrl = String.format("http://localhost:%d/api/simulations/slow/execute?delaySeconds=%d&pattern=%s",
+                serverPort, delaySeconds, pattern.name());
+        AtomicBoolean stopFlag = stopFlags.get(simulation.getId());
+        
+        for (int i = 0; i < maxRequests; i++) {
+            final int requestNum = i + 1;
+            long delayMs = (long) i * intervalSeconds * 1000;
+            
+            scheduler.schedule(() -> {
+                if (stopFlag.get()) {
+                    return; // Simulation was stopped
+                }
+                
+                try {
+                    HttpRequest httpRequest = HttpRequest.newBuilder()
+                            .uri(URI.create(blockUrl))
+                            .POST(HttpRequest.BodyPublishers.noBody())
+                            .timeout(Duration.ofSeconds(delaySeconds + 30))
+                            .build();
+                    
+                    httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+                            .thenAccept(response -> {
+                                logger.debug("[SlowRequest] Request {} completed", requestNum);
+                            });
+                            
+                } catch (Exception e) {
+                    logger.debug("[SlowRequest] Request {} failed: {}", requestNum, e.getMessage());
+                }
+            }, delayMs, TimeUnit.MILLISECONDS);
+        }
+
+        // Schedule completion
+        long totalDuration = (long) (maxRequests - 1) * intervalSeconds * 1000 + delaySeconds * 1000L;
+        scheduler.schedule(() -> {
+            stopFlags.remove(simulation.getId());
+            simulationTracker.completeSimulation(simulation.getId());
+            eventLogService.info(
+                    EventLogEntry.EventType.SIMULATION_COMPLETED,
+                    "Slow request simulation completed",
+                    simulation.getId(),
+                    SimulationType.SLOW_REQUEST,
+                    null
+            );
+        }, totalDuration + 1000, TimeUnit.MILLISECONDS);
+
+        return simulation;
+    }
+
+    /**
+     * Executes a single slow request (called by internal HTTP requests).
+     */
+    public void executeSingleRequest(int delaySeconds, SlowRequestRequest.BlockingPattern pattern) {
         try {
-            // Execute blocking pattern
             switch (pattern) {
                 case SLEEP -> blockWithSleep(delaySeconds);
                 case EXECUTOR_SATURATION -> blockWithExecutorSaturation(delaySeconds);
                 case SYNC_BLOCKING -> blockWithSyncWork(delaySeconds);
             }
-
-            // Mark completed
-            simulationTracker.completeSimulation(simulation.getId());
-            eventLogService.info(
-                    EventLogEntry.EventType.SIMULATION_COMPLETED,
-                    String.format("Slow request completed (%s)", patternDesc),
-                    simulation.getId(),
-                    SimulationType.SLOW_REQUEST,
-                    null
-            );
-
         } catch (Exception e) {
-            simulationTracker.failSimulation(simulation.getId());
-            eventLogService.error(
-                    EventLogEntry.EventType.SIMULATION_FAILED,
-                    "Slow request failed: " + e.getMessage(),
-                    simulation.getId(),
-                    SimulationType.SLOW_REQUEST,
-                    null
-            );
+            logger.warn("Slow request execution failed: {}", e.getMessage());
         }
+    }
 
-        return simulationTracker.getSimulation(simulation.getId());
+    /**
+     * Stops all active slow request simulations.
+     */
+    public void stopAll() {
+        List<String> ids = List.copyOf(stopFlags.keySet());
+        for (String id : ids) {
+            AtomicBoolean flag = stopFlags.get(id);
+            if (flag != null) {
+                flag.set(true);
+            }
+            simulationTracker.completeSimulation(id);
+            stopFlags.remove(id);
+        }
+        eventLogService.info(
+                EventLogEntry.EventType.SIMULATION_STOPPED,
+                "Slow request simulations stopped",
+                null,
+                SimulationType.SLOW_REQUEST,
+                null
+        );
+    }
+
+    /**
+     * Gets all active slow request simulations.
+     */
+    public List<Simulation> getActiveSimulations() {
+        return simulationTracker.getActiveSimulationsByType(SimulationType.SLOW_REQUEST);
     }
 
     /**
@@ -134,19 +216,16 @@ public class SlowRequestService {
 
     /**
      * Saturates the common ForkJoinPool with blocking tasks.
-     * This affects all parallel streams and default CompletableFuture operations.
      */
     private void blockWithExecutorSaturation(int seconds) {
         int poolSize = ForkJoinPool.commonPool().getParallelism();
         long endTime = System.currentTimeMillis() + (seconds * 1000L);
 
-        // Submit tasks to saturate the common pool
         CompletableFuture<?>[] futures = new CompletableFuture[poolSize];
         for (int i = 0; i < poolSize; i++) {
             futures[i] = CompletableFuture.runAsync(() -> {
                 try {
                     while (System.currentTimeMillis() < endTime) {
-                        // Small crypto work to keep the thread busy
                         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
                         PBEKeySpec spec = new PBEKeySpec("pwd".toCharArray(), "s".getBytes(), 1000, 128);
                         factory.generateSecret(spec);
@@ -156,8 +235,6 @@ public class SlowRequestService {
                 }
             });
         }
-
-        // Wait for all to complete
         CompletableFuture.allOf(futures).join();
     }
 

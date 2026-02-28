@@ -139,19 +139,28 @@ async function startThreadStarvation() {
 }
 
 /**
- * Triggers a slow request
+ * Starts slow request simulation
  */
 async function triggerSlowRequest() {
-    const delaySeconds = parseInt(document.getElementById('slowDelay').value) || 5;
+    const delaySeconds = parseInt(document.getElementById('slowDelay').value) || 10;
     const pattern = document.getElementById('slowPattern').value || 'SLEEP';
+    const intervalSeconds = parseInt(document.getElementById('slowInterval').value) || 5;
+    const maxRequests = parseInt(document.getElementById('slowMaxRequests').value) || 3;
 
     try {
-        const response = await fetch(`/api/simulations/slow?delaySeconds=${delaySeconds}&blockingPattern=${pattern}`, {
-            method: 'GET'
+        const response = await fetch('/api/simulations/slow', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                delaySeconds, 
+                blockingPattern: pattern,
+                intervalSeconds,
+                maxRequests
+            })
         });
         const result = await response.json();
-        console.log('[Dashboard] Slow Request completed:', result);
-        Dashboard.addEvent('info', `Slow Request completed after ${(result.actualDurationMs / 1000).toFixed(1)}s`);
+        console.log('[Dashboard] Slow Requests started:', result);
+        Dashboard.addEvent('info', `Slow Requests: ${maxRequests} requests at ${intervalSeconds}s intervals, ${delaySeconds}s each`);
     } catch (error) {
         console.error('[Dashboard] Slow request failed:', error);
         Dashboard.addEvent('error', 'Slow request failed: ' + error.message);
