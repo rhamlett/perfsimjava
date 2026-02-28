@@ -399,8 +399,8 @@ const ChartsModule = (function() {
         if (metrics.thread) {
             latestThreads = metrics.thread.activeCount || 0;
         }
-        if (metrics.gc) {
-            latestGc = metrics.gc.totalTimeMs || 0;
+        if (metrics.process) {
+            latestGc = metrics.process.gcTimeMs || 0;
         }
     }
 

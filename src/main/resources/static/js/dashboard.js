@@ -417,9 +417,9 @@ const Dashboard = (function() {
         // GC Tile
         const gcEl = document.getElementById('gc-value');
         const gcBar = document.getElementById('gc-bar');
-        if (gcEl && metrics.gc) {
-            gcEl.textContent = metrics.gc.totalCollections || 0;
-            if (gcBar) gcBar.style.width = Math.min((metrics.gc.totalCollections / 100) * 100, 100) + '%';
+        if (gcEl && metrics.process) {
+            gcEl.textContent = metrics.process.gcCount || 0;
+            if (gcBar) gcBar.style.width = Math.min((metrics.process.gcCount / 100) * 100, 100) + '%';
         }
     }
 
