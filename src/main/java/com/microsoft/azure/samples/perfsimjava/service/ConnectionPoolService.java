@@ -78,6 +78,11 @@ public class ConnectionPoolService {
     private final AtomicInteger timedOutRequests = new AtomicInteger(0);
     private final AtomicInteger successfulQueries = new AtomicInteger(0);
     private final AtomicInteger pendingQueries = new AtomicInteger(0);
+    
+    // Track completion (separate from pendingQueries for thread-safety)
+    private final AtomicInteger completedQueries = new AtomicInteger(0);
+    private volatile int totalQueriesForCompletion = 0;
+    private volatile String activeSimulationId = null;
 
     public ConnectionPoolService(SimulationTrackerService simulationTracker,
                                   EventLogService eventLogService) {
@@ -106,6 +111,8 @@ public class ConnectionPoolService {
         timedOutRequests.set(0);
         successfulQueries.set(0);
         pendingQueries.set(concurrentQueries);
+        completedQueries.set(0);
+        totalQueriesForCompletion = concurrentQueries;
 
         // Create simulation record
         Map<String, Object> params = Map.of(
@@ -125,6 +132,7 @@ public class ConnectionPoolService {
 
         // Initialize stop flag
         String simId = simulation.getId();
+        activeSimulationId = simId;
         stopFlags.put(simId, new AtomicBoolean(false));
         AtomicBoolean stopFlag = stopFlags.get(simId);
 
@@ -150,7 +158,8 @@ public class ConnectionPoolService {
             // Small stagger to avoid thundering herd (10ms between each)
             scheduler.schedule(() -> {
                 if (stopFlag.get()) {
-                    checkCompletion(simId, concurrentQueries);
+                    // Query skipped due to stop - still counts as completed
+                    markQueryCompleted(simId);
                     return;
                 }
                 
@@ -162,17 +171,23 @@ public class ConnectionPoolService {
                             .build();
                     
                     // Fire and forget - the servlet thread handles the blocking
+                    // Completion tracking happens in executeQuery(), not here
                     httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
                             .whenComplete((response, error) -> {
                                 if (error != null) {
-                                    logger.debug("[ConnectionPool] Query {} failed: {}", queryNum, error.getMessage());
+                                    // HTTP failed (timeout, connection refused, etc.)
+                                    // executeQuery never ran, so we need to mark completion here
+                                    logger.debug("[ConnectionPool] Query {} HTTP failed: {}", queryNum, error.getMessage());
+                                    pendingQueries.decrementAndGet();
+                                    markQueryCompleted(simId);
                                 }
-                                checkCompletion(simId, concurrentQueries);
+                                // Success case: executeQuery() handles the completion
                             });
                             
                 } catch (Exception e) {
                     logger.debug("[ConnectionPool] Query {} spawn failed: {}", queryNum, e.getMessage());
-                    checkCompletion(simId, concurrentQueries);
+                    pendingQueries.decrementAndGet();
+                    markQueryCompleted(simId);
                 }
             }, i * 10L, TimeUnit.MILLISECONDS);
         }
@@ -186,7 +201,11 @@ public class ConnectionPoolService {
      */
     public Map<String, Object> executeQuery() {
         AtomicBoolean anyStopFlag = stopFlags.values().stream().findFirst().orElse(null);
+        String simId = activeSimulationId;
+        
         if (anyStopFlag != null && anyStopFlag.get()) {
+            pendingQueries.decrementAndGet();
+            markQueryCompleted(simId);
             return Map.of("status", "stopped", "acquired", false);
         }
         
@@ -235,15 +254,17 @@ public class ConnectionPoolService {
                 connectionPool.release();
             }
             pendingQueries.decrementAndGet();
+            markQueryCompleted(simId);
         }
     }
 
     /**
-     * Checks if simulation is complete.
+     * Marks a query as completed and checks if simulation is done.
+     * Thread-safe: uses atomic increment and compares against total.
      */
-    private void checkCompletion(String simulationId, int totalQueries) {
-        int remaining = pendingQueries.get();
-        if (remaining <= 0) {
+    private void markQueryCompleted(String simulationId) {
+        int completed = completedQueries.incrementAndGet();
+        if (completed >= totalQueriesForCompletion && simulationId != null) {
             completeSimulation(simulationId);
         }
     }
@@ -256,7 +277,8 @@ public class ConnectionPoolService {
             return; // Already completed
         }
         
-        simulationTracker.completeSimulation(simulationId);
+        activeSimulationId = null;
+        simulationTracker.completeSimulation(simulationId);;
         
         String summary = String.format("Pool exhaustion complete: %d successful, %d timed out",
                 successfulQueries.get(), timedOutRequests.get());
@@ -295,6 +317,9 @@ public class ConnectionPoolService {
         connectionPool = new Semaphore(currentPoolSize);
         activeConnections.set(0);
         pendingQueries.set(0);
+        completedQueries.set(0);
+        totalQueriesForCompletion = 0;
+        activeSimulationId = null;
         
         eventLogService.info(
                 EventLogEntry.EventType.SIMULATION_STOPPED,
@@ -315,6 +340,8 @@ public class ConnectionPoolService {
                 "activeConnections", activeConnections.get(),
                 "waitingThreads", connectionPool.getQueueLength(),
                 "pendingQueries", pendingQueries.get(),
+                "completedQueries", completedQueries.get(),
+                "totalQueries", totalQueriesForCompletion,
                 "successfulQueries", successfulQueries.get(),
                 "timedOutRequests", timedOutRequests.get()
         );

@@ -219,6 +219,40 @@
         <section id="connection-pool">
         <h2>Connection Pool Exhaustion</h2>
 
+        <div class="note">
+            <h4>Understanding Connection Pools</h4>
+            <p>Database connection pools (like HikariCP, C3P0, Tomcat JDBC) maintain a fixed number of reusable database connections. When all connections are in use, new requests must wait. This is one of the most common performance issues in Java applications.</p>
+        </div>
+
+        <h3>How This Simulation Works</h3>
+        <p>We use a <strong>Semaphore</strong> — a Java concurrency primitive that controls access to a limited number of resources. Think of it like a parking lot:</p>
+        <ul>
+            <li><strong>Pool Size</strong> = Number of parking spaces</li>
+            <li><strong>acquire()</strong> = Car takes a space (gets a connection)</li>
+            <li><strong>release()</strong> = Car leaves (returns connection to pool)</li>
+            <li><strong>Waiting threads</strong> = Cars queued at the gate when lot is full</li>
+        </ul>
+
+        <h4>Semaphore → HikariCP Mapping:</h4>
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;"><code>new Semaphore(10)</code></td>
+                <td style="padding: 0.5rem;"><code>maximumPoolSize=10</code></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;"><code>tryAcquire(30, SECONDS)</code></td>
+                <td style="padding: 0.5rem;"><code>connectionTimeout=30000</code></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;"><code>release()</code></td>
+                <td style="padding: 0.5rem;">Connection returned to pool</td>
+            </tr>
+            <tr>
+                <td style="padding: 0.5rem;">Thread blocked on acquire</td>
+                <td style="padding: 0.5rem;">Thread waiting for available connection</td>
+            </tr>
+        </table>
+
         <div class="api-endpoint">
             <span class="method post">POST</span>
             <span class="path">/api/simulations/connection-pool</span>
@@ -232,11 +266,21 @@
 }</code></pre>
             <h4>Diagnostic Value:</h4>
             <ul>
-                <li>Thread dumps show threads WAITING on Semaphore (like HikariCP/C3P0)</li>
-                <li>Mimics real-world JDBC pool exhaustion scenarios</li>
-                <li>Timeouts trigger when queries exceed pool capacity</li>
+                <li>Thread dumps show threads <code>TIMED_WAITING</code> on <code>Semaphore.tryAcquire</code></li>
+                <li>Identical pattern to real HikariCP/C3P0 pool exhaustion</li>
+                <li>Latency spikes as servlet threads block waiting for connections</li>
+                <li>Timeout errors when wait exceeds <code>connectionTimeoutSeconds</code></li>
             </ul>
         </div>
+
+        <h3>What You'll See in Thread Dumps</h3>
+        <pre><code>"http-nio-8080-exec-42" #42 daemon prio=5 TIMED_WAITING
+    at jdk.internal.misc.Unsafe.park(Native Method)
+    at java.util.concurrent.locks.LockSupport.parkNanos(...)
+    at java.util.concurrent.Semaphore.tryAcquire(...)
+    at com.microsoft.azure.samples.perfsimjava.service.ConnectionPoolService.executeQuery(...)
+    ...</code></pre>
+        <p>In real applications, this would show <code>HikariPool.getConnection()</code> or <code>BasicResourcePool.getResource()</code> instead.</p>
 
         <div class="api-endpoint">
             <span class="method get">GET</span>

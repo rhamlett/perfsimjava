@@ -445,6 +445,40 @@ const Dashboard = (function() {
     }
 
     /**
+     * Gets the emoji for a simulation type
+     */
+    function getSimulationEmoji(simulationType) {
+        const emojiMap = {
+            'CPU_STRESS': '🔥',
+            'MEMORY_PRESSURE': '📊',
+            'THREAD_STARVATION': '🧵',
+            'CONNECTION_POOL_EXHAUSTION': '🔌',
+            'CRASH_EXCEPTION': '💥',
+            'CRASH_MEMORY': '💥',
+            'CRASH_FAILFAST': '💥',
+            'CRASH_STACKOVERFLOW': '💥'
+        };
+        return emojiMap[simulationType] || '';
+    }
+
+    /**
+     * Gets the CSS class for a simulation type
+     */
+    function getSimulationClass(simulationType) {
+        const classMap = {
+            'CPU_STRESS': 'sim-cpu',
+            'MEMORY_PRESSURE': 'sim-memory',
+            'THREAD_STARVATION': 'sim-threads',
+            'CONNECTION_POOL_EXHAUSTION': 'sim-connection-pool',
+            'CRASH_EXCEPTION': 'sim-crash',
+            'CRASH_MEMORY': 'sim-crash',
+            'CRASH_FAILFAST': 'sim-crash',
+            'CRASH_STACKOVERFLOW': 'sim-crash'
+        };
+        return classMap[simulationType] || '';
+    }
+
+    /**
      * Adds an event entry to the log
      */
     function addEventToLog(event) {
@@ -456,11 +490,14 @@ const Dashboard = (function() {
         const logEl = document.getElementById('eventLog');
         if (logEl) {
             const levelClass = event.level.toLowerCase();
+            const simClass = getSimulationClass(event.simulationType);
             const time = new Date(event.timestamp).toLocaleTimeString();
+            const emoji = getSimulationEmoji(event.simulationType);
+            const prefix = emoji ? emoji + ' ' : '';
             
             const eventDiv = document.createElement('div');
-            eventDiv.className = `event ${levelClass}`;
-            eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${event.message}`;
+            eventDiv.className = `event ${levelClass} ${simClass}`.trim();
+            eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}${event.message}`;
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
 

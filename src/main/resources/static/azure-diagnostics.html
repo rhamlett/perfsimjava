@@ -210,6 +210,28 @@
         <h3>Heap Dumps on OOM</h3>
         <pre><code>JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError \
   -XX:HeapDumpPath=/home/LogFiles/heapdump.hprof</code></pre>
+
+        <h3>Reading Thread Dumps: Connection Pool Exhaustion</h3>
+        <p>When diagnosing connection pool issues, look for threads in <code>TIMED_WAITING</code> state blocked on resource acquisition:</p>
+        <pre><code>"http-nio-8080-exec-42" #42 daemon prio=5 TIMED_WAITING
+    at jdk.internal.misc.Unsafe.park(Native Method)
+    at java.util.concurrent.locks.LockSupport.parkNanos(...)
+    at java.util.concurrent.Semaphore.tryAcquire(...)</code></pre>
+        
+        <p><strong>Real HikariCP example:</strong></p>
+        <pre><code>"http-nio-8080-exec-15" TIMED_WAITING
+    at com.zaxxer.hikari.pool.HikariPool.getConnection(...)
+    at com.zaxxer.hikari.HikariDataSource.getConnection(...)</code></pre>
+
+        <p><strong>What the thread states mean:</strong></p>
+        <ul>
+            <li><strong>RUNNABLE</strong> — Actively executing (CPU work)</li>
+            <li><strong>BLOCKED</strong> — Waiting for a monitor lock (synchronized block)</li>
+            <li><strong>WAITING</strong> — Waiting indefinitely (Object.wait, Thread.join)</li>
+            <li><strong>TIMED_WAITING</strong> — Waiting with timeout (common for pool timeouts)</li>
+        </ul>
+
+        <p>Many threads in TIMED_WAITING on pool acquisition = connection pool exhaustion. Increase pool size or reduce query hold time.</p>
         </section>
 
         <section id="mapping">

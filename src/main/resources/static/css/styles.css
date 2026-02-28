@@ -780,10 +780,10 @@ section h2, section h3 {
   box-shadow: var(--shadow-sm);
 }
 
-.simulation-badge.cpu { border: 2px solid #d83b01; }
-.simulation-badge.memory { border: 2px solid #0078d4; }
-.simulation-badge.threads { border: 2px solid #5c2d91; }
-.simulation-badge.slow { border: 2px solid #b86e00; }
+.simulation-badge.cpu { border: 2px solid var(--color-cpu); }
+.simulation-badge.memory { border: 2px solid var(--color-memory); }
+.simulation-badge.threads { border: 2px solid var(--color-threads); }
+.simulation-badge.slow { border: 2px solid #ff8c00; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.9); }
@@ -798,10 +798,10 @@ section h2, section h3 {
   animation: spin 1s linear infinite;
 }
 
-.simulation-badge.cpu .spinner { border-top-color: #d83b01; }
-.simulation-badge.memory .spinner { border-top-color: #0078d4; }
-.simulation-badge.threads .spinner { border-top-color: #5c2d91; }
-.simulation-badge.slow .spinner { border-top-color: #b86e00; }
+.simulation-badge.cpu .spinner { border-top-color: var(--color-cpu); }
+.simulation-badge.memory .spinner { border-top-color: var(--color-memory); }
+.simulation-badge.threads .spinner { border-top-color: var(--color-threads); }
+.simulation-badge.slow .spinner { border-top-color: #ff8c00; }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -1193,6 +1193,13 @@ button:disabled {
 .event.success { color: var(--color-success); }
 .event.warn, .event.warning { color: var(--color-warning); }
 .event.error, .event.danger { color: var(--color-danger); }
+
+/* Simulation-type specific event colors */
+.event.sim-cpu { color: var(--color-cpu); }
+.event.sim-memory { color: var(--color-memory); }
+.event.sim-threads { color: var(--color-threads); }
+.event.sim-connection-pool { color: #ff8c00; }
+.event.sim-crash { color: var(--color-danger); }
 
 .event .timestamp {
   color: var(--color-text-muted);
