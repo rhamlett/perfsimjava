@@ -12,6 +12,11 @@ const SocketClient = (function() {
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 10;
     const reconnectDelay = 3000;
+    
+    // Track connection events for event log
+    let firstConnection = true;
+    let disconnectTimer = null;
+    let disconnectTime = null;
 
     // Callbacks
     const callbacks = {
@@ -100,6 +105,28 @@ const SocketClient = (function() {
             connected = true;
             reconnectAttempts = 0;
             updateConnectionStatus('connected');
+            
+            // Clear any pending disconnect timer
+            if (disconnectTimer) {
+                clearTimeout(disconnectTimer);
+                disconnectTimer = null;
+            }
+            
+            // Log connection events
+            if (firstConnection) {
+                firstConnection = false;
+                if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
+                    Dashboard.addEvent('info', 'WebSocket connected - real-time metrics active');
+                }
+            } else if (disconnectTime) {
+                // We were disconnected, now reconnected
+                const downtime = ((Date.now() - disconnectTime) / 1000).toFixed(1);
+                if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
+                    Dashboard.addEvent('info', `WebSocket reconnected after ${downtime}s`);
+                }
+            }
+            disconnectTime = null;
+            
             trigger('onConnect', frame);
 
             // Subscribe to topics
@@ -118,6 +145,21 @@ const SocketClient = (function() {
             connected = false;
             updateConnectionStatus('disconnected');
             trigger('onDisconnect', event);
+            
+            // Track when disconnect happened
+            if (!disconnectTime) {
+                disconnectTime = Date.now();
+            }
+            
+            // Set timer to log disconnect event after 5 seconds
+            if (!disconnectTimer) {
+                disconnectTimer = setTimeout(function() {
+                    if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
+                        Dashboard.addEvent('warn', 'WebSocket disconnected - real-time metrics paused');
+                    }
+                    disconnectTimer = null;
+                }, 5000);
+            }
             
             // Attempt reconnection
             if (reconnectAttempts < maxReconnectAttempts) {

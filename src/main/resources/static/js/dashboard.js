@@ -20,7 +20,6 @@ async function startCpuStress() {
         });
         const result = await response.json();
         console.log('[Dashboard] CPU Stress started:', result);
-        Dashboard.addEvent('info', `CPU Stress started (${intensity}) for ${durationSeconds}s`);
     } catch (error) {
         console.error('[Dashboard] Failed to start CPU stress:', error);
         Dashboard.addEvent('error', 'Failed to start CPU stress: ' + error.message);
@@ -37,7 +36,6 @@ async function stopCpuStress() {
         });
         const result = await response.json();
         console.log('[Dashboard] CPU Stress stopped:', result);
-        Dashboard.addEvent('info', result.message || 'CPU Stress stopped');
     } catch (error) {
         console.error('[Dashboard] Failed to stop CPU stress:', error);
         Dashboard.addEvent('error', 'Failed to stop CPU stress: ' + error.message);
@@ -54,7 +52,6 @@ async function stopThreadStarvation() {
         });
         const result = await response.json();
         console.log('[Dashboard] Thread Starvation stopped:', result);
-        Dashboard.addEvent('info', result.message || 'Thread Starvation stopped');
     } catch (error) {
         console.error('[Dashboard] Failed to stop thread starvation:', error);
         Dashboard.addEvent('error', 'Failed to stop thread starvation: ' + error.message);
@@ -87,7 +84,6 @@ async function allocateMemory() {
         });
         const result = await response.json();
         console.log('[Dashboard] Memory allocated:', result);
-        Dashboard.addEvent('info', `Allocated ${sizeMb}MB of memory`);
     } catch (error) {
         console.error('[Dashboard] Failed to allocate memory:', error);
         Dashboard.addEvent('error', 'Failed to allocate memory: ' + error.message);
@@ -107,7 +103,6 @@ async function releaseAllMemory() {
         });
         const result = await response.json();
         console.log('[Dashboard] Memory released:', result);
-        Dashboard.addEvent('info', result.message || 'Memory released');
     } catch (error) {
         console.error('[Dashboard] Failed to release memory:', error);
         Dashboard.addEvent('error', 'Failed to release memory: ' + error.message);
@@ -130,7 +125,6 @@ async function startThreadStarvation() {
         });
         const result = await response.json();
         console.log('[Dashboard] Thread Starvation simulation started:', result);
-        Dashboard.addEvent('warn', `Thread starvation: ${threadCount} threads for ${durationSeconds}s`);
         
     } catch (error) {
         console.error('[Dashboard] Failed to start thread starvation:', error);
@@ -160,7 +154,6 @@ async function triggerConnectionPool() {
         });
         const result = await response.json();
         console.log('[Dashboard] Connection Pool simulation started:', result);
-        Dashboard.addEvent('info', `Connection Pool: ${concurrentQueries} queries competing for ${poolSize} connections`);
     } catch (error) {
         console.error('[Dashboard] Connection Pool simulation failed:', error);
         Dashboard.addEvent('error', 'Connection Pool simulation failed: ' + error.message);
@@ -177,10 +170,8 @@ async function stopConnectionPool() {
         });
         const result = await response.json();
         console.log('[Dashboard] Connection Pool simulation stopped:', result);
-        Dashboard.addEvent('info', result.message || 'Connection pool simulation stopped');
     } catch (error) {
         console.error('[Dashboard] Failed to stop connection pool simulation:', error);
-        Dashboard.addEvent('info', 'No active connection pool simulation to stop');
     }
 }
 
