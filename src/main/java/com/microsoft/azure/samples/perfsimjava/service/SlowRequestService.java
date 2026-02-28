@@ -150,7 +150,7 @@ public class SlowRequestService {
         }
 
         // Schedule completion
-        long totalDuration = (long) (maxRequests - 1) * intervalSeconds * 1000 + delaySeconds * 1000L;
+        long totalDuration = (long)((maxRequests - 1) * intervalSeconds * 1000) + delaySeconds * 1000L;
         scheduler.schedule(() -> {
             stopFlags.remove(simulation.getId());
             simulationTracker.completeSimulation(simulation.getId());
