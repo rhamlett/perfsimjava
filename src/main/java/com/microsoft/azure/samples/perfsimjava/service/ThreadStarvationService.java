@@ -223,7 +223,9 @@ public class ThreadStarvationService {
      * Stops all active thread starvation simulations.
      */
     public void stopAll() {
-        for (String id : stopFlags.keySet()) {
+        // Copy keys to avoid ConcurrentModificationException
+        List<String> ids = List.copyOf(stopFlags.keySet());
+        for (String id : ids) {
             stop(id);
         }
     }
@@ -234,7 +236,9 @@ public class ThreadStarvationService {
     public boolean stop(String simulationId) {
         AtomicBoolean stopFlag = stopFlags.get(simulationId);
         if (stopFlag != null) {
+            // Set flag first - blocking threads check this in their loop
             stopFlag.set(true);
+            
             simulationTracker.completeSimulation(simulationId);
             eventLogService.info(
                     EventLogEntry.EventType.SIMULATION_STOPPED,
@@ -243,9 +247,15 @@ public class ThreadStarvationService {
                     SimulationType.THREAD_STARVATION,
                     null
             );
-            // Cleanup will happen when last blocker exits
-            stopFlags.remove(simulationId);
-            activeBlockers.remove(simulationId);
+            
+            // Delay cleanup to give blocking threads time to see the stop flag
+            // They check stopFlag.get() in their while loop
+            // Don't remove immediately - let threads exit gracefully first
+            CompletableFuture.delayedExecutor(2, TimeUnit.SECONDS).execute(() -> {
+                stopFlags.remove(simulationId);
+                activeBlockers.remove(simulationId);
+            });
+            
             return true;
         }
         return false;
