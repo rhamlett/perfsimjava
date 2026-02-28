@@ -86,7 +86,7 @@
             <li><strong>CPU Stress:</strong> High CPU utilization graphs, potential throttling alerts</li>
             <li><strong>Memory Pressure:</strong> Memory usage spikes, potential OOM patterns</li>
             <li><strong>Thread Starvation:</strong> Increased request latency, request queuing</li>
-            <li><strong>Slow Requests:</strong> Long response times, timeout patterns</li>
+            <li><strong>Connection Pool:</strong> Thread dumps show WAITING state, timeout errors</li>
             <li><strong>Crashes:</strong> Instance restarts, availability drops</li>
         </ul>
         </section>
@@ -240,9 +240,9 @@
                     <td style="padding: 0.75rem;">Latency spikes, HTTP queue length</td>
                 </tr>
                 <tr>
-                    <td style="padding: 0.75rem;">Slow Request</td>
-                    <td style="padding: 0.75rem;">App Insights</td>
-                    <td style="padding: 0.75rem;">Response time distribution change</td>
+                    <td style="padding: 0.75rem;">Connection Pool</td>
+                    <td style="padding: 0.75rem;">Thread Dump, Logs</td>
+                    <td style="padding: 0.75rem;">Threads WAITING on Semaphore, timeout errors in logs</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.75rem;">Crash</td>

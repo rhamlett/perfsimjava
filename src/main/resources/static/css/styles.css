@@ -924,7 +924,7 @@ section h2, section h3 {
   background: rgba(135, 100, 184, 0.05);
 }
 
-.slow-section {
+.connection-pool-section {
   border: 2px dashed #ff8c00;
   background: rgba(255, 140, 0, 0.05);
 }
@@ -1050,18 +1050,18 @@ button:disabled {
   background: #5c2d91;
 }
 
-.btn-slow {
+.btn-connection-pool {
   background: linear-gradient(135deg, #ff8c00 0%, #b84900 100%);
   border: 2px solid #ffa500;
-  animation: pulse-slow 3s infinite;
+  animation: pulse-connection-pool 3s infinite;
 }
 
-.btn-slow:hover:not(:disabled) {
+.btn-connection-pool:hover:not(:disabled) {
   background: linear-gradient(135deg, #ffa500 0%, #d05500 100%);
   border-color: #ffbb33;
 }
 
-@keyframes pulse-slow {
+@keyframes pulse-connection-pool {
   0%, 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.3); }
   50% { box-shadow: 0 0 12px rgba(255, 140, 0, 0.5); }
 }

@@ -36,10 +36,11 @@ public enum SimulationType {
     THREAD_STARVATION,
 
     /**
-     * Delays HTTP responses using various blocking strategies.
-     * Demonstrates different ways requests can become slow.
+     * Simulates database connection pool exhaustion.
+     * Uses a Semaphore to mimic HikariCP/JDBC pool behavior.
+     * Demonstrates what happens when slow queries hold connections too long.
      */
-    SLOW_REQUEST,
+    CONNECTION_POOL_EXHAUSTION,
 
     /**
      * Crashes via unhandled exception.

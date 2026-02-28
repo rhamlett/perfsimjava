@@ -78,7 +78,7 @@
             <li><strong>CPU Stress</strong> - Generate high CPU usage at configurable percentages</li>
             <li><strong>Memory Pressure</strong> - Allocate and retain memory to simulate leaks</li>
             <li><strong>Thread Starvation</strong> - Block the servlet thread pool with synchronous operations</li>
-            <li><strong>Slow Requests</strong> - Simulate slow HTTP responses</li>
+            <li><strong>Connection Pool</strong> - Simulate JDBC connection pool exhaustion</li>
             <li><strong>Crash Simulation</strong> - Trigger unhandled exceptions or OOM conditions</li>
         </ul>
         </section>
@@ -216,18 +216,38 @@
         </div>
         </section>
 
-        <section id="slow-requests">
-        <h2>Slow Request Simulation</h2>
+        <section id="connection-pool">
+        <h2>Connection Pool Exhaustion</h2>
+
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/connection-pool</span>
+            <p>Simulates JDBC connection pool exhaustion. Multiple queries compete for limited connections, causing timeouts.</p>
+            <h4>Request Body:</h4>
+            <pre><code>{
+    "poolSize": 10,              // Simulated pool size (like HikariCP)
+    "queryDurationSeconds": 30,  // How long each query holds a connection
+    "concurrentQueries": 20,     // Number of concurrent queries
+    "connectionTimeoutSeconds": 5 // Timeout waiting for connection
+}</code></pre>
+            <h4>Diagnostic Value:</h4>
+            <ul>
+                <li>Thread dumps show threads WAITING on Semaphore (like HikariCP/C3P0)</li>
+                <li>Mimics real-world JDBC pool exhaustion scenarios</li>
+                <li>Timeouts trigger when queries exceed pool capacity</li>
+            </ul>
+        </div>
 
         <div class="api-endpoint">
             <span class="method get">GET</span>
-            <span class="path">/api/simulations/slow/request</span>
-            <p>Triggers a slow response with configurable delay.</p>
-            <h4>Query Parameters:</h4>
-            <ul>
-                <li><code>delayMs</code> - Response delay in milliseconds (default: 5000)</li>
-                <li><code>pattern</code> - Blocking pattern: SLEEP, EXECUTOR_SATURATION, or SYNC_BLOCKING</li>
-            </ul>
+            <span class="path">/api/simulations/connection-pool/stats</span>
+            <p>Returns current pool statistics including available connections, active connections, and timeout counts.</p>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method delete">DELETE</span>
+            <span class="path">/api/simulations/connection-pool</span>
+            <p>Stops the connection pool simulation and releases all connections.</p>
         </div>
         </section>
 
@@ -336,7 +356,7 @@
             <a href="#cpu-simulation" class="doc-toc-link"><span class="toc-icon">🔥</span> CPU Stress</a>
             <a href="#memory-simulation" class="doc-toc-link"><span class="toc-icon">📊</span> Memory Pressure</a>
             <a href="#thread-simulation" class="doc-toc-link"><span class="toc-icon">🟣</span> Thread Starvation</a>
-            <a href="#slow-requests" class="doc-toc-link"><span class="toc-icon">🐢</span> Slow Requests</a>
+            <a href="#connection-pool" class="doc-toc-link"><span class="toc-icon">🔌</span> Connection Pool</a>
             <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Crash Simulation</a>
             
             <div class="doc-toc-section-label">REFERENCE</div>

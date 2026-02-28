@@ -261,35 +261,33 @@
                     </form>
                 </div>
 
-                <!-- Slow Requests -->
-                <div class="control-section slow-section">
-                    <h3>🐌 Slow Request <span class="info-icon" title="Simulates a single slow HTTP request for diagnostic capture">ℹ️</span></h3>
-                    <p class="control-description">Triggers a single request with bad blocking patterns. Useful for capturing in memory dumps or CPU profiles to diagnose sync-over-async anti-patterns.</p>
+                <!-- Connection Pool Exhaustion -->
+                <div class="control-section connection-pool-section">
+                    <h3>🔌 Connection Pool <span class="info-icon" title="Simulates database connection pool exhaustion">ℹ️</span></h3>
+                    <p class="control-description">Simulates JDBC connection pool exhaustion. Concurrent queries exceed pool capacity, causing timeouts - a common Java production issue.</p>
                     <div class="note-box">
-                        🔍 Use Azure diagnostics to capture a memory dump or CPU profile while this request is running.
+                        🔍 Thread dumps will show threads WAITING on Semaphore - identical to HikariCP/C3P0 pool exhaustion.
                     </div>
-                    <form id="slow-form">
+                    <form id="connection-pool-form">
                         <label>
-                            Blocking Pattern:
-                            <select id="slowPattern" class="wide-select">
-                                <option value="SYNC_BLOCKING" selected>Synchronous CPU-bound blocking</option>
-                                <option value="SLEEP">Thread.sleep (simple delay)</option>
-                                <option value="EXECUTOR_SATURATION">ForkJoinPool saturation</option>
-                            </select>
+                            Pool Size <span class="info-icon" title="Max connections (like HikariCP maximumPoolSize)">ⓘ</span>:
+                            <input type="number" id="poolSize" value="10" min="1">
                         </label>
                         <label>
-                            Duration (seconds) <span class="info-icon" title="How long the request blocks - long enough to capture in diagnostics">ⓘ</span>:
-                            <input type="number" id="slowDelay" value="60" min="1">
+                            Query Duration (s) <span class="info-icon" title="How long each slow query holds a connection">ⓘ</span>:
+                            <input type="number" id="queryDuration" value="30" min="1">
                         </label>
-                        <label style="display:none;">
-                            <input type="hidden" id="slowInterval" value="1">
+                        <label>
+                            Concurrent Queries <span class="info-icon" title="Number of queries to execute (should exceed pool size)">ⓘ</span>:
+                            <input type="number" id="concurrentQueries" value="20" min="1">
                         </label>
-                        <label style="display:none;">
-                            <input type="hidden" id="slowMaxRequests" value="1">
+                        <label>
+                            Connection Timeout (s) <span class="info-icon" title="How long queries wait for a connection before timing out">ⓘ</span>:
+                            <input type="number" id="connectionTimeout" value="5" min="1">
                         </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-slow">🐌 Start Slow Requests</button>
-                            <button type="button" id="stop-slow" class="btn-stop">⬛ Stop</button>
+                            <button type="submit" class="btn-trigger btn-connection-pool">🔌 Exhaust Pool</button>
+                            <button type="button" id="stop-connection-pool" class="btn-stop">⬛ Stop</button>
                         </div>
                     </form>
                 </div>
@@ -403,12 +401,12 @@
 
         document.getElementById('stop-threads').addEventListener('click', stopThreadStarvation);
 
-        document.getElementById('slow-form').addEventListener('submit', (e) => {
+        document.getElementById('connection-pool-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            triggerSlowRequest();
+            triggerConnectionPool();
         });
 
-        document.getElementById('stop-slow').addEventListener('click', stopSlowRequests);
+        document.getElementById('stop-connection-pool').addEventListener('click', stopConnectionPool);
 
         document.getElementById('crash-form').addEventListener('submit', (e) => {
             e.preventDefault();

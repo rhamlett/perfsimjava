@@ -139,46 +139,48 @@ async function startThreadStarvation() {
 }
 
 /**
- * Starts slow request simulation
+ * Starts connection pool exhaustion simulation
  */
-async function triggerSlowRequest() {
-    const delaySeconds = parseInt(document.getElementById('slowDelay').value) || 60;
-    const pattern = document.getElementById('slowPattern').value || 'SYNC_BLOCKING';
+async function triggerConnectionPool() {
+    const poolSize = parseInt(document.getElementById('poolSize').value) || 10;
+    const queryDurationSeconds = parseInt(document.getElementById('queryDuration').value) || 30;
+    const concurrentQueries = parseInt(document.getElementById('concurrentQueries').value) || 20;
+    const connectionTimeoutSeconds = parseInt(document.getElementById('connectionTimeout').value) || 5;
 
     try {
-        const response = await fetch('/api/simulations/slow', {
+        const response = await fetch('/api/simulations/connection-pool', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                delaySeconds, 
-                blockingPattern: pattern,
-                intervalSeconds: 1,
-                maxRequests: 1
+                poolSize,
+                queryDurationSeconds,
+                concurrentQueries,
+                connectionTimeoutSeconds
             })
         });
         const result = await response.json();
-        console.log('[Dashboard] Slow Request started:', result);
-        Dashboard.addEvent('info', `Slow Request: ${delaySeconds}s blocking (${pattern})`);
+        console.log('[Dashboard] Connection Pool simulation started:', result);
+        Dashboard.addEvent('info', `Connection Pool: ${concurrentQueries} queries competing for ${poolSize} connections`);
     } catch (error) {
-        console.error('[Dashboard] Slow request failed:', error);
-        Dashboard.addEvent('error', 'Slow request failed: ' + error.message);
+        console.error('[Dashboard] Connection Pool simulation failed:', error);
+        Dashboard.addEvent('error', 'Connection Pool simulation failed: ' + error.message);
     }
 }
 
 /**
- * Stops slow request simulations
+ * Stops connection pool simulations
  */
-async function stopSlowRequests() {
+async function stopConnectionPool() {
     try {
-        const response = await fetch('/api/simulations/slow', {
+        const response = await fetch('/api/simulations/connection-pool', {
             method: 'DELETE'
         });
         const result = await response.json();
-        console.log('[Dashboard] Slow requests stopped:', result);
-        Dashboard.addEvent('info', result.message || 'Slow requests stopped');
+        console.log('[Dashboard] Connection Pool simulation stopped:', result);
+        Dashboard.addEvent('info', result.message || 'Connection pool simulation stopped');
     } catch (error) {
-        console.error('[Dashboard] Failed to stop slow requests:', error);
-        Dashboard.addEvent('info', 'No active slow requests to stop');
+        console.error('[Dashboard] Failed to stop connection pool simulation:', error);
+        Dashboard.addEvent('info', 'No active connection pool simulation to stop');
     }
 }
 
@@ -550,7 +552,7 @@ const Dashboard = (function() {
         if (type.includes('CPU')) return 'cpu';
         if (type.includes('MEMORY')) return 'memory';
         if (type.includes('THREAD')) return 'threads';
-        if (type.includes('SLOW')) return 'slow';
+        if (type.includes('CONNECTION_POOL')) return 'connection-pool';
         return '';
     }
 
@@ -562,7 +564,7 @@ const Dashboard = (function() {
             'CPU_STRESS': '🔥 CPU Stress',
             'MEMORY_PRESSURE': '💾 Memory Pressure',
             'THREAD_STARVATION': '🧵 Thread Starvation',
-            'SLOW_REQUEST': '🐌 Slow Request',
+            'CONNECTION_POOL_EXHAUSTION': '🔌 Connection Pool',
             'CRASH_FAILFAST': '💥 Crash (Exit)',
             'CRASH_STACKOVERFLOW': '💥 Stack Overflow',
             'CRASH_EXCEPTION': '💥 Exception',

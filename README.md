@@ -19,7 +19,7 @@ This application allows you to deliberately trigger different types of performan
 | 🔥 **CPU Stress** | Spawns worker threads performing PBKDF2 cryptographic operations | Test CPU throttling detection, auto-scaling triggers |
 | 💾 **Memory Pressure** | Allocates heap memory chunks | Test memory alerts, GC behavior, OOM scenarios |
 | ⏳ **Thread Pool Starvation** | Blocks servlet threads to exhaust the pool | Test request queuing, latency spikes (Java equivalent of Event Loop Blocking) |
-| 🐢 **Slow Request** | Introduces artificial delays in responses | Test timeout detection, P95/P99 latency monitoring |
+| � **Connection Pool** | Simulates JDBC connection pool exhaustion with slow queries | Test pool timeout detection, thread dumps show WAITING on semaphore |
 | 💥 **Crash** | Triggers various crash scenarios | Test instance restart detection, availability monitoring |
 
 ### Real-time Dashboard
@@ -86,8 +86,10 @@ az webapp deploy \
 ### Thread Pool Starvation
 - `POST /api/simulations/thread/starvation` - Start blocking threads
 
-### Slow Request
-- `GET /api/simulations/slow/request` - Trigger slow response
+### Connection Pool Exhaustion
+- `POST /api/simulations/connection-pool` - Start connection pool exhaustion
+- `GET /api/simulations/connection-pool/stats` - Get pool statistics
+- `DELETE /api/simulations/connection-pool` - Stop simulation
 
 ### Crash
 - `POST /api/simulations/crash` - Trigger crash by type
@@ -178,7 +180,7 @@ perfsimjava/
 │   │   ├── CpuStressService.java         # CPU stress logic
 │   │   ├── MemoryPressureService.java    # Memory allocation
 │   │   ├── ThreadStarvationService.java  # Thread blocking
-│   │   ├── SlowRequestService.java       # Slow responses
+│   │   ├── ConnectionPoolService.java    # Connection pool exhaustion
 │   │   ├── CrashService.java             # Crash triggers
 │   │   └── ProbeService.java             # Health probing
 │   └── controller/
@@ -187,7 +189,7 @@ perfsimjava/
 │       ├── CpuController.java            # CPU simulation API
 │       ├── MemoryController.java         # Memory simulation API
 │       ├── ThreadStarvationController.java # Thread starvation API
-│       ├── SlowRequestController.java    # Slow request API
+│       ├── ConnectionPoolController.java # Connection pool API
 │       ├── CrashController.java          # Crash simulation API
 │       └── AdminController.java          # Admin endpoints
 ├── src/main/resources/
