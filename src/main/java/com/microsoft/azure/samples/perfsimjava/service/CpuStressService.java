@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * INTENSITY LEVELS:
  *   - MODERATE: Uses ~65% of available CPU cores
- *   - HIGH: Uses ~100% of available CPU cores
+ *   - HIGH: Uses 2x available CPU cores (over-provisioned to saturate)
  *
  * PORTING NOTES:
  *   - Node.js: Uses child_process.fork() for separate processes
@@ -200,32 +200,48 @@ public class CpuStressService {
 
     /**
      * Calculates the number of threads based on intensity.
+     * HIGH uses 2x CPU cores to ensure maximum saturation.
      */
     private int calculateThreadCount(CpuStressRequest.Intensity intensity) {
         return switch (intensity) {
             case MODERATE -> Math.max(1, (int) (availableProcessors * 0.65));
-            case HIGH -> availableProcessors;
+            case HIGH -> availableProcessors * 2;  // Over-provision to saturate all cores
         };
     }
 
     /**
      * Runs CPU-intensive work until stopped.
-     * Uses PBKDF2 key derivation which is computationally expensive.
+     * Uses a combination of tight math loops and PBKDF2 for maximum CPU pressure.
      */
     private void runCpuIntensiveWork(AtomicBoolean running) {
         try {
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+            long counter = 0;
+            double result = 0;
 
             while (running.get() && !Thread.currentThread().isInterrupted()) {
-                // PBKDF2 with high iteration count - CPU intensive
-                PBEKeySpec spec = new PBEKeySpec(
-                        "password".toCharArray(),
-                        "salt".getBytes(),
-                        10000,  // iterations
-                        512     // key length
-                );
-                factory.generateSecret(spec);
-                spec.clearPassword();
+                // Tight computational loop - pure CPU work with no memory allocation
+                for (int i = 0; i < 100_000 && running.get(); i++) {
+                    result += Math.sin(counter++) * Math.cos(counter) * Math.tan(counter % 1000 + 1);
+                    result = Math.sqrt(Math.abs(result) + 1);
+                }
+                
+                // Occasional PBKDF2 to add variety and prevent JIT over-optimization
+                if (counter % 500_000 == 0) {
+                    PBEKeySpec spec = new PBEKeySpec(
+                            "password".toCharArray(),
+                            "salt".getBytes(),
+                            5000,   // iterations (reduced for tighter loop)
+                            256     // key length
+                    );
+                    factory.generateSecret(spec);
+                    spec.clearPassword();
+                }
+                
+                // Prevent dead code elimination
+                if (result == Double.MAX_VALUE) {
+                    logger.trace("Result: {}", result);
+                }
             }
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             logger.error("CPU stress work failed: {}", e.getMessage());
