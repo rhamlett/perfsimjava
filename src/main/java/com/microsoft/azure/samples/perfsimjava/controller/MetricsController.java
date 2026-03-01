@@ -1,6 +1,7 @@
 package com.microsoft.azure.samples.perfsimjava.controller;
 
 import com.microsoft.azure.samples.perfsimjava.model.SystemMetrics;
+import com.microsoft.azure.samples.perfsimjava.service.ConnectionPoolService;
 import com.microsoft.azure.samples.perfsimjava.service.MetricsService;
 import com.microsoft.azure.samples.perfsimjava.service.ProbeService;
 import org.springframework.http.ResponseEntity;
@@ -30,10 +31,13 @@ public class MetricsController {
 
     private final MetricsService metricsService;
     private final ProbeService probeService;
+    private final ConnectionPoolService connectionPoolService;
 
-    public MetricsController(MetricsService metricsService, ProbeService probeService) {
+    public MetricsController(MetricsService metricsService, ProbeService probeService,
+                             ConnectionPoolService connectionPoolService) {
         this.metricsService = metricsService;
         this.probeService = probeService;
+        this.connectionPoolService = connectionPoolService;
     }
 
     /**
@@ -47,9 +51,17 @@ public class MetricsController {
     /**
      * Lightweight probe endpoint for latency monitoring.
      * This is what the probe service hits to measure response time.
+     * 
+     * When connection pool exhaustion is active, this endpoint must acquire
+     * a connection first - simulating realistic health checks that verify
+     * database connectivity.
      */
     @GetMapping("/probe")
     public ResponseEntity<MetricsService.ProbeResponse> probe() {
+        // When connection pool simulation is active, probe must acquire a connection
+        // This makes probe latency realistic - real health checks often query the DB
+        connectionPoolService.acquireProbeConnection();
+        
         return ResponseEntity.ok(metricsService.getProbeResponse());
     }
 

@@ -353,4 +353,38 @@ public class ConnectionPoolService {
     public List<Simulation> getActiveSimulations() {
         return simulationTracker.getActiveSimulationsByType(SimulationType.CONNECTION_POOL_EXHAUSTION);
     }
+
+    /**
+     * Checks if a connection pool exhaustion simulation is currently active.
+     */
+    public boolean isSimulationActive() {
+        return activeSimulationId != null;
+    }
+
+    /**
+     * Acquires a connection for probe/health check requests.
+     * This makes probe latency realistic - real health checks often verify DB connectivity.
+     * 
+     * @return true if connection was acquired (or no simulation active), false if timed out
+     */
+    public boolean acquireProbeConnection() {
+        if (activeSimulationId == null) {
+            // No active simulation - don't block probes
+            return true;
+        }
+        
+        try {
+            // Try to acquire with the configured timeout
+            // This makes probes experience the same contention as real queries
+            boolean acquired = connectionPool.tryAcquire(currentTimeout, TimeUnit.SECONDS);
+            if (acquired) {
+                // Immediately release - probe just needs to verify connectivity
+                connectionPool.release();
+            }
+            return acquired;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return true; // Don't fail probe on interrupt
+        }
+    }
 }
