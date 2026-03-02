@@ -418,6 +418,11 @@ header nav {
   min-height: calc(100vh - 52px);
 }
 
+/* Documentation pages need vertical layout */
+.app-container:has(.doc-page-header) {
+  flex-direction: column;
+}
+
 main {
   flex: 1;
   max-width: 1400px;

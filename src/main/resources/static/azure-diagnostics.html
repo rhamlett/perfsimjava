@@ -15,7 +15,7 @@
             <span></span>
         </button>
         <h1>☕ Performance Problem Simulator</h1>
-        <span class="sku-badge">Java Blessed Image (Java|21)</span>
+        <span id="sku-badge" class="sku-badge">SKU: Local</span>
         <nav>
             <a href="/" class="nav-link">🎮 Dashboard</a>
         </nav>
@@ -371,6 +371,21 @@
         
         window.addEventListener('scroll', highlightToc);
         highlightToc();
+
+        // Load SKU info
+        async function loadSkuInfo() {
+            try {
+                const response = await fetch('/api/health/environment');
+                const data = await response.json();
+                const skuBadge = document.getElementById('sku-badge');
+                if (skuBadge) {
+                    skuBadge.textContent = data.isAzure ? `SKU: ${data.sku}` : 'SKU: Local';
+                }
+            } catch (error) {
+                console.log('Could not load SKU info');
+            }
+        }
+        loadSkuInfo();
 
         // Load footer info
         async function loadBuildInfo() {
