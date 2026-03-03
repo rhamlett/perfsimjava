@@ -207,6 +207,7 @@ public class SystemMetrics {
         private long uptimeSeconds;
         private int gcCount;
         private long gcTimeMs;
+        private double gcOverheadPercent;
 
         public long getPid() {
             return pid;
@@ -246,6 +247,14 @@ public class SystemMetrics {
 
         public void setGcTimeMs(long gcTimeMs) {
             this.gcTimeMs = gcTimeMs;
+        }
+
+        public double getGcOverheadPercent() {
+            return gcOverheadPercent;
+        }
+
+        public void setGcOverheadPercent(double gcOverheadPercent) {
+            this.gcOverheadPercent = gcOverheadPercent;
         }
     }
 }

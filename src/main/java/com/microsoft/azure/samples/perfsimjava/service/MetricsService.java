@@ -1,6 +1,5 @@
 package com.microsoft.azure.samples.perfsimjava.service;
 
-import com.microsoft.azure.samples.perfsimjava.config.AppConfig;
 import com.microsoft.azure.samples.perfsimjava.model.EventLogEntry;
 import com.microsoft.azure.samples.perfsimjava.model.SystemMetrics;
 import com.sun.management.OperatingSystemMXBean;
@@ -53,7 +52,6 @@ public class MetricsService {
     private static final double BYTES_TO_MB = 1024.0 * 1024.0;
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final AppConfig config;
     private final EventLogService eventLogService;
 
     private final OperatingSystemMXBean osBean;
@@ -62,10 +60,13 @@ public class MetricsService {
     private final long processId;
     private final Instant startTime;
     private final long jvmStartTime;
+    
+    // For GC overhead calculation (delta between intervals)
+    private volatile long lastGcTimeMs = 0;
+    private volatile long lastGcTimestamp = System.currentTimeMillis();
 
-    public MetricsService(SimpMessagingTemplate messagingTemplate, AppConfig config, EventLogService eventLogService) {
+    public MetricsService(SimpMessagingTemplate messagingTemplate, EventLogService eventLogService) {
         this.messagingTemplate = messagingTemplate;
-        this.config = config;
         this.eventLogService = eventLogService;
 
         // Initialize MXBeans
@@ -161,6 +162,20 @@ public class MetricsService {
         }
         process.setGcCount(gcCount);
         process.setGcTimeMs(gcTimeMs);
+        
+        // Calculate GC overhead % (time spent in GC during this interval)
+        long now = System.currentTimeMillis();
+        long elapsedMs = now - lastGcTimestamp;
+        long deltaGcMs = gcTimeMs - lastGcTimeMs;
+        double gcOverhead = (elapsedMs > 0 && deltaGcMs >= 0) 
+                ? (deltaGcMs * 100.0 / elapsedMs) 
+                : 0.0;
+        process.setGcOverheadPercent(Math.min(gcOverhead, 100.0));
+        
+        // Update tracking for next interval
+        lastGcTimeMs = gcTimeMs;
+        lastGcTimestamp = now;
+        
         metrics.setProcess(process);
 
         return metrics;

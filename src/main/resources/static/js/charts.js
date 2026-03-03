@@ -208,7 +208,7 @@ const ChartsModule = (function() {
                             yAxisID: 'y'
                         },
                         {
-                            label: 'GC Time (ms)',
+                            label: 'GC Overhead (%)',
                             data: dataBuffers.gc,
                             borderColor: colors.gc,
                             backgroundColor: colors.gcLight,
@@ -373,7 +373,7 @@ const ChartsModule = (function() {
     }
 
     /**
-     * Updates GC time (stores latest, rendered by interval)
+     * Updates GC overhead (stores latest, rendered by interval)
      */
     function updateGc(value) {
         latestGc = value;
@@ -400,7 +400,7 @@ const ChartsModule = (function() {
             latestThreads = metrics.thread.activeCount || 0;
         }
         if (metrics.process) {
-            latestGc = metrics.process.gcTimeMs || 0;
+            latestGc = metrics.process.gcOverheadPercent || 0;
         }
     }
 

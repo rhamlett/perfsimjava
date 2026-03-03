@@ -1,6 +1,5 @@
 package com.microsoft.azure.samples.perfsimjava.controller;
 
-import com.microsoft.azure.samples.perfsimjava.service.MetricsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,11 +31,9 @@ import java.util.Map;
 @RequestMapping("/api/health")
 public class HealthController {
 
-    private final MetricsService metricsService;
     private final String buildTime;
 
-    public HealthController(MetricsService metricsService) {
-        this.metricsService = metricsService;
+    public HealthController() {
         // Capture build time at startup
         this.buildTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 .withZone(ZoneOffset.UTC)

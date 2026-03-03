@@ -432,12 +432,14 @@ const Dashboard = (function() {
             if (threadBar) threadBar.style.width = Math.min((threadCount / 500) * 100, 100) + '%';
         }
 
-        // GC Tile
+        // GC Tile (shows GC Overhead %)
         const gcEl = document.getElementById('gc-value');
         const gcBar = document.getElementById('gc-bar');
         if (gcEl && metrics.process) {
-            gcEl.textContent = metrics.process.gcCount || 0;
-            if (gcBar) gcBar.style.width = Math.min((metrics.process.gcCount / 100) * 100, 100) + '%';
+            const gcOverhead = metrics.process.gcOverheadPercent || 0;
+            gcEl.textContent = gcOverhead.toFixed(1);
+            // Bar fills at 10% overhead (considered high)
+            if (gcBar) gcBar.style.width = Math.min((gcOverhead / 10) * 100, 100) + '%';
         }
     }
 
