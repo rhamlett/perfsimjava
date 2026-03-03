@@ -57,10 +57,10 @@ const ChartsModule = (function() {
     let latencyTimeLabels = [];
 
     /**
-     * Formats time for x-axis labels
+     * Formats time for x-axis labels (UTC)
      */
     function formatTime(date) {
-        return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'UTC' });
     }
 
     /**

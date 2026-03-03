@@ -247,8 +247,8 @@ const Dashboard = (function() {
         if (metrics.process && metrics.process.jvmStartTime) {
             const currentJvmStartTime = metrics.process.jvmStartTime;
             if (lastKnownJvmStartTime !== null && lastKnownJvmStartTime !== currentJvmStartTime) {
-                const prevTime = new Date(lastKnownJvmStartTime).toLocaleTimeString();
-                const newTime = new Date(currentJvmStartTime).toLocaleTimeString();
+                const prevTime = new Date(lastKnownJvmStartTime).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' });
+                const newTime = new Date(currentJvmStartTime).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' });
                 // Use crash styling for restart notification
                 addEventToLog({
                     level: 'WARN',
@@ -456,9 +456,9 @@ const Dashboard = (function() {
     }
 
     /**
-     * Gets the emoji for a simulation type
+     * Gets the emoji for a simulation type or event type
      */
-    function getSimulationEmoji(simulationType) {
+    function getSimulationEmoji(simulationType, eventType) {
         const emojiMap = {
             'CPU_STRESS': '🔥',
             'MEMORY_PRESSURE': '📊',
@@ -467,9 +467,10 @@ const Dashboard = (function() {
             'CRASH_EXCEPTION': '💥',
             'CRASH_MEMORY': '💥',
             'CRASH_FAILFAST': '💥',
-            'CRASH_STACKOVERFLOW': '💥'
+            'CRASH_STACKOVERFLOW': '💥',
+            'LOAD_TEST_STATS': '📊'
         };
-        return emojiMap[simulationType] || '';
+        return emojiMap[simulationType] || emojiMap[eventType] || '';
     }
 
     /**
@@ -502,8 +503,8 @@ const Dashboard = (function() {
         if (logEl) {
             const levelClass = event.level.toLowerCase();
             const simClass = getSimulationClass(event.simulationType);
-            const time = new Date(event.timestamp).toLocaleTimeString();
-            const emoji = getSimulationEmoji(event.simulationType);
+            const time = new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' });
+            const emoji = getSimulationEmoji(event.simulationType, event.event);
             const prefix = emoji ? emoji + ' ' : '';
             
             const eventDiv = document.createElement('div');
