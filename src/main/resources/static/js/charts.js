@@ -10,6 +10,25 @@ const ChartsModule = (function() {
     const MAX_DATA_POINTS = 60;  // Upper charts: 60 points at 250ms = 15 seconds
     const MAX_LATENCY_DATA_POINTS = 150;  // Latency chart: 150 points at 100ms = 15 seconds (same visual pacing)
 
+    // Latency threshold values (in milliseconds)
+    const LATENCY_THRESHOLDS = {
+        GOOD: 150,        // < 150ms = Good
+        DEGRADED: 1000,   // 150ms - 1s = Degraded
+        SEVERE: 30000     // 1s - 30s = Severe, > 30s = Critical
+    };
+
+    // Latency threshold colors (matching CSS variables)
+    const LATENCY_COLORS = {
+        good: '#1d6f1d',           // --color-success
+        goodLight: 'rgba(29, 111, 29, 0.2)',
+        degraded: '#ffb900',       // --color-warning
+        degradedLight: 'rgba(255, 185, 0, 0.2)',
+        severe: '#d13438',         // --color-danger
+        severeLight: 'rgba(209, 52, 56, 0.2)',
+        critical: '#8b0000',       // dark red
+        criticalLight: 'rgba(139, 0, 0, 0.2)'
+    };
+
     // Chart colors matching PerfSimNode
     const colors = {
         cpu: '#0078d4',
@@ -25,6 +44,20 @@ const ChartsModule = (function() {
         text: '#323130',
         grid: '#e1dfdd'
     };
+
+    /**
+     * Returns the appropriate color for a latency value
+     */
+    function getLatencyColor(value, light = false) {
+        if (value >= LATENCY_THRESHOLDS.SEVERE) {
+            return light ? LATENCY_COLORS.criticalLight : LATENCY_COLORS.critical;
+        } else if (value >= LATENCY_THRESHOLDS.DEGRADED) {
+            return light ? LATENCY_COLORS.severeLight : LATENCY_COLORS.severe;
+        } else if (value >= LATENCY_THRESHOLDS.GOOD) {
+            return light ? LATENCY_COLORS.degradedLight : LATENCY_COLORS.degraded;
+        }
+        return light ? LATENCY_COLORS.goodLight : LATENCY_COLORS.good;
+    }
 
     // Chart instances
     let cpuMemoryChart = null;
@@ -246,7 +279,7 @@ const ChartsModule = (function() {
             });
         }
 
-        // Latency Chart
+        // Latency Chart with threshold-based coloring
         const latencyCtx = document.getElementById('latencyChart');
         if (latencyCtx) {
             latencyChart = new Chart(latencyCtx, {
@@ -256,11 +289,29 @@ const ChartsModule = (function() {
                     datasets: [{
                         label: 'Latency (ms)',
                         data: dataBuffers.latency,
-                        borderColor: colors.latency,
-                        backgroundColor: colors.latencyLight,
+                        // Use segment styling for dynamic colors based on values
+                        segment: {
+                            borderColor: ctx => {
+                                // Use the higher value between start and end points for color determination
+                                const value = Math.max(
+                                    ctx.p0.parsed.y || 0,
+                                    ctx.p1.parsed.y || 0
+                                );
+                                return getLatencyColor(value, false);
+                            },
+                            backgroundColor: ctx => {
+                                const value = Math.max(
+                                    ctx.p0.parsed.y || 0,
+                                    ctx.p1.parsed.y || 0
+                                );
+                                return getLatencyColor(value, true);
+                            }
+                        },
+                        borderColor: colors.latency,          // Default/fallback color
+                        backgroundColor: colors.latencyLight, // Default/fallback color
                         fill: true,
                         tension: 0.3,
-                        borderWidth: 1,
+                        borderWidth: 1.5,
                         pointRadius: 0
                     }]
                 },
