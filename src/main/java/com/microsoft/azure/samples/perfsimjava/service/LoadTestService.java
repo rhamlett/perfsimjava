@@ -227,6 +227,9 @@ public class LoadTestService {
             // Update statistics
             updateStatistics(durationMs);
 
+            // Broadcast latency to Request Latency Monitor
+            broadcastLatency(endMs, durationMs, result.isSuccess(), result.getErrorMessage());
+
             logger.debug("[LoadTest:{}] Completed - duration={}ms, concurrent={}, success={}",
                     requestId, durationMs, finalConcurrent, result.isSuccess());
         }
@@ -475,5 +478,26 @@ public class LoadTestService {
             currentMin = periodMinResponseTimeMs.get();
             if (durationMs >= currentMin) break;
         } while (!periodMinResponseTimeMs.compareAndSet(currentMin, durationMs));
+    }
+
+    /**
+     * Broadcasts load test request latency to the Request Latency Monitor.
+     * Uses the same /topic/probe channel as the ProbeService so all request
+     * latencies are shown in one place.
+     */
+    private void broadcastLatency(long timestamp, long latencyMs, boolean success, String error) {
+        Map<String, Object> result = Map.of(
+                "timestamp", timestamp,
+                "latencyMs", latencyMs,
+                "success", success,
+                "error", error != null ? error : "",
+                "source", "loadtest"
+        );
+
+        try {
+            messagingTemplate.convertAndSend("/topic/probe", result);
+        } catch (Exception e) {
+            logger.debug("Failed to broadcast load test latency: {}", e.getMessage());
+        }
     }
 }
