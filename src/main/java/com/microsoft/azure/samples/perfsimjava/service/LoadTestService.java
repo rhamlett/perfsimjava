@@ -139,12 +139,15 @@ public class LoadTestService {
 
     /**
      * Broadcasts load test statistics to WebSocket clients.
-     * Runs every second to provide real-time updates during load tests.
+     * Only broadcasts when there are active requests or recent activity.
      */
     @Scheduled(fixedRate = 1000)
     public void broadcastStats() {
-        LoadTestStats stats = getStats();
-        messagingTemplate.convertAndSend("/topic/loadtest", stats);
+        // Only broadcast if there are active requests or there was recent activity
+        if (currentConcurrent.get() > 0 || periodTotalRequests.get() > 0) {
+            LoadTestStats stats = getStats();
+            messagingTemplate.convertAndSend("/topic/loadtest", stats);
+        }
     }
 
     /**
