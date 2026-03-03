@@ -59,6 +59,72 @@ const ChartsModule = (function() {
         return light ? LATENCY_COLORS.goodLight : LATENCY_COLORS.good;
     }
 
+    /**
+     * Creates a vertical gradient for the latency chart based on thresholds
+     * @param {Chart} chart - The Chart.js instance
+     * @param {boolean} light - If true, use light/transparent colors for fill; false for solid border colors
+     */
+    function createLatencyGradient(chart, light = true) {
+        const ctx = chart.ctx;
+        const chartArea = chart.chartArea;
+        const yScale = chart.scales.y;
+        
+        const fallback = light ? colors.latencyLight : colors.latency;
+        if (!chartArea || !yScale) return fallback;
+        
+        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        
+        // Get the Y scale range
+        const yMin = yScale.min;
+        const yMax = yScale.max;
+        const range = yMax - yMin;
+        
+        if (range <= 0) return fallback;
+        
+        // Select color set based on light parameter
+        const goodColor = light ? LATENCY_COLORS.goodLight : LATENCY_COLORS.good;
+        const degradedColor = light ? LATENCY_COLORS.degradedLight : LATENCY_COLORS.degraded;
+        const severeColor = light ? LATENCY_COLORS.severeLight : LATENCY_COLORS.severe;
+        const criticalColor = light ? LATENCY_COLORS.criticalLight : LATENCY_COLORS.critical;
+        
+        // Calculate gradient stops based on thresholds relative to scale
+        // Position 0 = bottom (yMin), Position 1 = top (yMax)
+        const goodStop = Math.max(0, Math.min(1, (LATENCY_THRESHOLDS.GOOD - yMin) / range));
+        const degradedStop = Math.max(0, Math.min(1, (LATENCY_THRESHOLDS.DEGRADED - yMin) / range));
+        const severeStop = Math.max(0, Math.min(1, (LATENCY_THRESHOLDS.SEVERE - yMin) / range));
+        
+        // Add color stops (from bottom to top)
+        gradient.addColorStop(0, goodColor);
+        
+        if (goodStop > 0 && goodStop < 1) {
+            gradient.addColorStop(goodStop, goodColor);
+            gradient.addColorStop(Math.min(goodStop + 0.001, 1), degradedColor);
+        }
+        
+        if (degradedStop > 0 && degradedStop < 1) {
+            gradient.addColorStop(degradedStop, degradedColor);
+            gradient.addColorStop(Math.min(degradedStop + 0.001, 1), severeColor);
+        }
+        
+        if (severeStop > 0 && severeStop < 1) {
+            gradient.addColorStop(severeStop, severeColor);
+            gradient.addColorStop(Math.min(severeStop + 0.001, 1), criticalColor);
+        }
+        
+        // Ensure we have a final stop at the top
+        if (yMax >= LATENCY_THRESHOLDS.SEVERE) {
+            gradient.addColorStop(1, criticalColor);
+        } else if (yMax >= LATENCY_THRESHOLDS.DEGRADED) {
+            gradient.addColorStop(1, severeColor);
+        } else if (yMax >= LATENCY_THRESHOLDS.GOOD) {
+            gradient.addColorStop(1, degradedColor);
+        } else {
+            gradient.addColorStop(1, goodColor);
+        }
+        
+        return gradient;
+    }
+
     // Chart instances
     let cpuMemoryChart = null;
     let threadsGcChart = null;
@@ -279,36 +345,30 @@ const ChartsModule = (function() {
             });
         }
 
-        // Latency Chart with threshold-based coloring
+        // Latency Chart with threshold-based gradient coloring
         const latencyCtx = document.getElementById('latencyChart');
         if (latencyCtx) {
+            // Plugin to update gradients on each render
+            const gradientPlugin = {
+                id: 'latencyGradient',
+                beforeDraw: (chart) => {
+                    const fillGradient = createLatencyGradient(chart, true);   // Light colors for fill
+                    const borderGradient = createLatencyGradient(chart, false); // Solid colors for border
+                    chart.data.datasets[0].backgroundColor = fillGradient;
+                    chart.data.datasets[0].borderColor = borderGradient;
+                }
+            };
+
             latencyChart = new Chart(latencyCtx, {
                 type: 'line',
+                plugins: [gradientPlugin],
                 data: {
                     labels: latencyTimeLabels,
                     datasets: [{
                         label: 'Latency (ms)',
                         data: dataBuffers.latency,
-                        // Use segment styling for dynamic colors based on values
-                        segment: {
-                            borderColor: ctx => {
-                                // Use the higher value between start and end points for color determination
-                                const value = Math.max(
-                                    ctx.p0.parsed.y || 0,
-                                    ctx.p1.parsed.y || 0
-                                );
-                                return getLatencyColor(value, false);
-                            },
-                            backgroundColor: ctx => {
-                                const value = Math.max(
-                                    ctx.p0.parsed.y || 0,
-                                    ctx.p1.parsed.y || 0
-                                );
-                                return getLatencyColor(value, true);
-                            }
-                        },
-                        borderColor: colors.latency,          // Default/fallback color
-                        backgroundColor: colors.latencyLight, // Default/fallback color
+                        borderColor: colors.latency,          // Default/fallback, replaced by gradient plugin
+                        backgroundColor: colors.latencyLight, // Default/fallback, replaced by gradient plugin
                         fill: true,
                         tension: 0.3,
                         borderWidth: 1.5,
