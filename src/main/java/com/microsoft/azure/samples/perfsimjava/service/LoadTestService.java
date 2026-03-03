@@ -6,6 +6,7 @@ import com.microsoft.azure.samples.perfsimjava.model.LoadTestStats;
 import com.microsoft.azure.samples.perfsimjava.model.dto.LoadTestRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -80,6 +81,7 @@ public class LoadTestService {
     private static final int PAGE_SIZE = 4096; // Memory page size for touching
 
     private final EventLogService eventLogService;
+    private final SimpMessagingTemplate messagingTemplate;
     private final Random random = new Random();
 
     // Concurrent request tracking
@@ -128,10 +130,21 @@ public class LoadTestService {
             "Specified cast is not valid"
     };
 
-    public LoadTestService(EventLogService eventLogService) {
+    public LoadTestService(EventLogService eventLogService, SimpMessagingTemplate messagingTemplate) {
         this.eventLogService = eventLogService;
+        this.messagingTemplate = messagingTemplate;
         logger.info("[LoadTestService] Initialized with exception threshold {}ms, probability {}%",
                 EXCEPTION_THRESHOLD_MS, EXCEPTION_PROBABILITY * 100);
+    }
+
+    /**
+     * Broadcasts load test statistics to WebSocket clients.
+     * Runs every second to provide real-time updates during load tests.
+     */
+    @Scheduled(fixedRate = 1000)
+    public void broadcastStats() {
+        LoadTestStats stats = getStats();
+        messagingTemplate.convertAndSend("/topic/loadtest", stats);
     }
 
     /**
