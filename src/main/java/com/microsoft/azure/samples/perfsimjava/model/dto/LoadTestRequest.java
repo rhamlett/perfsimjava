@@ -1,8 +1,5 @@
 package com.microsoft.azure.samples.perfsimjava.model.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-
 /**
  * =============================================================================
  * LOAD TEST REQUEST DTO
@@ -23,24 +20,14 @@ import jakarta.validation.constraints.Min;
  */
 public class LoadTestRequest {
 
-    @Min(value = 1, message = "workIterations must be at least 1")
-    @Max(value = 10000, message = "workIterations cannot exceed 10000")
     private int workIterations = 200;
 
-    @Min(value = 100, message = "bufferSizeKb must be at least 100")
-    @Max(value = 500000, message = "bufferSizeKb cannot exceed 500000")
     private int bufferSizeKb = 20000;
 
-    @Min(value = 100, message = "baselineDelayMs must be at least 100")
-    @Max(value = 60000, message = "baselineDelayMs cannot exceed 60000")
     private int baselineDelayMs = 500;
 
-    @Min(value = 1, message = "softLimit must be at least 1")
-    @Max(value = 1000, message = "softLimit cannot exceed 1000")
     private int softLimit = 25;
 
-    @Min(value = 0, message = "degradationFactor cannot be negative")
-    @Max(value = 10000, message = "degradationFactor cannot exceed 10000")
     private int degradationFactor = 500;
 
     // Getters and Setters
