@@ -338,6 +338,141 @@
         </div>
         </section>
 
+        <section id="load-testing">
+        <h2>Load Testing</h2>
+        
+        <div class="note">
+            <h4>Designed for Load Testing Tools</h4>
+            <p>This endpoint is optimized for use with Azure Load Testing, Apache JMeter, k6, or similar tools. 
+            It performs lightweight work that compounds under high concurrency to demonstrate timeout behavior.</p>
+        </div>
+
+        <h3>How It Works</h3>
+        <ol>
+            <li><strong>Memory Allocation:</strong> Allocates a buffer (default 20MB) and touches each page to ensure real memory commitment</li>
+            <li><strong>Degradation Delay:</strong> Calculates total delay based on concurrent requests:<br>
+                <code>totalDelay = baselineDelayMs + max(0, concurrent - softLimit) × degradationFactor</code></li>
+            <li><strong>Sustained Work Loop:</strong> Interleaves CPU spin work, memory touches, and 50ms sleeps</li>
+            <li><strong>Exception Injection:</strong> After 120 seconds of processing, each cycle has a 20% chance of throwing a random exception</li>
+        </ol>
+
+        <h3>Under Load Behavior</h3>
+        <p>As concurrent requests increase:</p>
+        <ul>
+            <li>Response times grow linearly beyond the soft limit</li>
+            <li>Memory pressure builds as more requests hold buffers simultaneously</li>
+            <li>After 120+ seconds of processing, random exceptions start appearing (20% per check)</li>
+            <li>At high enough load, requests may hit the Azure App Service 230-second frontend timeout</li>
+        </ul>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/loadtest</span>
+            <p>Executes a load test request with configurable CPU work and memory usage.</p>
+            <h4>Query Parameters:</h4>
+            <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 0.5rem; text-align: left;">Parameter</th>
+                        <th style="padding: 0.5rem; text-align: left;">Default</th>
+                        <th style="padding: 0.5rem; text-align: left;">Range</th>
+                        <th style="padding: 0.5rem; text-align: left;">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 0.5rem;"><code>workIterations</code></td>
+                        <td style="padding: 0.5rem;">200</td>
+                        <td style="padding: 0.5rem;">1-10,000</td>
+                        <td style="padding: 0.5rem;">CPU work intensity per cycle (ms = iterations/100)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem;"><code>bufferSizeKb</code></td>
+                        <td style="padding: 0.5rem;">20,000</td>
+                        <td style="padding: 0.5rem;">100-500,000</td>
+                        <td style="padding: 0.5rem;">Memory buffer held per request (KB)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem;"><code>baselineDelayMs</code></td>
+                        <td style="padding: 0.5rem;">500</td>
+                        <td style="padding: 0.5rem;">100-60,000</td>
+                        <td style="padding: 0.5rem;">Minimum request duration (ms)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem;"><code>softLimit</code></td>
+                        <td style="padding: 0.5rem;">25</td>
+                        <td style="padding: 0.5rem;">1-1,000</td>
+                        <td style="padding: 0.5rem;">Concurrent requests before degradation begins</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem;"><code>degradationFactor</code></td>
+                        <td style="padding: 0.5rem;">500</td>
+                        <td style="padding: 0.5rem;">0-10,000</td>
+                        <td style="padding: 0.5rem;">Additional delay (ms) per request over soft limit</td>
+                    </tr>
+                </tbody>
+            </table>
+            <h4>Example Request:</h4>
+            <pre><code>GET /api/loadtest?workIterations=300&bufferSizeKb=10000&baselineDelayMs=1000</code></pre>
+            <h4>Success Response:</h4>
+            <pre><code>{
+    "requestId": "a1b2c3d4",
+    "startTime": "2024-01-01T00:00:00Z",
+    "endTime": "2024-01-01T00:00:01Z",
+    "durationMs": 1250,
+    "calculatedDelayMs": 1000,
+    "concurrentAtStart": 15,
+    "concurrentAtEnd": 14,
+    "bufferSizeKb": 10000,
+    "workIterations": 300,
+    "success": true,
+    "parameters": {...}
+}</code></pre>
+            <h4>Error Response (Exception Injected):</h4>
+            <pre><code>{
+    "success": false,
+    "errorType": "TimeoutException",
+    "errorMessage": "The operation has timed out [Injected after 125s, requestId=a1b2c3d4]",
+    "timestamp": "2024-01-01T00:02:05Z"
+}</code></pre>
+        </div>
+
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <span class="path">/api/loadtest/stats</span>
+            <p>Returns current load test statistics including concurrency, timing, and error metrics.</p>
+            <pre><code>{
+    "currentConcurrent": 12,
+    "peakConcurrent": 45,
+    "totalRequests": 1250,
+    "successfulRequests": 1180,
+    "failedRequests": 70,
+    "errorRate": 5.6,
+    "avgResponseTimeMs": 2340.5,
+    "maxResponseTimeMs": 45000,
+    "minResponseTimeMs": 520,
+    "requestsPerSecond": 8.7,
+    "periodStartTime": "2024-01-01T00:00:00Z",
+    "periodDurationSeconds": 60
+}</code></pre>
+        </div>
+
+        <h3>Exception Types Injected</h3>
+        <p>After 120 seconds of processing, the following exceptions may be thrown (20% probability per check):</p>
+        <ul>
+            <li><code>IllegalStateException</code> - Invalid operation state</li>
+            <li><code>NullPointerException</code> - Null reference</li>
+            <li><code>TimeoutException</code> - Operation timeout</li>
+            <li><code>IOException</code> - I/O error</li>
+            <li><code>ArithmeticException</code> - Divide by zero</li>
+            <li><code>IllegalArgumentException</code> - Invalid argument</li>
+            <li><code>IndexOutOfBoundsException</code> - Index out of range</li>
+            <li><code>UnsupportedOperationException</code> - Operation not supported</li>
+            <li><code>SecurityException</code> - Security violation</li>
+            <li><code>ClassCastException</code> - Invalid cast</li>
+        </ul>
+        </section>
+
         <section id="admin-endpoints">
         <h2>Admin Endpoints</h2>
 
@@ -402,6 +537,7 @@
             <a href="#thread-simulation" class="doc-toc-link"><span class="toc-icon">🟣</span> Thread Starvation</a>
             <a href="#connection-pool" class="doc-toc-link"><span class="toc-icon">🔌</span> Connection Pool</a>
             <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Crash Simulation</a>
+            <a href="#load-testing" class="doc-toc-link"><span class="toc-icon">🧪</span> Load Testing</a>
             
             <div class="doc-toc-section-label">REFERENCE</div>
             <a href="#health-endpoints" class="doc-toc-link"><span class="toc-icon">💚</span> Health Endpoints</a>

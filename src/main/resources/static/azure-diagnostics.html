@@ -234,6 +234,83 @@
         <p>Many threads in TIMED_WAITING on pool acquisition = connection pool exhaustion. Increase pool size or reduce query hold time.</p>
         </section>
 
+        <section id="load-testing-diagnostics">
+        <h2>Load Testing Diagnostics</h2>
+
+        <p>The <code>/api/loadtest</code> endpoint is designed for use with Azure Load Testing or similar tools to generate realistic load patterns that can trigger Azure App Service timeout behavior.</p>
+
+        <h3>What Happens Under Load</h3>
+        <ol>
+            <li><strong>Response Time Degradation:</strong> As concurrent requests exceed the soft limit (default: 25), response times increase linearly based on the degradation factor</li>
+            <li><strong>Memory Pressure:</strong> Each request holds a memory buffer (default: 20MB). With many concurrent requests, this creates visible memory pressure in Azure metrics</li>
+            <li><strong>Exception Injection:</strong> After 120 seconds of processing, requests have a 20% chance per cycle of throwing a random exception, simulating timeout-related failures</li>
+            <li><strong>Frontend Timeout:</strong> At high enough load, requests may exceed the Azure App Service stamp frontend 230-second timeout</li>
+        </ol>
+
+        <h3>Monitoring Load Tests</h3>
+
+        <h4>Azure Monitor Metrics</h4>
+        <ul>
+            <li><strong>Response Time:</strong> Watch P95/P99 increase as load exceeds soft limit</li>
+            <li><strong>Memory Working Set:</strong> Grows proportionally to concurrent requests</li>
+            <li><strong>HTTP Server Errors:</strong> Increases after requests run for 120+ seconds</li>
+            <li><strong>Average Response Time:</strong> Should show clear degradation curve</li>
+        </ul>
+
+        <h4>Application Insights</h4>
+        <ul>
+            <li><strong>Failed Requests:</strong> Look for injected exception types (TimeoutException, IOException, etc.)</li>
+            <li><strong>Request Duration:</strong> Create charts showing duration distribution</li>
+            <li><strong>Exceptions:</strong> Search for "[Injected after" to find simulated failures</li>
+        </ul>
+
+        <h3>KQL Queries for Load Testing</h3>
+
+        <h4>Load Test Response Time Degradation</h4>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where CsUriStem == "/api/loadtest"
+| summarize 
+    Count=count(),
+    AvgDuration=avg(TimeTaken),
+    P95Duration=percentile(TimeTaken, 95),
+    ErrorCount=countif(ScStatus >= 500)
+    by bin(TimeGenerated, 1m)
+| render timechart</code></pre>
+
+        <h4>Injected Exceptions</h4>
+        <pre><code>AppServiceConsoleLogs
+| where TimeGenerated > ago(1h)
+| where ResultDescription contains "[Injected after"
+| project TimeGenerated, ResultDescription
+| order by TimeGenerated desc</code></pre>
+
+        <h4>Concurrent Request Correlation</h4>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where CsUriStem == "/api/loadtest"
+| summarize ConcurrentRequests=count() by bin(TimeGenerated, 1s)
+| join kind=inner (
+    AppServiceHTTPLogs
+    | where CsUriStem == "/api/loadtest"
+    | summarize AvgDuration=avg(TimeTaken) by bin(TimeGenerated, 1s)
+) on TimeGenerated
+| project TimeGenerated, ConcurrentRequests, AvgDuration
+| render timechart</code></pre>
+
+        <h3>Stats Endpoint</h3>
+        <p>Use <code>GET /api/loadtest/stats</code> to monitor load test progress:</p>
+        <ul>
+            <li><strong>currentConcurrent:</strong> Active requests right now</li>
+            <li><strong>peakConcurrent:</strong> Maximum concurrent requests seen</li>
+            <li><strong>errorRate:</strong> Percentage of failed requests</li>
+            <li><strong>avgResponseTimeMs:</strong> Mean response time in current period</li>
+            <li><strong>requestsPerSecond:</strong> Current throughput</li>
+        </ul>
+
+        <p>Stats are logged to the event log every 60 seconds with type <code>LOAD_TEST_STATS</code>.</p>
+        </section>
+
         <section id="mapping">
         <h2>Simulation → Diagnostic Mapping</h2>
 
@@ -270,6 +347,11 @@
                     <td style="padding: 0.75rem;">Crash</td>
                     <td style="padding: 0.75rem;">AppLens, Logs</td>
                     <td style="padding: 0.75rem;">Instance restarts, availability dips</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Load Testing</td>
+                    <td style="padding: 0.75rem;">Azure Load Testing, Metrics, Logs</td>
+                    <td style="padding: 0.75rem;">Response time degradation, HTTP 5xx after 120s, memory pressure</td>
                 </tr>
             </tbody>
         </table>
@@ -310,6 +392,7 @@
             <a href="#app-insights" class="doc-toc-link"><span class="toc-icon">💡</span> Application Insights</a>
             <a href="#diagnose-solve" class="doc-toc-link"><span class="toc-icon">🔧</span> Diagnose & Solve</a>
             <a href="#kql-queries" class="doc-toc-link"><span class="toc-icon">📝</span> KQL Queries</a>
+            <a href="#load-testing-diagnostics" class="doc-toc-link"><span class="toc-icon">🧪</span> Load Testing</a>
             
             <div class="doc-toc-section-label">REFERENCE</div>
             <a href="#java-diagnostics" class="doc-toc-link"><span class="toc-icon">☕</span> Java Diagnostics</a>
