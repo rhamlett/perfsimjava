@@ -204,15 +204,50 @@
             the same symptom of request queueing and latency spikes.
         </div>
 
+        <h3>Understanding Duration and Thread Count</h3>
+        <p>The simulation spawns internal HTTP requests that each block a servlet thread. Here's how the timing works:</p>
+        <ul>
+            <li><strong>Duration per request:</strong> Each blocking request runs for the specified duration (e.g., 10s)</li>
+            <li><strong>Tomcat thread pool:</strong> Default max ~200 threads</li>
+            <li><strong>Wave behavior:</strong> If you spawn more threads than the pool size, excess requests queue in Tomcat's HTTP queue</li>
+        </ul>
+        
+        <h4>Example Timeline (220 threads, 10s duration):</h4>
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <tr style="border-bottom: 1px solid var(--border-color); background: var(--code-bg);">
+                <th style="padding: 0.5rem; text-align: left;">Time</th>
+                <th style="padding: 0.5rem; text-align: left;">What Happens</th>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">0-10s</td>
+                <td style="padding: 0.5rem;">First 200 requests grab threads, start blocking. 20 requests waiting in queue.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">~10s</td>
+                <td style="padding: 0.5rem;">First wave completes. Queued 20 requests now get threads.</td>
+            </tr>
+            <tr>
+                <td style="padding: 0.5rem;">~20s</td>
+                <td style="padding: 0.5rem;">Second wave completes. Simulation ends.</td>
+            </tr>
+        </table>
+        <p><strong>Formula:</strong> Total time ≈ <code>durationSeconds × ⌈threadCount / 200⌉</code></p>
+
         <div class="api-endpoint">
             <span class="method post">POST</span>
             <span class="path">/api/simulations/thread/starvation</span>
             <p>Starts blocking servlet threads to starve the thread pool.</p>
             <h4>Request Body:</h4>
             <pre><code>{
-    "blockedThreadCount": 50,  // Number of threads to block (10-200)
-    "durationMs": 30000        // Duration to block
+    "threadCount": 150,      // Number of blocking requests to spawn
+    "durationSeconds": 10   // How long each request blocks its thread
 }</code></pre>
+            <h4>Recommended Settings:</h4>
+            <ul>
+                <li><strong>Quick test:</strong> 150 threads, 10s (single wave, ~10s total)</li>
+                <li><strong>Moderate impact:</strong> 200 threads, 15s (saturates pool, ~15s total)</li>
+                <li><strong>Extended test:</strong> 400 threads, 10s (two waves, ~20s total)</li>
+            </ul>
         </div>
         </section>
 

@@ -245,14 +245,17 @@
                 <div class="control-section threads-section">
                     <h3>🧵 Thread Pool Starvation <span class="info-icon" title="Blocks servlet threads to starve the thread pool (Java equivalent of Event Loop Blocking)">⚠️</span></h3>
                     <p class="control-description">Blocks servlet threads to simulate thread pool exhaustion. Server becomes unresponsive to new requests.</p>
+                    <div class="note-box" style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                        ⏱️ <strong>Duration Note:</strong> Each blocking request runs for the specified duration. If threads &gt; pool size (~200), excess requests queue and run in waves. Total time ≈ <code>duration × ⌈threads/200⌉</code>.
+                    </div>
                     <form id="threads-form">
                         <label>
                             Blocked Threads:
-                            <input type="number" id="starvationCount" value="210" min="1">
+                            <input type="number" id="starvationCount" value="150" min="1">
                         </label>
                         <label>
                             Duration (s):
-                            <input type="number" id="starvationDuration" value="60" min="1">
+                            <input type="number" id="starvationDuration" value="10" min="1">
                         </label>
                         <div class="btn-group">
                             <button type="submit" class="btn-trigger btn-threads">🧵 Start Thread Starvation</button>

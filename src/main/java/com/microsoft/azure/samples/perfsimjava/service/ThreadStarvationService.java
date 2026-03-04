@@ -150,8 +150,19 @@ public class ThreadStarvationService {
         }
         
         // Track active blocker count
+        int currentCount = 0;
         if (blockerCount != null) {
-            blockerCount.incrementAndGet();
+            currentCount = blockerCount.incrementAndGet();
+            // Log when a new wave of blocking requests begins
+            if (currentCount == 1 || currentCount % 50 == 0) {
+                eventLogService.info(
+                        EventLogEntry.EventType.INFO,
+                        String.format("Thread starvation: %d threads now blocking (wave in progress)", currentCount),
+                        simulationId,
+                        SimulationType.THREAD_STARVATION,
+                        null
+                );
+            }
         }
         
         try {
@@ -178,6 +189,17 @@ public class ThreadStarvationService {
         } finally {
             if (blockerCount != null) {
                 int remaining = blockerCount.decrementAndGet();
+                
+                // Log progress when threads complete
+                if (remaining > 0 && remaining % 50 == 0) {
+                    eventLogService.info(
+                            EventLogEntry.EventType.INFO,
+                            String.format("Thread starvation: %d threads still blocking (queued requests may start next wave)", remaining),
+                            simulationId,
+                            SimulationType.THREAD_STARVATION,
+                            null
+                    );
+                }
                 
                 // Check if this was the last blocker
                 if (remaining <= 0 && stopFlags.containsKey(simulationId)) {
