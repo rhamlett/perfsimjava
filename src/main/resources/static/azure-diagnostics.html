@@ -437,12 +437,21 @@
         
         function highlightToc() {
             let current = '';
+            const viewportHeight = window.innerHeight;
+            
+            // Find the section that's most visible in viewport
             sections.forEach(section => {
                 const rect = section.getBoundingClientRect();
-                if (rect.top <= 100) {
+                // Section is considered "current" if its top is in upper 40% of viewport
+                if (rect.top <= viewportHeight * 0.4 && rect.bottom > 0) {
                     current = section.getAttribute('id');
                 }
             });
+            
+            // If no section found (scrolled to very top), use first section
+            if (!current && sections.length > 0) {
+                current = sections[0].getAttribute('id');
+            }
             
             tocLinks.forEach(link => {
                 link.classList.remove('active');

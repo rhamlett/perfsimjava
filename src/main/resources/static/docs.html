@@ -83,16 +83,6 @@
         </ul>
         </section>
 
-        <section id="health-endpoints">
-        <h2>Health Endpoints</h2>
-        <p>Standard health check endpoints for monitoring and container orchestration:</p>
-        <ul>
-            <li><code>GET /health</code> — Full health status with version and runtime info</li>
-            <li><code>GET /health/live</code> — Kubernetes liveness probe (HTTP 200 when alive)</li>
-            <li><code>GET /health/ready</code> — Kubernetes readiness probe (HTTP 200 when ready)</li>
-        </ul>
-        </section>
-
         <section id="metrics">
         <h2>Metrics</h2>
         <p>The dashboard displays real-time system metrics streamed via WebSocket. Metrics include:</p>
@@ -101,7 +91,6 @@
             <li><strong>Memory</strong> — Heap used/max, heap percentage, non-heap memory</li>
             <li><strong>Threads</strong> — Active count, peak count, total threads started</li>
             <li><strong>GC</strong> — Collection count and total pause time</li>
-            <li><strong>Process</strong> — PID and uptime</li>
         </ul>
         <p>These metrics are collected from JMX MBeans and update every 250ms on the dashboard.</p>
         </section>
@@ -125,19 +114,19 @@
 
         <h3>Configuration Options</h3>
         <ul>
-            <li><strong>Workers (1-32)</strong> — Number of parallel threads consuming CPU. More workers = higher CPU usage.</li>
-            <li><strong>Duration</strong> — How long the stress runs before automatically stopping.</li>
+            <li><strong>Duration (seconds)</strong> — How long the stress runs before automatically stopping.</li>
+            <li><strong>Intensity</strong> — Choose <em>High</em> or <em>Moderate</em> to control CPU consumption level.</li>
         </ul>
 
         <h3>What You'll See in Diagnostics</h3>
         <ul>
             <li><strong>Thread dumps:</strong> Threads in <code>RUNNABLE</code> state inside <code>PBKDF2Core</code> or <code>SecretKeyFactory</code></li>
             <li><strong>CPU Profiler:</strong> High CPU samples in cryptographic classes</li>
-            <li><strong>App Service Metrics:</strong> CPU percentage approaching worker count × (100% / cores)</li>
+            <li><strong>App Service Metrics:</strong> CPU percentage spike during simulation</li>
         </ul>
 
         <h4>Dashboard Controls</h4>
-        <p>Use the <strong>CPU Stress</strong> panel on the dashboard to start/stop simulations and adjust worker count and duration in real-time.</p>
+        <p>Use the <strong>CPU Stress</strong> panel on the dashboard to start/stop simulations. Select intensity level and duration, then click <strong>Trigger CPU Stress</strong>.</p>
         </section>
 
         <section id="memory-simulation">
@@ -145,7 +134,7 @@
 
         <div class="note">
             <h4>How It Works</h4>
-            <p>The memory simulation allocates large byte arrays that are held on the heap for the specified duration, preventing garbage collection from reclaiming the memory.</p>
+            <p>The memory simulation allocates large byte arrays that are held on the heap until explicitly released, preventing garbage collection from reclaiming the memory.</p>
         </div>
 
         <h3>Understanding Memory Leaks</h3>
@@ -160,8 +149,7 @@
 
         <h3>Configuration Options</h3>
         <ul>
-            <li><strong>Target MB</strong> — Amount of heap memory to allocate and hold</li>
-            <li><strong>Duration</strong> — How long to retain the memory before releasing</li>
+            <li><strong>Size (MB)</strong> — Amount of heap memory to allocate per click. Multiple allocations stack.</li>
         </ul>
 
         <h3>What You'll See in Diagnostics</h3>
@@ -173,7 +161,7 @@
         </ul>
 
         <h4>Dashboard Controls</h4>
-        <p>Use the <strong>Memory</strong> panel on the dashboard to allocate memory and watch heap usage grow in real-time. The memory is automatically released when the duration expires or when you stop the simulation.</p>
+        <p>Use the <strong>Memory</strong> panel on the dashboard to allocate memory and watch heap usage grow in real-time. Click <strong>Release</strong> to free all allocated memory on demand.</p>
         </section>
 
         <section id="thread-simulation">
@@ -216,8 +204,8 @@
 
         <h3>Configuration Options</h3>
         <ul>
-            <li><strong>Thread Count (1-500)</strong> — Number of blocking requests to spawn</li>
-            <li><strong>Duration</strong> — How long each request blocks its thread</li>
+            <li><strong>Blocked Threads</strong> — Number of blocking requests to spawn</li>
+            <li><strong>Duration (seconds)</strong> — How long each request blocks its thread</li>
         </ul>
 
         <h4>Recommended Settings:</h4>
@@ -275,10 +263,10 @@
         <h3>Configuration Options</h3>
         <p>Adjustable via the dashboard:</p>
         <ul>
-            <li><strong>Pool Size (1-50)</strong> — Number of simulated connections available</li>
-            <li><strong>Query Duration</strong> — How long each "query" holds a connection</li>
+            <li><strong>Pool Size</strong> — Number of simulated connections available</li>
+            <li><strong>Query Duration (seconds)</strong> — How long each \"query\" holds a connection</li>
             <li><strong>Concurrent Queries</strong> — Number of simultaneous queries to attempt</li>
-            <li><strong>Connection Timeout</strong> — How long to wait before timing out</li>
+            <li><strong>Connection Timeout (seconds)</strong> — How long to wait before timing out</li>
         </ul>
 
         <h3>What You'll See in Thread Dumps</h3>
@@ -518,7 +506,6 @@
             <div class="doc-toc-section-label toc-section-reference">
                 <span class="toc-section-icon">📖</span> REFERENCE
             </div>
-            <a href="#health-endpoints" class="doc-toc-link"><span class="toc-icon">💚</span> Health Endpoints</a>
             <a href="#metrics" class="doc-toc-link"><span class="toc-icon">📈</span> Metrics</a>
             <a href="#admin-endpoints" class="doc-toc-link"><span class="toc-icon">⚙️</span> Admin</a>
             <a href="#websocket" class="doc-toc-link"><span class="toc-icon">🔌</span> WebSocket</a>

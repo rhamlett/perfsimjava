@@ -14,13 +14,13 @@ This application allows you to deliberately trigger different types of performan
 
 ### Simulations
 
-| Simulation | Description | Use Case |
-|------------|-------------|----------|
-| 🔥 **CPU Stress** | Spawns worker threads performing PBKDF2 cryptographic operations | Test CPU throttling detection, auto-scaling triggers |
-| 💾 **Memory Pressure** | Allocates heap memory chunks | Test memory alerts, GC behavior, OOM scenarios |
-| ⏳ **Thread Pool Starvation** | Blocks servlet threads to exhaust the pool | Test request queuing, latency spikes (Java equivalent of Event Loop Blocking) |
-| � **Connection Pool** | Simulates JDBC connection pool exhaustion with slow queries | Test pool timeout detection, thread dumps show WAITING on semaphore |
-| 💥 **Crash** | Triggers various crash scenarios | Test instance restart detection, availability monitoring |
+| Simulation | Description | Dashboard Controls |
+|------------|-------------|-------------------|
+| 🔥 **CPU Stress** | Worker threads perform PBKDF2 cryptographic operations | Duration, Intensity (High/Moderate) |
+| 📊 **Memory Pressure** | Allocates heap memory chunks that stack up | Size (MB), Release button |
+| 🧵 **Thread Pool Starvation** | Blocks servlet threads to exhaust the pool | Blocked Threads, Duration |
+| 🔌 **Connection Pool** | Simulates JDBC connection pool exhaustion | Pool Size, Query Duration, Concurrent Queries, Timeout |
+| 💥 **Crash** | Triggers various crash scenarios | Type: Fail Fast, Stack Overflow, Exception, OOM |
 
 ### Real-time Dashboard
 
@@ -28,7 +28,7 @@ This application allows you to deliberately trigger different types of performan
 - System metrics updated every 250ms
 - Request latency probe updated every 100ms (for AppLens visibility)
 - Interactive charts for CPU, Memory, Threads, and Latency
-- Event log with color-coded entries
+- Event log with timestamped entries (UTC)
 
 ## Technology Stack
 
@@ -66,37 +66,22 @@ az webapp deploy \
 
 ## API Endpoints
 
-### Health
-- `GET /health` - Application health status
-- `GET /health/live` - Liveness probe
-- `GET /health/ready` - Readiness probe
+All simulations are controlled through the web dashboard. The following endpoints are available for programmatic access:
 
-### Metrics
+### Health & Metrics
+- `GET /health` - Application health status
+- `GET /health/live` - Liveness probe (Kubernetes)
+- `GET /health/ready` - Readiness probe (Kubernetes)
 - `GET /api/metrics` - Current system metrics
 
-### CPU Stress
-- `POST /api/simulations/cpu/stress` - Start CPU stress
-- `DELETE /api/simulations/cpu/stress/{id}` - Stop simulation
-- `GET /api/simulations/cpu/active` - List active simulations
+### Load Testing (External Use)
+The `/api/loadtest` endpoint is designed for use with Azure Load Testing, JMeter, or k6:
 
-### Memory Pressure
-- `POST /api/simulations/memory/pressure` - Start memory pressure
-- `DELETE /api/simulations/memory/pressure/{id}` - Release memory
+```
+GET /api/loadtest?workIterations=200&bufferSizeKb=20000&baselineDelayMs=500
+```
 
-### Thread Pool Starvation
-- `POST /api/simulations/thread/starvation` - Start blocking threads
-
-### Connection Pool Exhaustion
-- `POST /api/simulations/connection-pool` - Start connection pool exhaustion
-- `GET /api/simulations/connection-pool/stats` - Get pool statistics
-- `DELETE /api/simulations/connection-pool` - Stop simulation
-
-### Crash
-- `POST /api/simulations/crash` - Trigger crash by type
-- `POST /api/simulations/crash/failfast` - System.exit()
-- `POST /api/simulations/crash/stackoverflow` - StackOverflowError
-- `POST /api/simulations/crash/exception` - RuntimeException
-- `POST /api/simulations/crash/oom` - OutOfMemoryError
+This endpoint simulates realistic workloads that degrade under high concurrency.
 
 ### Admin
 - `GET /api/simulations` - List all active simulations
