@@ -156,7 +156,7 @@ public class ThreadStarvationService {
             // Log when a new wave of blocking requests begins
             if (currentCount == 1 || currentCount % 50 == 0) {
                 eventLogService.info(
-                        EventLogEntry.EventType.INFO,
+                        EventLogEntry.EventType.SIMULATION_PROGRESS,
                         String.format("Thread starvation: %d threads now blocking (wave in progress)", currentCount),
                         simulationId,
                         SimulationType.THREAD_STARVATION,
@@ -193,7 +193,7 @@ public class ThreadStarvationService {
                 // Log progress when threads complete
                 if (remaining > 0 && remaining % 50 == 0) {
                     eventLogService.info(
-                            EventLogEntry.EventType.INFO,
+                            EventLogEntry.EventType.SIMULATION_PROGRESS,
                             String.format("Thread starvation: %d threads still blocking (queued requests may start next wave)", remaining),
                             simulationId,
                             SimulationType.THREAD_STARVATION,

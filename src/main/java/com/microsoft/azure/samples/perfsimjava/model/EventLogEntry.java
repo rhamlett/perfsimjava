@@ -31,6 +31,7 @@ public class EventLogEntry {
         SIMULATION_STOPPED,
         SIMULATION_COMPLETED,
         SIMULATION_FAILED,
+        SIMULATION_PROGRESS,
         CRASH_WARNING,
         MEMORY_ALLOCATING,
         MEMORY_ALLOCATED,
