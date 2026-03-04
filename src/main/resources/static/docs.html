@@ -85,114 +85,95 @@
 
         <section id="health-endpoints">
         <h2>Health Endpoints</h2>
-        
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/health</span>
-            <p>Returns the application health status.</p>
-            <pre><code>{
-    "status": "healthy",
-    "timestamp": "2024-01-01T00:00:00Z",
-    "version": "1.0.0",
-    "runtime": "Java 21"
-}</code></pre>
-        </div>
-
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/health/live</span>
-            <p>Kubernetes liveness probe endpoint. Returns HTTP 200 if the application is alive.</p>
-        </div>
-
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/health/ready</span>
-            <p>Kubernetes readiness probe endpoint. Returns HTTP 200 if the application is ready to serve traffic.</p>
-        </div>
+        <p>Standard health check endpoints for monitoring and container orchestration:</p>
+        <ul>
+            <li><code>GET /health</code> — Full health status with version and runtime info</li>
+            <li><code>GET /health/live</code> — Kubernetes liveness probe (HTTP 200 when alive)</li>
+            <li><code>GET /health/ready</code> — Kubernetes readiness probe (HTTP 200 when ready)</li>
+        </ul>
         </section>
 
         <section id="metrics">
-        <h2>Metrics Endpoints</h2>
-
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/api/metrics</span>
-            <p>Returns current system metrics including CPU, memory, threads, and GC statistics.</p>
-            <pre><code>{
-    "cpu": {
-        "usagePercent": 25.5,
-        "availableProcessors": 8,
-        "systemLoadAverage": 1.2
-    },
-    "memory": {
-        "heapUsedMb": 128,
-        "heapMaxMb": 512,
-        "heapUsagePercent": 25.0,
-        "nonHeapUsedMb": 64
-    },
-    "thread": {
-        "activeCount": 25,
-        "peakCount": 30,
-        "totalStartedCount": 100
-    },
-    "gc": {
-        "totalCollections": 50,
-        "totalTimeMs": 250
-    },
-    "process": {
-        "pid": 12345,
-        "uptimeSeconds": 3600
-    }
-}</code></pre>
-        </div>
+        <h2>Metrics</h2>
+        <p>The dashboard displays real-time system metrics streamed via WebSocket. Metrics include:</p>
+        <ul>
+            <li><strong>CPU</strong> — Usage percentage, processor count, system load average</li>
+            <li><strong>Memory</strong> — Heap used/max, heap percentage, non-heap memory</li>
+            <li><strong>Threads</strong> — Active count, peak count, total threads started</li>
+            <li><strong>GC</strong> — Collection count and total pause time</li>
+            <li><strong>Process</strong> — PID and uptime</li>
+        </ul>
+        <p>These metrics are collected from JMX MBeans and update every 250ms on the dashboard.</p>
         </section>
 
         <section id="cpu-simulation">
         <h2>CPU Stress Simulation</h2>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/cpu/stress</span>
-            <p>Starts a CPU stress simulation with cryptographic operations.</p>
-            <h4>Request Body:</h4>
-            <pre><code>{
-    "workers": 4,        // Number of worker threads (1-32)
-    "durationMs": 30000  // Duration in milliseconds
-}</code></pre>
+        <div class="note">
+            <h4>How It Works</h4>
+            <p>The CPU stress simulation creates worker threads that perform <strong>PBKDF2WithHmacSHA512</strong> cryptographic operations—computationally expensive work that cannot be optimized away by the JIT compiler.</p>
         </div>
 
-        <div class="api-endpoint">
-            <span class="method delete">DELETE</span>
-            <span class="path">/api/simulations/cpu/stress/{simulationId}</span>
-            <p>Stops a running CPU stress simulation.</p>
-        </div>
+        <h3>Understanding the Simulation</h3>
+        <p>Each worker thread runs in a tight loop performing password hashing operations. This mimics real-world scenarios like:</p>
+        <ul>
+            <li><strong>Inefficient algorithms</strong> — O(n²) loops or regex backtracking</li>
+            <li><strong>Missing caches</strong> — Recalculating expensive operations repeatedly</li>
+            <li><strong>Crypto-mining malware</strong> — Unauthorized CPU consumption</li>
+            <li><strong>Unoptimized queries</strong> — CPU-bound data processing</li>
+        </ul>
 
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/api/simulations/cpu/active</span>
-            <p>Lists all active CPU stress simulations.</p>
-        </div>
+        <h3>Configuration Options</h3>
+        <ul>
+            <li><strong>Workers (1-32)</strong> — Number of parallel threads consuming CPU. More workers = higher CPU usage.</li>
+            <li><strong>Duration</strong> — How long the stress runs before automatically stopping.</li>
+        </ul>
+
+        <h3>What You'll See in Diagnostics</h3>
+        <ul>
+            <li><strong>Thread dumps:</strong> Threads in <code>RUNNABLE</code> state inside <code>PBKDF2Core</code> or <code>SecretKeyFactory</code></li>
+            <li><strong>CPU Profiler:</strong> High CPU samples in cryptographic classes</li>
+            <li><strong>App Service Metrics:</strong> CPU percentage approaching worker count × (100% / cores)</li>
+        </ul>
+
+        <h4>Dashboard Controls</h4>
+        <p>Use the <strong>CPU Stress</strong> panel on the dashboard to start/stop simulations and adjust worker count and duration in real-time.</p>
         </section>
 
         <section id="memory-simulation">
         <h2>Memory Pressure Simulation</h2>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/memory/pressure</span>
-            <p>Starts a memory pressure simulation by allocating heap memory.</p>
-            <h4>Request Body:</h4>
-            <pre><code>{
-    "targetMb": 500,     // Target memory allocation in MB
-    "durationMs": 30000  // Duration to hold memory
-}</code></pre>
+        <div class="note">
+            <h4>How It Works</h4>
+            <p>The memory simulation allocates large byte arrays that are held on the heap for the specified duration, preventing garbage collection from reclaiming the memory.</p>
         </div>
 
-        <div class="api-endpoint">
-            <span class="method delete">DELETE</span>
-            <span class="path">/api/simulations/memory/pressure/{simulationId}</span>
-            <p>Releases memory from a running simulation.</p>
-        </div>
+        <h3>Understanding Memory Leaks</h3>
+        <p>In real applications, memory leaks occur when objects remain reachable but are no longer needed. Common causes include:</p>
+        <ul>
+            <li><strong>Static collections</strong> — Adding to a static <code>List</code> or <code>Map</code> without removing</li>
+            <li><strong>Event listeners</strong> — Registering listeners that are never unregistered</li>
+            <li><strong>Caches without eviction</strong> — Unbounded caches that grow indefinitely</li>
+            <li><strong>ThreadLocal variables</strong> — Values held in pooled threads</li>
+            <li><strong>Session data</strong> — Large objects stored in HTTP sessions</li>
+        </ul>
+
+        <h3>Configuration Options</h3>
+        <ul>
+            <li><strong>Target MB</strong> — Amount of heap memory to allocate and hold</li>
+            <li><strong>Duration</strong> — How long to retain the memory before releasing</li>
+        </ul>
+
+        <h3>What You'll See in Diagnostics</h3>
+        <ul>
+            <li><strong>GC Frequency:</strong> Increased GC activity as heap fills up</li>
+            <li><strong>Heap Dumps:</strong> Large <code>byte[]</code> arrays retained by the simulation service</li>
+            <li><strong>Memory Metrics:</strong> Heap usage climbing toward the configured target</li>
+            <li><strong>GC Pauses:</strong> Longer GC times as the heap approaches capacity</li>
+        </ul>
+
+        <h4>Dashboard Controls</h4>
+        <p>Use the <strong>Memory</strong> panel on the dashboard to allocate memory and watch heap usage grow in real-time. The memory is automatically released when the duration expires or when you stop the simulation.</p>
         </section>
 
         <section id="thread-simulation">
@@ -233,22 +214,25 @@
         </table>
         <p><strong>Formula:</strong> Total time ≈ <code>durationSeconds × ⌈threadCount / 200⌉</code></p>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/thread/starvation</span>
-            <p>Starts blocking servlet threads to starve the thread pool.</p>
-            <h4>Request Body:</h4>
-            <pre><code>{
-    "threadCount": 150,      // Number of blocking requests to spawn
-    "durationSeconds": 10   // How long each request blocks its thread
-}</code></pre>
-            <h4>Recommended Settings:</h4>
-            <ul>
-                <li><strong>Quick test:</strong> 150 threads, 10s (single wave, ~10s total)</li>
-                <li><strong>Moderate impact:</strong> 200 threads, 15s (saturates pool, ~15s total)</li>
-                <li><strong>Extended test:</strong> 400 threads, 10s (two waves, ~20s total)</li>
-            </ul>
-        </div>
+        <h3>Configuration Options</h3>
+        <ul>
+            <li><strong>Thread Count (1-500)</strong> — Number of blocking requests to spawn</li>
+            <li><strong>Duration</strong> — How long each request blocks its thread</li>
+        </ul>
+
+        <h4>Recommended Settings:</h4>
+        <ul>
+            <li><strong>Quick test:</strong> 150 threads, 10s (single wave, ~10s total)</li>
+            <li><strong>Moderate impact:</strong> 200 threads, 15s (saturates pool, ~15s total)</li>
+            <li><strong>Extended test:</strong> 400 threads, 10s (two waves, ~20s total)</li>
+        </ul>
+
+        <h3>What You'll See in Diagnostics</h3>
+        <ul>
+            <li><strong>Thread dumps:</strong> Many threads in <code>TIMED_WAITING</code> state</li>
+            <li><strong>Latency spikes:</strong> New requests queue behind blocked threads</li>
+            <li><strong>Dashboard:</strong> Active thread count climbs rapidly</li>
+        </ul>
         </section>
 
         <section id="connection-pool">
@@ -288,25 +272,14 @@
             </tr>
         </table>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/connection-pool</span>
-            <p>Simulates JDBC connection pool exhaustion. Multiple queries compete for limited connections, causing timeouts.</p>
-            <h4>Request Body:</h4>
-            <pre><code>{
-    "poolSize": 10,              // Simulated pool size (like HikariCP)
-    "queryDurationSeconds": 30,  // How long each query holds a connection
-    "concurrentQueries": 20,     // Number of concurrent queries
-    "connectionTimeoutSeconds": 5 // Timeout waiting for connection
-}</code></pre>
-            <h4>Diagnostic Value:</h4>
-            <ul>
-                <li>Thread dumps show threads <code>TIMED_WAITING</code> on <code>Semaphore.tryAcquire</code></li>
-                <li>Identical pattern to real HikariCP/C3P0 pool exhaustion</li>
-                <li>Latency spikes as servlet threads block waiting for connections</li>
-                <li>Timeout errors when wait exceeds <code>connectionTimeoutSeconds</code></li>
-            </ul>
-        </div>
+        <h3>Configuration Options</h3>
+        <p>Adjustable via the dashboard:</p>
+        <ul>
+            <li><strong>Pool Size (1-50)</strong> — Number of simulated connections available</li>
+            <li><strong>Query Duration</strong> — How long each "query" holds a connection</li>
+            <li><strong>Concurrent Queries</strong> — Number of simultaneous queries to attempt</li>
+            <li><strong>Connection Timeout</strong> — How long to wait before timing out</li>
+        </ul>
 
         <h3>What You'll See in Thread Dumps</h3>
         <pre><code>"http-nio-8080-exec-42" #42 daemon prio=5 TIMED_WAITING
@@ -317,60 +290,42 @@
     ...</code></pre>
         <p>In real applications, this would show <code>HikariPool.getConnection()</code> or <code>BasicResourcePool.getResource()</code> instead.</p>
 
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/api/simulations/connection-pool/stats</span>
-            <p>Returns current pool statistics including available connections, active connections, and timeout counts.</p>
-        </div>
-
-        <div class="api-endpoint">
-            <span class="method delete">DELETE</span>
-            <span class="path">/api/simulations/connection-pool</span>
-            <p>Stops the connection pool simulation and releases all connections.</p>
-        </div>
+        <h3>Diagnostic Indicators</h3>
+        <ul>
+            <li>Thread dumps show threads <code>TIMED_WAITING</code> on <code>Semaphore.tryAcquire</code></li>
+            <li>Latency spikes as servlet threads block waiting for connections</li>
+            <li>Timeout errors when wait exceeds the configured timeout</li>
+            <li>Dashboard shows real-time pool utilization and timeout counts</li>
+        </ul>
         </section>
 
         <section id="crash-simulation">
         <h2>Crash Simulation</h2>
         
         <div class="warning">
-            <strong>Warning:</strong> These endpoints will crash or terminate the application. 
-            Use only for testing diagnostics and recovery scenarios.
+            <strong>Warning:</strong> These simulations will crash or terminate the application. 
+            Use only for testing diagnostics and recovery scenarios in App Service.
         </div>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/crash</span>
-            <p>Triggers a crash of the specified type.</p>
-            <h4>Request Body:</h4>
-            <pre><code>{
-    "type": "FAILFAST"  // FAILFAST, STACKOVERFLOW, EXCEPTION, or OOM
-}</code></pre>
-        </div>
+        <h3>Available Crash Types</h3>
+        <p>Select a crash type from the dashboard to test different failure modes:</p>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/crash/failfast</span>
-            <p>Immediately exits the JVM with System.exit(1).</p>
-        </div>
+        <h4>🛑 Fail Fast (System.exit)</h4>
+        <p>Immediately terminates the JVM with <code>System.exit(1)</code>. The process exits without running shutdown hooks or finalizers. In App Service, this triggers an immediate restart.</p>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/crash/stackoverflow</span>
-            <p>Causes a StackOverflowError through infinite recursion.</p>
-        </div>
+        <h4>📉 Stack Overflow</h4>
+        <p>Triggers a <code>StackOverflowError</code> through infinite recursion. This simulates bugs like circular method calls or unbounded recursion. The stack trace will show repeated calls to the same method.</p>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/crash/exception</span>
-            <p>Throws an unhandled RuntimeException.</p>
-        </div>
+        <h4>⚠️ Unhandled Exception</h4>
+        <p>Throws an unhandled <code>RuntimeException</code> from a request handler. Tests how your application handles unexpected errors and whether exception handling middleware is working correctly.</p>
 
-        <div class="api-endpoint">
-            <span class="method post">POST</span>
-            <span class="path">/api/simulations/crash/oom</span>
-            <p>Causes an OutOfMemoryError by allocating excessive memory.</p>
-        </div>
+        <h4>💥 Out of Memory (OOM)</h4>
+        <p>Rapidly allocates memory until the JVM throws an <code>OutOfMemoryError</code>. This is useful for testing:</p>
+        <ul>
+            <li>App Service auto-restart behavior on OOM</li>
+            <li>Memory alerting and monitoring</li>
+            <li>Heap dump collection configuration</li>
+        </ul>
         </section>
 
         <section id="load-testing">
@@ -510,28 +465,12 @@
 
         <section id="admin-endpoints">
         <h2>Admin Endpoints</h2>
-
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/api/simulations</span>
-            <p>Lists all active simulations.</p>
-        </div>
-
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/api/admin/status</span>
-            <p>Returns admin status overview with metrics and simulation count.</p>
-        </div>
-
-        <div class="api-endpoint">
-            <span class="method get">GET</span>
-            <span class="path">/api/admin/events</span>
-            <p>Returns recent event log entries.</p>
-            <h4>Query Parameters:</h4>
-            <ul>
-                <li><code>limit</code> - Maximum number of events to return (default: 50)</li>
-            </ul>
-        </div>
+        <p>These endpoints power the dashboard and provide programmatic access to simulation status:</p>
+        <ul>
+            <li><code>GET /api/simulations</code> — Lists all active simulations</li>
+            <li><code>GET /api/admin/status</code> — Overview with metrics and simulation count</li>
+            <li><code>GET /api/admin/events</code> — Recent event log entries</li>
+        </ul>
         </section>
 
         <section id="websocket">
@@ -566,7 +505,9 @@
             <h2>ON THIS PAGE</h2>
             <a href="#overview" class="doc-toc-link active"><span class="toc-icon">📄</span> Overview</a>
             
-            <div class="doc-toc-section-label">SIMULATIONS</div>
+            <div class="doc-toc-section-label toc-section-simulations">
+                <span class="toc-section-icon">🎮</span> SIMULATIONS
+            </div>
             <a href="#cpu-simulation" class="doc-toc-link"><span class="toc-icon">🔥</span> CPU Stress</a>
             <a href="#memory-simulation" class="doc-toc-link"><span class="toc-icon">📊</span> Memory Pressure</a>
             <a href="#thread-simulation" class="doc-toc-link"><span class="toc-icon">🟣</span> Thread Starvation</a>
@@ -574,7 +515,9 @@
             <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Crash Simulation</a>
             <a href="#load-testing" class="doc-toc-link"><span class="toc-icon">🧪</span> Load Testing</a>
             
-            <div class="doc-toc-section-label">REFERENCE</div>
+            <div class="doc-toc-section-label toc-section-reference">
+                <span class="toc-section-icon">📖</span> REFERENCE
+            </div>
             <a href="#health-endpoints" class="doc-toc-link"><span class="toc-icon">💚</span> Health Endpoints</a>
             <a href="#metrics" class="doc-toc-link"><span class="toc-icon">📈</span> Metrics</a>
             <a href="#admin-endpoints" class="doc-toc-link"><span class="toc-icon">⚙️</span> Admin</a>
@@ -619,12 +562,21 @@
         
         function highlightToc() {
             let current = '';
+            const viewportHeight = window.innerHeight;
+            
+            // Find the section that's most visible in viewport
             sections.forEach(section => {
                 const rect = section.getBoundingClientRect();
-                if (rect.top <= 100) {
+                // Section is considered "current" if its top is in upper 40% of viewport
+                if (rect.top <= viewportHeight * 0.4 && rect.bottom > 0) {
                     current = section.getAttribute('id');
                 }
             });
+            
+            // If no section found (scrolled to very top), use first section
+            if (!current && sections.length > 0) {
+                current = sections[0].getAttribute('id');
+            }
             
             tocLinks.forEach(link => {
                 link.classList.remove('active');

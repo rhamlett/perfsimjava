@@ -523,7 +523,7 @@ const Dashboard = (function() {
         if (logEl) {
             const levelClass = event.level.toLowerCase();
             const simClass = getSimulationClass(event.simulationType);
-            const time = new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' });
+            const time = new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' }) + ' UTC';
             const emoji = getSimulationEmoji(event.simulationType, event.event);
             const prefix = emoji ? emoji + ' ' : '';
             
