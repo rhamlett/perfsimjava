@@ -1322,6 +1322,7 @@ footer a:hover {
 /* Two-column layout: content + TOC */
 .doc-layout {
   display: flex;
+  gap: 0;
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
@@ -1329,11 +1330,17 @@ footer a:hover {
 
 /* Main content area */
 .doc-content {
-  flex: 1;
-  max-width: 900px;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 2rem 2.5rem;
   background: var(--color-card);
   min-height: calc(100vh - 200px);
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Override global main styles */
+  display: block;
+  margin: 0;
 }
 
 /* Documentation content typography */
@@ -1404,12 +1411,13 @@ footer a:hover {
 .doc-toc {
   width: 280px;
   flex-shrink: 0;
-  padding: 1.5rem 1rem 1.5rem 0;
+  padding: 1.5rem 1rem 1.5rem 1.5rem;
   position: sticky;
   top: 72px;
   align-self: flex-start;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
+  background: var(--color-bg);
 }
 
 .doc-toc-inner {
