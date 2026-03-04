@@ -4,7 +4,6 @@ import com.microsoft.azure.samples.perfsimjava.model.LoadTestResult;
 import com.microsoft.azure.samples.perfsimjava.model.LoadTestStats;
 import com.microsoft.azure.samples.perfsimjava.model.dto.LoadTestRequest;
 import com.microsoft.azure.samples.perfsimjava.service.LoadTestService;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
