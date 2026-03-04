@@ -117,6 +117,33 @@ perfsim.default-duration-ms=30000
 perfsim.max-duration-ms=120000
 ```
 
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `PAGE_FOOTER` | Custom HTML footer text displayed at the bottom of the dashboard. Supports HTML links. |
+
+### PAGE_FOOTER
+
+The `PAGE_FOOTER` environment variable allows you to customize the footer credits displayed on the dashboard. This is useful for attributing tools, teams, or linking to relevant resources.
+
+**Example:**
+
+```bash
+# Set via Azure CLI
+az webapp config appsettings set \
+    --resource-group rg-perfsimjava \
+    --name perfsimjava \
+    --settings PAGE_FOOTER='Created by <a href="https://speckit.org/" target="_blank">SpecKit</a> and <a href="https://github.com/copilot" target="_blank">Github Copilot</a>'
+```
+
+```bash
+# Set locally for testing
+export PAGE_FOOTER='Created by <a href="https://speckit.org/" target="_blank">SpecKit</a> and <a href="https://github.com/copilot" target="_blank">Github Copilot</a>'
+```
+
+The footer is retrieved via the `/api/health/footer` endpoint and rendered in the dashboard's footer section. If `PAGE_FOOTER` is not set, the footer credits section is hidden.
+
 ## Deploy to Azure App Service
 
 ### Using Azure CLI

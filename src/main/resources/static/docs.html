@@ -485,6 +485,43 @@
             <li><strong>CPU Stress:</strong> PBKDF2WithHmacSHA512 cryptographic operations</li>
         </ul>
         </section>
+
+        <section id="environment-variables">
+        <h2>Environment Variables</h2>
+        <p>The following environment variables can be configured to customize application behavior:</p>
+        
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color);">
+                    <th style="padding: 0.5rem; text-align: left;">Variable</th>
+                    <th style="padding: 0.5rem; text-align: left;">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><code>PAGE_FOOTER</code></td>
+                    <td style="padding: 0.5rem;">Custom HTML footer text displayed at the bottom of the dashboard. Supports HTML links.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>PAGE_FOOTER</h3>
+        <p>The <code>PAGE_FOOTER</code> environment variable allows you to customize the footer credits displayed on the dashboard. This is useful for attributing tools, teams, or linking to relevant resources.</p>
+        
+        <h4>Example Value:</h4>
+        <pre><code>Created by &lt;a href="https://speckit.org/" target="_blank"&gt;SpecKit&lt;/a&gt; and &lt;a href="https://github.com/copilot" target="_blank"&gt;Github Copilot&lt;/a&gt;</code></pre>
+
+        <h4>Setting via Azure CLI:</h4>
+        <pre><code>az webapp config appsettings set \
+    --resource-group rg-perfsimjava \
+    --name perfsimjava \
+    --settings PAGE_FOOTER='Created by &lt;a href="https://speckit.org/" target="_blank"&gt;SpecKit&lt;/a&gt; and &lt;a href="https://github.com/copilot" target="_blank"&gt;Github Copilot&lt;/a&gt;'</code></pre>
+
+        <h4>Setting Locally:</h4>
+        <pre><code>export PAGE_FOOTER='Created by &lt;a href="https://speckit.org/" target="_blank"&gt;SpecKit&lt;/a&gt; and &lt;a href="https://github.com/copilot" target="_blank"&gt;Github Copilot&lt;/a&gt;'</code></pre>
+
+        <p>The footer is retrieved via the <code>/api/health/footer</code> endpoint and rendered in the dashboard's footer section. If <code>PAGE_FOOTER</code> is not set, the footer credits section is hidden.</p>
+        </section>
     </main>
     
     <!-- Right-side Table of Contents -->
@@ -510,6 +547,7 @@
             <a href="#admin-endpoints" class="doc-toc-link"><span class="toc-icon">⚙️</span> Admin</a>
             <a href="#websocket" class="doc-toc-link"><span class="toc-icon">🔌</span> WebSocket</a>
             <a href="#tech-stack" class="doc-toc-link"><span class="toc-icon">📦</span> Tech Stack</a>
+            <a href="#environment-variables" class="doc-toc-link"><span class="toc-icon">🔧</span> Environment Variables</a>
         </div>
     </aside>
     </div>
