@@ -432,7 +432,7 @@ const ChartsModule = (function() {
                         backgroundColor: colors.latencyLight, // Default/fallback, replaced by gradient plugin
                         fill: true,
                         tension: 0.3,
-                        borderWidth: 1.5,
+                        borderWidth: 1,
                         pointRadius: 0
                     }]
                 },
