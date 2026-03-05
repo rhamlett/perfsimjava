@@ -7,8 +7,8 @@ const ChartsModule = (function() {
     'use strict';
 
     // Chart configuration
-    const MAX_DATA_POINTS = 60;  // Upper charts: 60 points at 250ms = 15 seconds
-    const MAX_LATENCY_DATA_POINTS = 150;  // Latency chart: 150 points at 100ms = 15 seconds (same visual pacing)
+    const MAX_DATA_POINTS = 240;  // Upper charts: 240 points at 250ms = 60 seconds
+    const MAX_LATENCY_DATA_POINTS = 600;  // Latency chart: 600 points at 100ms = 60 seconds
 
     // Latency threshold values (in milliseconds)
     const LATENCY_THRESHOLDS = {
