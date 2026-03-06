@@ -267,41 +267,29 @@ const Dashboard = (function() {
         updateCurrentMetrics(metrics);
     }
 
-    // Badge update throttling (100ms minimum between updates)
-    const BADGE_UPDATE_INTERVAL_MS = 100;
-
-    // Throttling for current latency badge
-    let lastCurrentBadgeUpdateTime = 0;
-
     /**
      * Handles probe results from WebSocket
      */
     function handleProbeResult(result) {
-        // Update latency chart immediately at probe rate (100ms)
+        // Update latency chart immediately at probe rate
         if (result.latencyMs !== undefined) {
             ChartsModule.updateLatency(result.latencyMs);
             
-            // Throttle current latency badge to 100ms
-            const now = Date.now();
-            if (now - lastCurrentBadgeUpdateTime >= BADGE_UPDATE_INTERVAL_MS) {
-                lastCurrentBadgeUpdateTime = now;
+            // Update current latency display
+            const latencyCurrentEl = document.getElementById('latency-current');
+            if (latencyCurrentEl) {
+                latencyCurrentEl.textContent = result.latencyMs.toFixed(1) + 'ms';
                 
-                // Update current latency display
-                const latencyCurrentEl = document.getElementById('latency-current');
-                if (latencyCurrentEl) {
-                    latencyCurrentEl.textContent = result.latencyMs.toFixed(1) + 'ms';
-                    
-                    // Add color class based on threshold (matches advertised thresholds)
-                    latencyCurrentEl.classList.remove('good', 'degraded', 'severe', 'critical');
-                    if (result.latencyMs < 150) {
-                        latencyCurrentEl.classList.add('good');      // Good (<150ms)
-                    } else if (result.latencyMs < 1000) {
-                        latencyCurrentEl.classList.add('degraded'); // Degraded (150ms-1s)
-                    } else if (result.latencyMs < 30000) {
-                        latencyCurrentEl.classList.add('severe');   // Severe (>1s)
-                    } else {
-                        latencyCurrentEl.classList.add('critical'); // Critical (>30s)
-                    }
+                // Add color class based on threshold (matches advertised thresholds)
+                latencyCurrentEl.classList.remove('good', 'degraded', 'severe', 'critical');
+                if (result.latencyMs < 150) {
+                    latencyCurrentEl.classList.add('good');      // Good (<150ms)
+                } else if (result.latencyMs < 1000) {
+                    latencyCurrentEl.classList.add('degraded'); // Degraded (150ms-1s)
+                } else if (result.latencyMs < 30000) {
+                    latencyCurrentEl.classList.add('severe');   // Severe (>1s)
+                } else {
+                    latencyCurrentEl.classList.add('critical'); // Critical (>30s)
                 }
             }
             
@@ -317,10 +305,9 @@ const Dashboard = (function() {
     const latencyHistory = [];
     const MAX_LATENCY_HISTORY = 600; // 60 seconds at 100ms intervals
     let criticalCount = 0;
-    let lastBadgeUpdateTime = 0;
 
     /**
-     * Updates latency statistics (throttled to 100ms)
+     * Updates latency statistics
      */
     function updateLatencyStats(latency) {
         latencyHistory.push(latency);
@@ -332,13 +319,6 @@ const Dashboard = (function() {
         if (latency > 30000) {
             criticalCount++;
         }
-        
-        // Throttle badge updates to 100ms
-        const now = Date.now();
-        if (now - lastBadgeUpdateTime < BADGE_UPDATE_INTERVAL_MS) {
-            return; // Skip this update, too soon
-        }
-        lastBadgeUpdateTime = now;
         
         // Calculate stats
         const sum = latencyHistory.reduce((a, b) => a + b, 0);
