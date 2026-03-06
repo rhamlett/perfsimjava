@@ -530,6 +530,22 @@ section h2, section h3 {
   margin-top: 0.1rem;
 }
 
+/* Stress level color classes for metric values */
+.tile-value .stress-warning {
+  color: var(--color-warning);
+  transition: color var(--transition-fast);
+}
+
+.tile-value .stress-critical {
+  color: var(--color-danger);
+  transition: color var(--transition-fast);
+}
+
+.tile-value .stress-normal {
+  color: var(--color-text);
+  transition: color var(--transition-fast);
+}
+
 .metric-bar {
   height: 4px;
   background: #e1dfdd;
@@ -671,6 +687,14 @@ section h2, section h3 {
   font-weight: 700;
   color: var(--color-text);
   transition: color var(--transition-fast);
+  display: inline-block;
+  min-width: 4.5em;
+  text-align: right;
+}
+
+/* Count-only badge (smaller fixed width for numbers) */
+#latency-critical {
+  min-width: 1.5em;
 }
 
 .stat-value.good { color: var(--color-success); }
@@ -930,12 +954,12 @@ section h2, section h3 {
 }
 
 .connection-pool-section {
-  border: 2px dashed #ff8c00;
+  border: 2px solid #ff8c00;
   background: rgba(255, 140, 0, 0.05);
 }
 
 .crash-section {
-  border: 2px dashed var(--color-danger);
+  border: 2px solid var(--color-danger);
   background: rgba(209, 52, 56, 0.05);
 }
 

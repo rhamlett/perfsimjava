@@ -416,19 +416,44 @@ const Dashboard = (function() {
     }
 
     /**
+     * Returns the appropriate stress class based on value and thresholds
+     * @param {number} value - Current value
+     * @param {number} warningThreshold - Yellow threshold
+     * @param {number} criticalThreshold - Red threshold
+     * @returns {string} CSS class name
+     */
+    function getStressClass(value, warningThreshold, criticalThreshold) {
+        if (value >= criticalThreshold) return 'stress-critical';
+        if (value >= warningThreshold) return 'stress-warning';
+        return 'stress-normal';
+    }
+
+    /**
+     * Applies stress color class to an element
+     * @param {HTMLElement} el - Element to style
+     * @param {string} stressClass - CSS class to apply
+     */
+    function applyStressClass(el, stressClass) {
+        if (!el) return;
+        el.classList.remove('stress-normal', 'stress-warning', 'stress-critical');
+        el.classList.add(stressClass);
+    }
+
+    /**
      * Updates the current metrics display (metric tiles)
      */
     function updateCurrentMetrics(metrics) {
-        // CPU Tile
+        // CPU Tile - yellow at 60%, red at 80%
         const cpuEl = document.getElementById('cpu-value');
         const cpuBar = document.getElementById('cpu-bar');
         if (cpuEl && metrics.cpu) {
             const cpuValue = metrics.cpu.usagePercent || 0;
             cpuEl.textContent = cpuValue.toFixed(1);
             if (cpuBar) cpuBar.style.width = Math.min(cpuValue, 100) + '%';
+            applyStressClass(cpuEl, getStressClass(cpuValue, 60, 80));
         }
 
-        // Memory Tile
+        // Memory Tile - based on heap percentage: yellow at 60%, red at 80%
         const memEl = document.getElementById('memory-value');
         const memBar = document.getElementById('memory-bar');
         const memTotal = document.getElementById('memory-total');
@@ -437,22 +462,25 @@ const Dashboard = (function() {
             const heapUsed = metrics.memory.heapUsedMb || 0;
             const heapMax = metrics.memory.heapMaxMb || 1000;
             const totalSystem = metrics.memory.totalSystemMb || 0;
+            const heapPercent = (heapUsed / heapMax) * 100;
             memEl.textContent = heapUsed.toFixed(0);
-            if (memBar) memBar.style.width = Math.min((heapUsed / heapMax) * 100, 100) + '%';
+            if (memBar) memBar.style.width = Math.min(heapPercent, 100) + '%';
             if (memTotal) memTotal.textContent = 'of ' + (heapMax / 1024).toFixed(1) + ' GB heap';
             if (systemMem) systemMem.textContent = 'System: ' + (totalSystem / 1024).toFixed(1) + ' GB';
+            applyStressClass(memEl, getStressClass(heapPercent, 60, 80));
         }
 
-        // Threads Tile
+        // Threads Tile - yellow at 200 threads, red at 400 threads
         const threadEl = document.getElementById('threads-value');
         const threadBar = document.getElementById('threads-bar');
         if (threadEl && metrics.thread) {
             const threadCount = metrics.thread.activeCount || 0;
             threadEl.textContent = threadCount;
             if (threadBar) threadBar.style.width = Math.min((threadCount / 500) * 100, 100) + '%';
+            applyStressClass(threadEl, getStressClass(threadCount, 200, 400));
         }
 
-        // GC Tile (shows GC Overhead %)
+        // GC Tile (shows GC Overhead %) - yellow at 2%, red at 5%
         const gcEl = document.getElementById('gc-value');
         const gcBar = document.getElementById('gc-bar');
         if (gcEl && metrics.process) {
@@ -460,6 +488,7 @@ const Dashboard = (function() {
             gcEl.textContent = gcOverhead.toFixed(1);
             // Bar fills at 10% overhead (considered high)
             if (gcBar) gcBar.style.width = Math.min((gcOverhead / 10) * 100, 100) + '%';
+            applyStressClass(gcEl, getStressClass(gcOverhead, 2, 5));
         }
     }
 
