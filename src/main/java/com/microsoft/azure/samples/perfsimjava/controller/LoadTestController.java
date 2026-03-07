@@ -74,7 +74,7 @@ public class LoadTestController {
      * @param baselineDelayMs   Minimum duration in ms (100-60000, default: 500)
      * @param softLimit         Max concurrent before degradation (1-1000, default: 25)
      * @param degradationFactor Delay per request over limit (0-10000, default: 500)
-     * @param errorAfter        Seconds before random errors may occur (0-600, default: 120, 0 disables)
+     * @param errorAfter        Seconds before random errors may occur (0+ , default: 120, 0 disables)
      * @param errorPercent      Percentage chance of error after threshold (0-100, default: 20, 0 disables)
      * @return Load test result with timing metrics
      */
@@ -95,7 +95,7 @@ public class LoadTestController {
         request.setBaselineDelayMs(clamp(baselineDelayMs, 100, 60000));
         request.setSoftLimit(clamp(softLimit, 1, 1000));
         request.setDegradationFactor(clamp(degradationFactor, 0, 10000));
-        request.setErrorAfterSeconds(clamp(errorAfter, 0, 600));
+        request.setErrorAfterSeconds(Math.max(0, errorAfter));
         request.setErrorPercent(clamp(errorPercent, 0, 100));
 
         try {
