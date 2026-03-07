@@ -29,25 +29,22 @@ import java.util.concurrent.atomic.AtomicLong;
  *   periodic probe requests. Unlike simple health checks, this measures
  *   real response time including any thread pool queueing delays.
  *
- * HOW IT WORKS:
- *   1. A dedicated thread sends HTTP GET requests to /api/metrics/probe
- *   2. Measures round-trip time for each request
- *   3. Broadcasts results to dashboard via WebSocket
- *   4. Dashboard displays latency chart and statistics
+ * TWO PROBE MODES:
+ *   1. LOCAL PROBE (100ms interval):
+ *      - Sends HTTP GET to localhost:/api/metrics/probe
+ *      - Fast interval for real-time latency monitoring dashboard
+ *      - Lightweight, stays within the JVM/container network
  *
- * WHY INTERNAL PROBING:
- *   Unlike the Node.js version which uses a separate sidecar process,
- *   Java's thread-per-request model allows us to probe from a dedicated
- *   thread within the same JVM. The probe thread has its own HTTP client
- *   and doesn't share resources with servlet threads.
+ *   2. FRONTEND PROBE (1000ms interval, Azure only):
+ *      - Sends HTTP GET through Azure frontend (WEBSITE_HOSTNAME)
+ *      - Slower interval to reduce CPU overhead
+ *      - Traffic visible in Azure AppLens diagnostics
+ *      - Only active when WEBSITE_HOSTNAME environment variable is set
  *
- *   For Azure App Service, you can also configure external health probes
- *   that go through the Azure frontend for AppLens visibility.
- *
- * AZURE INTEGRATION:
- *   When WEBSITE_HOSTNAME is set (Azure App Service), probes can be
- *   configured to go through the Azure frontend load balancer, making
- *   the traffic visible in AppLens diagnostics.
+ * WHY TWO PROBES:
+ *   - Local probe: High-frequency data for the dashboard latency chart
+ *   - Frontend probe: AppLens visibility for Azure diagnostics training
+ *   - Separation reduces CPU overhead while maintaining both features
  *
  * PORTING NOTES:
  *   - Node.js: Uses a separate child process (sidecar) for true isolation
@@ -59,28 +56,41 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ProbeService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProbeService.class);
+    
+    // Frontend probe interval - fixed at 1 second for AppLens visibility
+    private static final int FRONTEND_PROBE_INTERVAL_MS = 1000;
 
     private final SimpMessagingTemplate messagingTemplate;
     private final AppConfig config;
     private final HttpClient httpClient;
     private final ScheduledExecutorService scheduler;
 
-    private String probeUrl;
-    private final AtomicLong probeCount = new AtomicLong(0);
-    private final AtomicLong errorCount = new AtomicLong(0);
-    private volatile long lastLatencyMs = 0;
+    // Local probe state
+    private String localProbeUrl;
+    private final AtomicLong localProbeCount = new AtomicLong(0);
+    private final AtomicLong localErrorCount = new AtomicLong(0);
+    private volatile long lastLocalLatencyMs = 0;
+
+    // Frontend probe state (for AppLens)
+    private String frontendProbeUrl;
+    private final AtomicLong frontendProbeCount = new AtomicLong(0);
+    private final AtomicLong frontendErrorCount = new AtomicLong(0);
+    private volatile long lastFrontendLatencyMs = 0;
+    private volatile boolean frontendProbeEnabled = false;
 
     public ProbeService(SimpMessagingTemplate messagingTemplate, AppConfig config) {
         this.messagingTemplate = messagingTemplate;
         this.config = config;
-        
+
         // Create dedicated HTTP client for probing
+        // Uses a small thread pool to avoid blocking
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .executor(Executors.newFixedThreadPool(2))
                 .build();
-        
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+
+        // Single-threaded scheduler for probe tasks
+        this.scheduler = Executors.newScheduledThreadPool(2, r -> {
             Thread t = new Thread(r, "probe-service");
             t.setDaemon(true);
             return t;
@@ -89,101 +99,175 @@ public class ProbeService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
-        // Determine probe URL
-        String hostname = System.getenv("WEBSITE_HOSTNAME");
         int port = Integer.parseInt(System.getProperty("server.port", "8080"));
 
+        // Local probe URL - always use localhost
+        localProbeUrl = "http://localhost:" + port + "/api/metrics/probe";
+        logger.info("[ProbeService] Local probe URL: {}", localProbeUrl);
+
+        // Frontend probe URL - only when running in Azure
+        String hostname = System.getenv("WEBSITE_HOSTNAME");
         if (hostname != null && !hostname.isEmpty()) {
-            // Azure App Service - probe through frontend
-            probeUrl = "https://" + hostname + "/api/metrics/probe";
-            logger.info("[ProbeService] Azure mode: probing through {}", probeUrl);
+            frontendProbeUrl = "https://" + hostname + "/api/metrics/probe";
+            frontendProbeEnabled = true;
+            logger.info("[ProbeService] Frontend probe enabled: {}", frontendProbeUrl);
         } else {
-            // Local development - probe localhost
-            probeUrl = "http://localhost:" + port + "/api/metrics/probe";
-            logger.info("[ProbeService] Local mode: probing {}", probeUrl);
+            logger.info("[ProbeService] Frontend probe disabled (not running in Azure)");
         }
 
-        // Start the probe loop
-        int intervalMs = config.getProbeIntervalMs();
-        logger.info("[ProbeService] Starting probe loop at {}ms interval", intervalMs);
-        
+        // Start local probe loop (fast, for dashboard latency chart)
+        int localIntervalMs = config.getProbeIntervalMs();
+        logger.info("[ProbeService] Starting local probe loop at {}ms interval", localIntervalMs);
         scheduler.scheduleAtFixedRate(
-                this::sendProbe,
-                5000,  // Initial delay - wait for app to fully stabilize
-                intervalMs,
+                this::sendLocalProbe,
+                5000,  // Initial delay - wait for app to stabilize
+                localIntervalMs,
                 TimeUnit.MILLISECONDS
         );
+
+        // Start frontend probe loop (slower, for AppLens visibility)
+        if (frontendProbeEnabled) {
+            logger.info("[ProbeService] Starting frontend probe loop at {}ms interval", FRONTEND_PROBE_INTERVAL_MS);
+            scheduler.scheduleAtFixedRate(
+                    this::sendFrontendProbe,
+                    6000,  // Stagger start to avoid overlap
+                    FRONTEND_PROBE_INTERVAL_MS,
+                    TimeUnit.MILLISECONDS
+            );
+        }
     }
 
     /**
-     * Sends a probe request and broadcasts the result.
+     * Sends a local probe request and broadcasts the result to the dashboard.
+     * This is the high-frequency probe for the latency monitor chart.
      */
-    private void sendProbe() {
+    private void sendLocalProbe() {
         long startTime = System.currentTimeMillis();
         long timestamp = startTime;
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(probeUrl))
+                .uri(URI.create(localProbeUrl))
                 .header("X-Probe-Request", "true")
+                .header("X-Probe-Type", "local")
                 .timeout(Duration.ofSeconds(30))
                 .GET()
                 .build();
 
         try {
             httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            
-            long latencyMs = System.currentTimeMillis() - startTime;
-            lastLatencyMs = latencyMs;
-            probeCount.incrementAndGet();
 
-            // Broadcast to dashboard
-            broadcastProbeResult(timestamp, latencyMs, true, null);
+            long latencyMs = System.currentTimeMillis() - startTime;
+            lastLocalLatencyMs = latencyMs;
+            localProbeCount.incrementAndGet();
+
+            // Broadcast to dashboard latency monitor
+            broadcastProbeResult(timestamp, latencyMs, true, null, "local");
 
         } catch (Exception e) {
             long latencyMs = System.currentTimeMillis() - startTime;
-            lastLatencyMs = latencyMs;
-            errorCount.incrementAndGet();
+            lastLocalLatencyMs = latencyMs;
+            localErrorCount.incrementAndGet();
 
             // Broadcast failure
-            broadcastProbeResult(timestamp, latencyMs, false, e.getMessage());
+            broadcastProbeResult(timestamp, latencyMs, false, e.getMessage(), "local");
+        }
+    }
+
+    /**
+     * Sends a frontend probe request through Azure's frontend/load balancer.
+     * This is the slower probe for AppLens visibility.
+     * Does NOT broadcast to dashboard to avoid noise.
+     */
+    private void sendFrontendProbe() {
+        if (!frontendProbeEnabled || frontendProbeUrl == null) {
+            return;
+        }
+
+        long startTime = System.currentTimeMillis();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(frontendProbeUrl))
+                .header("X-Probe-Request", "true")
+                .header("X-Probe-Type", "frontend")
+                .timeout(Duration.ofSeconds(30))
+                .GET()
+                .build();
+
+        try {
+            httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            long latencyMs = System.currentTimeMillis() - startTime;
+            lastFrontendLatencyMs = latencyMs;
+            frontendProbeCount.incrementAndGet();
+
+            // Log occasionally for visibility (every 60 probes = ~1 minute at 1s interval)
+            if (frontendProbeCount.get() % 60 == 0) {
+                logger.debug("[ProbeService] Frontend probe stats: count={}, lastLatency={}ms",
+                        frontendProbeCount.get(), latencyMs);
+            }
+
+        } catch (Exception e) {
+            long latencyMs = System.currentTimeMillis() - startTime;
+            lastFrontendLatencyMs = latencyMs;
+            frontendErrorCount.incrementAndGet();
+
+            // Log errors (but don't spam)
+            if (frontendErrorCount.get() % 10 == 1) {
+                logger.warn("[ProbeService] Frontend probe error: {} (count={})",
+                        e.getMessage(), frontendErrorCount.get());
+            }
         }
     }
 
     /**
      * Broadcasts probe result to WebSocket clients.
      */
-    private void broadcastProbeResult(long timestamp, long latencyMs, boolean success, String error) {
+    private void broadcastProbeResult(long timestamp, long latencyMs, boolean success,
+                                       String error, String probeType) {
         Map<String, Object> result = Map.of(
                 "timestamp", timestamp,
                 "latencyMs", latencyMs,
                 "success", success,
-                "error", error != null ? error : ""
+                "error", error != null ? error : "",
+                "probeType", probeType
         );
-
-        try {
-            messagingTemplate.convertAndSend("/topic/probe", result);
-        } catch (Exception e) {
-            logger.debug("Failed to broadcast probe result: {}", e.getMessage());
-        }
+        messagingTemplate.convertAndSend("/topic/probe", result);
     }
 
     /**
-     * Gets the last recorded latency.
-     */
-    public long getLastLatencyMs() {
-        return lastLatencyMs;
-    }
-
-    /**
-     * Gets probe statistics.
+     * Gets combined probe statistics for both local and frontend probes.
      */
     public Map<String, Object> getStats() {
         return Map.of(
-                "probeCount", probeCount.get(),
-                "errorCount", errorCount.get(),
-                "lastLatencyMs", lastLatencyMs,
-                "probeUrl", probeUrl,
-                "intervalMs", config.getProbeIntervalMs()
+                "local", Map.of(
+                        "probeUrl", localProbeUrl != null ? localProbeUrl : "",
+                        "probeCount", localProbeCount.get(),
+                        "errorCount", localErrorCount.get(),
+                        "lastLatencyMs", lastLocalLatencyMs,
+                        "intervalMs", config.getProbeIntervalMs()
+                ),
+                "frontend", Map.of(
+                        "enabled", frontendProbeEnabled,
+                        "probeUrl", frontendProbeUrl != null ? frontendProbeUrl : "",
+                        "probeCount", frontendProbeCount.get(),
+                        "errorCount", frontendErrorCount.get(),
+                        "lastLatencyMs", lastFrontendLatencyMs,
+                        "intervalMs", FRONTEND_PROBE_INTERVAL_MS
+                )
         );
+    }
+
+    /**
+     * Gets the last local probe latency (used by dashboard).
+     */
+    public long getLastLocalLatencyMs() {
+        return lastLocalLatencyMs;
+    }
+
+    /**
+     * Gets the last frontend probe latency (for diagnostics).
+     */
+    public long getLastFrontendLatencyMs() {
+        return lastFrontendLatencyMs;
     }
 }
