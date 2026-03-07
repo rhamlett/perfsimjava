@@ -14,6 +14,8 @@ package com.microsoft.azure.samples.perfsimjava.model.dto;
  *   baselineDelayMs   - Minimum request duration
  *   softLimit         - Concurrent requests before degradation begins
  *   degradationFactor - Additional delay per request over soft limit
+ *   errorAfterSeconds - Seconds before random errors may occur (0 disables)
+ *   errorPercent      - Percentage chance of error after threshold (0-100, 0 disables)
  *
  * DEGRADATION FORMULA:
  *   totalDelay = baselineDelayMs + max(0, concurrent - softLimit) * degradationFactor
@@ -29,6 +31,10 @@ public class LoadTestRequest {
     private int softLimit = 25;
 
     private int degradationFactor = 500;
+
+    private int errorAfterSeconds = 120;
+
+    private int errorPercent = 20;
 
     // Getters and Setters
 
@@ -72,9 +78,25 @@ public class LoadTestRequest {
         this.degradationFactor = degradationFactor;
     }
 
+    public int getErrorAfterSeconds() {
+        return errorAfterSeconds;
+    }
+
+    public void setErrorAfterSeconds(int errorAfterSeconds) {
+        this.errorAfterSeconds = errorAfterSeconds;
+    }
+
+    public int getErrorPercent() {
+        return errorPercent;
+    }
+
+    public void setErrorPercent(int errorPercent) {
+        this.errorPercent = errorPercent;
+    }
+
     @Override
     public String toString() {
-        return String.format("LoadTestRequest{workIterations=%d, bufferSizeKb=%d, baselineDelayMs=%d, softLimit=%d, degradationFactor=%d}",
-                workIterations, bufferSizeKb, baselineDelayMs, softLimit, degradationFactor);
+        return String.format("LoadTestRequest{workIterations=%d, bufferSizeKb=%d, baselineDelayMs=%d, softLimit=%d, degradationFactor=%d, errorAfterSeconds=%d, errorPercent=%d}",
+                workIterations, bufferSizeKb, baselineDelayMs, softLimit, degradationFactor, errorAfterSeconds, errorPercent);
     }
 }

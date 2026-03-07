@@ -40,6 +40,8 @@ import java.util.Map;
  *   baselineDelayMs   - Minimum request duration in ms (default: 500)
  *   softLimit         - Concurrent requests before degradation (default: 25)
  *   degradationFactor - Additional delay ms per request over limit (default: 500)
+ *   errorAfter        - Seconds before random errors may occur (default: 120, 0 disables)
+ *   errorPercent      - Percentage chance of error after threshold (default: 20, 0 disables)
  *
  * EXAMPLE:
  *   GET /api/loadtest?workIterations=300&bufferSizeKb=10000&baselineDelayMs=1000
@@ -72,6 +74,8 @@ public class LoadTestController {
      * @param baselineDelayMs   Minimum duration in ms (100-60000, default: 500)
      * @param softLimit         Max concurrent before degradation (1-1000, default: 25)
      * @param degradationFactor Delay per request over limit (0-10000, default: 500)
+     * @param errorAfter        Seconds before random errors may occur (0-600, default: 120, 0 disables)
+     * @param errorPercent      Percentage chance of error after threshold (0-100, default: 20, 0 disables)
      * @return Load test result with timing metrics
      */
     @GetMapping
@@ -80,7 +84,9 @@ public class LoadTestController {
             @RequestParam(required = false, defaultValue = "20000") int bufferSizeKb,
             @RequestParam(required = false, defaultValue = "500") int baselineDelayMs,
             @RequestParam(required = false, defaultValue = "25") int softLimit,
-            @RequestParam(required = false, defaultValue = "500") int degradationFactor) {
+            @RequestParam(required = false, defaultValue = "500") int degradationFactor,
+            @RequestParam(required = false, defaultValue = "120") int errorAfter,
+            @RequestParam(required = false, defaultValue = "20") int errorPercent) {
 
         // Build request from query parameters
         LoadTestRequest request = new LoadTestRequest();
@@ -89,6 +95,8 @@ public class LoadTestController {
         request.setBaselineDelayMs(clamp(baselineDelayMs, 100, 60000));
         request.setSoftLimit(clamp(softLimit, 1, 1000));
         request.setDegradationFactor(clamp(degradationFactor, 0, 10000));
+        request.setErrorAfterSeconds(clamp(errorAfter, 0, 600));
+        request.setErrorPercent(clamp(errorPercent, 0, 100));
 
         try {
             LoadTestResult result = loadTestService.execute(request);

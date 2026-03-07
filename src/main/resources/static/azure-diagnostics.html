@@ -243,7 +243,7 @@
         <ol>
             <li><strong>Response Time Degradation:</strong> As concurrent requests exceed the soft limit (default: 25), response times increase linearly based on the degradation factor</li>
             <li><strong>Memory Pressure:</strong> Each request holds a memory buffer (default: 20MB). With many concurrent requests, this creates visible memory pressure in Azure metrics</li>
-            <li><strong>Exception Injection:</strong> After 120 seconds of processing, requests have a 20% chance per cycle of throwing a random exception, simulating timeout-related failures</li>
+            <li><strong>Exception Injection:</strong> After <code>errorAfter</code> seconds of processing (default: 120), requests have an <code>errorPercent</code> chance per cycle (default: 20%) of throwing a random exception. Errors are injected <em>after</em> thread blocking delays for chaotic, unpredictable timing.</li>
             <li><strong>Frontend Timeout:</strong> At high enough load, requests may exceed the Azure App Service stamp frontend 230-second timeout</li>
         </ol>
 
@@ -253,7 +253,7 @@
         <ul>
             <li><strong>Response Time:</strong> Watch P95/P99 increase as load exceeds soft limit</li>
             <li><strong>Memory Working Set:</strong> Grows proportionally to concurrent requests</li>
-            <li><strong>HTTP Server Errors:</strong> Increases after requests run for 120+ seconds</li>
+            <li><strong>HTTP Server Errors:</strong> Increases after requests run for <code>errorAfter</code> seconds (default: 120)</li>
             <li><strong>Average Response Time:</strong> Should show clear degradation curve</li>
         </ul>
 

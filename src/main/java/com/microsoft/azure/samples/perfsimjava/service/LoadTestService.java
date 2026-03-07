@@ -72,13 +72,13 @@ public class LoadTestService {
 
     private static final Logger logger = LoggerFactory.getLogger(LoadTestService.class);
 
-    // Exception injection settings
-    private static final long EXCEPTION_THRESHOLD_MS = 120_000; // 120 seconds
-    private static final double EXCEPTION_PROBABILITY = 0.20; // 20%
-
     // Work cycle settings
     private static final int CYCLE_SLEEP_MS = 50; // Yield time between work cycles
     private static final int PAGE_SIZE = 4096; // Memory page size for touching
+
+    // Latency broadcast sampling (1 in 10 requests are sent to the Request Latency Monitor)
+    private static final int LATENCY_SAMPLE_RATE = 10;
+    private final AtomicLong latencySampleCounter = new AtomicLong(0);
 
     private final EventLogService eventLogService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -133,8 +133,7 @@ public class LoadTestService {
     public LoadTestService(EventLogService eventLogService, SimpMessagingTemplate messagingTemplate) {
         this.eventLogService = eventLogService;
         this.messagingTemplate = messagingTemplate;
-        logger.info("[LoadTestService] Initialized with exception threshold {}ms, probability {}%",
-                EXCEPTION_THRESHOLD_MS, EXCEPTION_PROBABILITY * 100);
+        logger.info("[LoadTestService] Initialized with configurable error injection parameters");
     }
 
     /**
@@ -179,7 +178,9 @@ public class LoadTestService {
                 "bufferSizeKb", request.getBufferSizeKb(),
                 "baselineDelayMs", request.getBaselineDelayMs(),
                 "softLimit", request.getSoftLimit(),
-                "degradationFactor", request.getDegradationFactor()
+                "degradationFactor", request.getDegradationFactor(),
+                "errorAfterSeconds", request.getErrorAfterSeconds(),
+                "errorPercent", request.getErrorPercent()
         ));
 
         byte[] buffer = null;
@@ -199,7 +200,8 @@ public class LoadTestService {
                     requestId, totalDelayMs, request.getBaselineDelayMs(), overLimit, degradationDelay);
 
             // Step 3: Run sustained work loop
-            executeSustainedWorkLoop(requestId, buffer, request.getWorkIterations(), totalDelayMs, startMs);
+            executeSustainedWorkLoop(requestId, buffer, request.getWorkIterations(), totalDelayMs, startMs,
+                    request.getErrorAfterSeconds(), request.getErrorPercent());
 
             result.setSuccess(true);
             periodSuccessfulRequests.incrementAndGet();
@@ -352,21 +354,27 @@ public class LoadTestService {
 
     /**
      * Executes the sustained work loop with CPU work, memory touches, and sleeps.
+     * Error injection is checked AFTER thread blocking delays to ensure errors occur
+     * "after" the specified time threshold, not precisely at the threshold.
+     *
+     * @param requestId Request identifier for logging
+     * @param buffer Memory buffer to touch during work
+     * @param workIterations CPU work intensity
+     * @param totalDelayMs Total delay target
+     * @param startMs Start time in milliseconds
+     * @param errorAfterSeconds Seconds before errors may be injected (0 disables)
+     * @param errorPercent Percentage chance of error (0-100, 0 disables)
      */
     private void executeSustainedWorkLoop(String requestId, byte[] buffer, int workIterations,
-                                           long totalDelayMs, long startMs) throws Exception {
+                                           long totalDelayMs, long startMs,
+                                           int errorAfterSeconds, int errorPercent) throws Exception {
         long targetEndMs = startMs + totalDelayMs;
         int workDurationPerCycleMs = Math.max(1, workIterations / 100);
         int cycleCount = 0;
+        long errorThresholdMs = errorAfterSeconds * 1000L;
 
         while (System.currentTimeMillis() < targetEndMs) {
             cycleCount++;
-            long elapsedMs = System.currentTimeMillis() - startMs;
-
-            // Check for exception injection after threshold
-            if (elapsedMs >= EXCEPTION_THRESHOLD_MS) {
-                checkAndThrowRandomException(requestId, elapsedMs);
-            }
 
             // CPU work via busy-wait spin loop
             doCpuWork(workDurationPerCycleMs);
@@ -374,8 +382,15 @@ public class LoadTestService {
             // Touch memory buffer to keep it active and prevent optimization
             touchBuffer(buffer);
 
-            // Yield to prevent 100% CPU saturation
+            // Yield to prevent 100% CPU saturation (thread blocking delay)
             Thread.sleep(CYCLE_SLEEP_MS);
+
+            // Check for exception injection AFTER thread blocking delays
+            // This ensures errors happen "after" the threshold, not precisely at it
+            long elapsedMs = System.currentTimeMillis() - startMs;
+            if (errorPercent > 0 && errorAfterSeconds > 0 && elapsedMs >= errorThresholdMs) {
+                checkAndThrowRandomException(requestId, elapsedMs, errorPercent);
+            }
         }
 
         logger.trace("[LoadTest:{}] Completed {} work cycles", requestId, cycleCount);
@@ -417,16 +432,21 @@ public class LoadTestService {
 
     /**
      * Checks if a random exception should be thrown and throws it.
-     * 20% probability after 120 seconds of processing.
+     * Uses the configurable errorPercent probability.
+     *
+     * @param requestId Request identifier for logging
+     * @param elapsedMs Time elapsed since request start
+     * @param errorPercent Percentage chance of error (0-100)
      */
-    private void checkAndThrowRandomException(String requestId, long elapsedMs) throws Exception {
-        if (random.nextDouble() < EXCEPTION_PROBABILITY) {
+    private void checkAndThrowRandomException(String requestId, long elapsedMs, int errorPercent) throws Exception {
+        double probability = errorPercent / 100.0;
+        if (random.nextDouble() < probability) {
             int index = random.nextInt(EXCEPTION_TYPES.length);
             Class<?> exceptionType = EXCEPTION_TYPES[index];
             String message = EXCEPTION_MESSAGES[index] +
                     String.format(" [Injected after %ds, requestId=%s]", elapsedMs / 1000, requestId);
 
-            logger.warn("[LoadTest:{}] Injecting {} after {}ms", requestId, exceptionType.getSimpleName(), elapsedMs);
+            logger.warn("[LoadTest:{}] Injecting {} after {}ms (errorPercent={}%)", requestId, exceptionType.getSimpleName(), elapsedMs, errorPercent);
 
             // Create and throw the exception
             Exception ex = createException(exceptionType, message);
@@ -487,8 +507,17 @@ public class LoadTestService {
      * Broadcasts load test request latency to the Request Latency Monitor.
      * Uses the same /topic/probe channel as the ProbeService so all request
      * latencies are shown in one place.
+     *
+     * Only broadcasts 1 in 10 requests to avoid flooding the monitor during
+     * high-volume load tests. Failed requests are always broadcasted for visibility.
      */
     private void broadcastLatency(long timestamp, long latencyMs, boolean success, String error) {
+        // Always broadcast failures for visibility; sample successes at 1/10 rate
+        long count = latencySampleCounter.incrementAndGet();
+        if (success && (count % LATENCY_SAMPLE_RATE) != 0) {
+            return; // Skip this sample
+        }
+
         Map<String, Object> result = Map.of(
                 "timestamp", timestamp,
                 "latencyMs", latencyMs,
