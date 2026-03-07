@@ -564,6 +564,9 @@ const Dashboard = (function() {
                     ? `SKU: ${data.sku}`
                     : 'SKU: Local';
             }
+            
+            // Log event with instance ID
+            addEvent('info', `Application is currently running on: ${data.instanceId}`);
         } catch (error) {
             console.error('[Dashboard] Failed to load SKU info:', error);
         }

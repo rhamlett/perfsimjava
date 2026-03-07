@@ -89,17 +89,20 @@ public class HealthController {
     }
 
     /**
-     * Environment info endpoint - returns SKU and Azure detection.
+     * Environment info endpoint - returns SKU, Azure detection, and worker instance details.
      */
     @GetMapping("/environment")
     public ResponseEntity<Map<String, Object>> environment() {
         String websiteSku = System.getenv("WEBSITE_SKU");
         String websiteHostname = System.getenv("WEBSITE_HOSTNAME");
+        String instanceId = System.getenv("WEBSITE_ROLE_INSTANCE_ID");
         
-        return ResponseEntity.ok(Map.of(
-                "sku", websiteSku != null ? websiteSku : "Local",
-                "hostname", websiteHostname != null ? websiteHostname : "localhost",
-                "isAzure", websiteHostname != null
-        ));
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("sku", websiteSku != null ? websiteSku : "Local");
+        response.put("hostname", websiteHostname != null ? websiteHostname : "localhost");
+        response.put("isAzure", websiteHostname != null);
+        response.put("instanceId", instanceId != null ? instanceId : "local-instance");
+        
+        return ResponseEntity.ok(response);
     }
 }
