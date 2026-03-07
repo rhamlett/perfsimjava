@@ -95,26 +95,13 @@ public class HealthController {
     public ResponseEntity<Map<String, Object>> environment() {
         String websiteSku = System.getenv("WEBSITE_SKU");
         String websiteHostname = System.getenv("WEBSITE_HOSTNAME");
-        String websiteInstanceId = System.getenv("WEBSITE_INSTANCE_ID");
         String computerName = System.getenv("COMPUTERNAME");
-        
-        // Build instance identifier from WEBSITE_INSTANCE_ID and COMPUTERNAME
-        String instanceId;
-        if (websiteInstanceId != null && computerName != null) {
-            instanceId = websiteInstanceId + " - " + computerName;
-        } else if (websiteInstanceId != null) {
-            instanceId = websiteInstanceId;
-        } else if (computerName != null) {
-            instanceId = computerName;
-        } else {
-            instanceId = "local-instance";
-        }
         
         Map<String, Object> response = new java.util.HashMap<>();
         response.put("sku", websiteSku != null ? websiteSku : "Local");
         response.put("hostname", websiteHostname != null ? websiteHostname : "localhost");
         response.put("isAzure", websiteHostname != null);
-        response.put("instanceId", instanceId);
+        response.put("computerName", computerName != null ? computerName : "local-worker");
         
         return ResponseEntity.ok(response);
     }

@@ -565,8 +565,8 @@ const Dashboard = (function() {
                     : 'SKU: Local';
             }
             
-            // Log event with instance ID
-            addEvent('info', `Application is currently running on: ${data.instanceId}`);
+            // Log event with SKU and worker info
+            addEvent('info', `Application is currently running on ${data.sku} SKU on worker ${data.computerName}`);
         } catch (error) {
             console.error('[Dashboard] Failed to load SKU info:', error);
         }
