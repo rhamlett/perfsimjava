@@ -268,16 +268,22 @@ const ChartsModule = (function() {
      * Initializes all charts
      */
     function init() {
-        // Initialize labels and data buffers
+        // Initialize labels and data buffers for upper charts (250ms intervals, 60 seconds)
         const now = new Date();
         for (let i = MAX_DATA_POINTS - 1; i >= 0; i--) {
-            const time = new Date(now.getTime() - i * 1000);
+            const time = new Date(now.getTime() - i * 250);
             timeLabels.push(formatTime(time));
             labels.push('');
             dataBuffers.cpu.push(0);
             dataBuffers.memory.push(0);
             dataBuffers.threads.push(0);
             dataBuffers.gc.push(0);
+        }
+
+        // Initialize latency chart separately (100ms intervals, 60 seconds)
+        for (let i = MAX_LATENCY_DATA_POINTS - 1; i >= 0; i--) {
+            const time = new Date(now.getTime() - i * 100);
+            latencyTimeLabels.push(formatTime(time));
             dataBuffers.latency.push(0);
         }
 
