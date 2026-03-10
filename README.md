@@ -122,6 +122,30 @@ perfsim.max-duration-ms=120000
 | Variable | Description |
 |----------|-------------|
 | `PAGE_FOOTER` | Custom HTML footer text displayed at the bottom of the dashboard. Supports HTML links. |
+| `HEALTH_PROBE_RATE` | Latency probe interval in milliseconds. Default: 200ms. Minimum: 100ms. |
+
+### HEALTH_PROBE_RATE
+
+The `HEALTH_PROBE_RATE` environment variable controls how frequently the server sends health probe requests to measure request latency. Lower values provide more granular latency data but increase CPU overhead.
+
+- **Default:** 200ms (5 probes/sec)
+- **Minimum:** 100ms (values below this are automatically clamped)
+- **Chart updates:** The latency chart continues to update at 100ms regardless of probe rate, using interpolation
+
+**Example:**
+
+```bash
+# Set via Azure CLI
+az webapp config appsettings set \
+    --resource-group rg-perfsimjava \
+    --name perfsimjava \
+    --settings HEALTH_PROBE_RATE=400
+```
+
+```bash
+# Set locally for testing
+export HEALTH_PROBE_RATE=400
+```
 
 ### PAGE_FOOTER
 

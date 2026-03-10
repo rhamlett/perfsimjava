@@ -1,5 +1,6 @@
 package com.microsoft.azure.samples.perfsimjava.controller;
 
+import com.microsoft.azure.samples.perfsimjava.config.AppConfig;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,7 @@ import java.util.Map;
  *   GET /api/health             → Basic health check
  *   GET /api/health/live        → Liveness probe (is the app running?)
  *   GET /api/health/ready       → Readiness probe (can the app handle traffic?)
+ *   GET /api/health/config      → Frontend configuration (probe intervals, etc.)
  *   GET /api/health/footer      → Footer info (PAGE_FOOTER env var and build time)
  *   GET /api/health/environment → Environment info (SKU, Azure detection)
  */
@@ -32,8 +34,10 @@ import java.util.Map;
 public class HealthController {
 
     private final String buildTime;
+    private final AppConfig appConfig;
 
-    public HealthController() {
+    public HealthController(AppConfig appConfig) {
+        this.appConfig = appConfig;
         // Capture build time at startup
         this.buildTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 .withZone(ZoneOffset.UTC)
@@ -71,6 +75,18 @@ public class HealthController {
     public ResponseEntity<Map<String, String>> readiness() {
         // Could add checks for database, external services, etc.
         return ResponseEntity.ok(Map.of("status", "ready"));
+    }
+
+    /**
+     * Frontend configuration endpoint - returns configurable values for the dashboard.
+     * Used by the frontend to adapt to server-side configuration.
+     */
+    @GetMapping("/config")
+    public ResponseEntity<Map<String, Object>> config() {
+        return ResponseEntity.ok(Map.of(
+                "latencyProbeIntervalMs", appConfig.getProbeIntervalMs(),
+                "metricsIntervalMs", appConfig.getMetricsIntervalMs()
+        ));
     }
 
     /**

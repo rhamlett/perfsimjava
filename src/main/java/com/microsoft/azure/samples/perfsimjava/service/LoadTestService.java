@@ -298,7 +298,7 @@ public class LoadTestService {
         if (periodTotalRequests.get() > 0) {
             eventLogService.info(
                     EventLogEntry.EventType.LOAD_TEST_STATS,
-                    String.format("Load test period stats: %d requests, %.1f avg ms, %d max ms, %.2f RPS, %.1f%% errors",
+                    String.format("Load test period stats (60s): %d requests, %.1f avg ms, %d max ms, %.2f RPS, %.1f%% errors",
                             periodTotalRequests.get(),
                             stats.getAvgResponseTimeMs(),
                             stats.getMaxResponseTimeMs(),

@@ -519,8 +519,30 @@
                     <td style="padding: 0.5rem;"><code>PAGE_FOOTER</code></td>
                     <td style="padding: 0.5rem;">Custom HTML footer text displayed at the bottom of the dashboard. Supports HTML links.</td>
                 </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><code>HEALTH_PROBE_RATE</code></td>
+                    <td style="padding: 0.5rem;">Latency probe interval in milliseconds. Default: 200ms. Minimum: 100ms.</td>
+                </tr>
             </tbody>
         </table>
+
+        <h3>HEALTH_PROBE_RATE</h3>
+        <p>The <code>HEALTH_PROBE_RATE</code> environment variable controls how frequently the server sends health probe requests to measure request latency. Lower values provide more granular latency data but increase CPU overhead.</p>
+        
+        <ul>
+            <li><strong>Default:</strong> 200ms (5 probes/sec)</li>
+            <li><strong>Minimum:</strong> 100ms (values below this are automatically clamped)</li>
+            <li><strong>Chart updates:</strong> The latency chart continues to update at 100ms regardless of probe rate, using interpolation</li>
+        </ul>
+
+        <h4>Setting via Azure CLI:</h4>
+        <pre><code>az webapp config appsettings set \
+    --resource-group rg-perfsimjava \
+    --name perfsimjava \
+    --settings HEALTH_PROBE_RATE=400</code></pre>
+
+        <h4>Setting Locally:</h4>
+        <pre><code>export HEALTH_PROBE_RATE=400</code></pre>
 
         <h3>PAGE_FOOTER</h3>
         <p>The <code>PAGE_FOOTER</code> environment variable allows you to customize the footer credits displayed on the dashboard. This is useful for attributing tools, teams, or linking to relevant resources.</p>

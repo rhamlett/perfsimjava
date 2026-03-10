@@ -1,5 +1,8 @@
 package com.microsoft.azure.samples.perfsimjava.config;
 
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,6 +32,14 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "perfsim")
 public class AppConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
+    
+    /**
+     * Minimum allowed probe interval in milliseconds.
+     * Safety floor to prevent excessive probing.
+     */
+    private static final int MIN_PROBE_INTERVAL_MS = 100;
+
     /**
      * Metrics broadcast interval in milliseconds.
      * WebSocket clients receive metrics updates at this frequency.
@@ -37,9 +48,10 @@ public class AppConfig {
 
     /**
      * Probe interval in milliseconds for the latency monitor.
-     * Lower values provide more granular latency data.
+     * Configurable via HEALTH_PROBE_RATE environment variable.
+     * Default: 200ms (5 probes/sec). Minimum: 100ms.
      */
-    private int probeIntervalMs = 100;
+    private int probeIntervalMs = 200;
 
     /**
      * Maximum allowed simulation duration in seconds.
@@ -79,7 +91,33 @@ public class AppConfig {
     }
 
     public void setProbeIntervalMs(int probeIntervalMs) {
-        this.probeIntervalMs = probeIntervalMs;
+        // Enforce minimum probe interval
+        this.probeIntervalMs = Math.max(probeIntervalMs, MIN_PROBE_INTERVAL_MS);
+    }
+
+    /**
+     * Post-construction initialization.
+     * Checks for HEALTH_PROBE_RATE environment variable override.
+     */
+    @PostConstruct
+    public void init() {
+        String healthProbeRate = System.getenv("HEALTH_PROBE_RATE");
+        if (healthProbeRate != null && !healthProbeRate.isEmpty()) {
+            try {
+                int envValue = Integer.parseInt(healthProbeRate);
+                int clampedValue = Math.max(envValue, MIN_PROBE_INTERVAL_MS);
+                this.probeIntervalMs = clampedValue;
+                if (envValue < MIN_PROBE_INTERVAL_MS) {
+                    logger.warn("[AppConfig] HEALTH_PROBE_RATE={} is below minimum, clamped to {}ms", 
+                            envValue, MIN_PROBE_INTERVAL_MS);
+                } else {
+                    logger.info("[AppConfig] HEALTH_PROBE_RATE set to {}ms from environment", clampedValue);
+                }
+            } catch (NumberFormatException e) {
+                logger.warn("[AppConfig] Invalid HEALTH_PROBE_RATE value '{}', using default {}ms", 
+                        healthProbeRate, probeIntervalMs);
+            }
+        }
     }
 
     public int getMaxSimulationDurationSeconds() {
