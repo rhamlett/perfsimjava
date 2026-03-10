@@ -4,6 +4,7 @@ import com.microsoft.azure.samples.perfsimjava.config.AppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -62,8 +63,12 @@ public class ProbeService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final AppConfig config;
+    private final ApplicationContext applicationContext;
     private final HttpClient httpClient;
     private final ScheduledExecutorService scheduler;
+    
+    // Lazy-loaded to avoid circular dependency
+    private IdleService idleService;
 
     // Local probe state
     private String localProbeUrl;
@@ -78,9 +83,11 @@ public class ProbeService {
     private volatile long lastFrontendLatencyMs = 0;
     private volatile boolean frontendProbeEnabled = false;
 
-    public ProbeService(SimpMessagingTemplate messagingTemplate, AppConfig config) {
+    public ProbeService(SimpMessagingTemplate messagingTemplate, AppConfig config, 
+                         ApplicationContext applicationContext) {
         this.messagingTemplate = messagingTemplate;
         this.config = config;
+        this.applicationContext = applicationContext;
 
         // Create dedicated HTTP client for probing
         // Uses a small thread pool to avoid blocking
@@ -95,6 +102,16 @@ public class ProbeService {
             t.setDaemon(true);
             return t;
         });
+    }
+    
+    /**
+     * Gets the IdleService lazily to avoid circular dependency.
+     */
+    private IdleService getIdleService() {
+        if (idleService == null) {
+            idleService = applicationContext.getBean(IdleService.class);
+        }
+        return idleService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -140,8 +157,14 @@ public class ProbeService {
     /**
      * Sends a local probe request and broadcasts the result to the dashboard.
      * This is the high-frequency probe for the latency monitor chart.
+     * Skipped when application is idle to reduce unnecessary traffic.
      */
     private void sendLocalProbe() {
+        // Check if application is idle - skip probes if so
+        if (getIdleService().isIdle()) {
+            return;
+        }
+        
         long startTime = System.currentTimeMillis();
         long timestamp = startTime;
 
@@ -177,9 +200,15 @@ public class ProbeService {
      * Sends a frontend probe request through Azure's frontend/load balancer.
      * This is the slower probe for AppLens visibility.
      * Does NOT broadcast to dashboard to avoid noise.
+     * Skipped when application is idle to reduce unnecessary traffic.
      */
     private void sendFrontendProbe() {
         if (!frontendProbeEnabled || frontendProbeUrl == null) {
+            return;
+        }
+        
+        // Check if application is idle - skip probes if so
+        if (getIdleService().isIdle()) {
             return;
         }
 

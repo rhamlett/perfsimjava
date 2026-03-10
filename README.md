@@ -123,6 +123,7 @@ perfsim.max-duration-ms=120000
 |----------|-------------|
 | `PAGE_FOOTER` | Custom HTML footer text displayed at the bottom of the dashboard. Supports HTML links. |
 | `HEALTH_PROBE_RATE` | Latency probe interval in milliseconds. Default: 200ms. Minimum: 100ms. |
+| `IDLE_TIMEOUT_MINUTES` | Idle timeout in minutes. When app is idle, health probes stop to reduce traffic. Default: 20. Set to 0 to disable. |
 
 ### HEALTH_PROBE_RATE
 
@@ -167,6 +168,44 @@ export PAGE_FOOTER='Created by <a href="https://speckit.org/" target="_blank">Sp
 ```
 
 The footer is retrieved via the `/api/health/footer` endpoint and rendered in the dashboard's footer section. If `PAGE_FOOTER` is not set, the footer credits section is hidden.
+
+### IDLE_TIMEOUT_MINUTES
+
+The `IDLE_TIMEOUT_MINUTES` environment variable controls how long the application can remain idle before health probes are paused. This reduces unnecessary traffic to AppLens and Application Insights when the app is not being actively used.
+
+- **Default:** 20 minutes
+- **Minimum:** 1 minute (set to 0 to disable idle timeout entirely)
+- **Wake-up:** The app automatically wakes when a page is loaded or a load test request is received
+
+**Behavior when idle:**
+- Local health probes stop being sent
+- Frontend probes (Azure AppLens visibility) stop being sent
+- Event log shows "Application going idle, no health probes being sent. There will be gaps in diagnostics and logs."
+
+**Behavior when waking:**
+- Page load or load test activity resets the idle timer
+- Event log shows "App waking up from idle state. There may be gaps in diagnostics and logs."
+- Health probes resume immediately
+
+**Example:**
+
+```bash
+# Set via Azure CLI
+az webapp config appsettings set \
+    --resource-group rg-perfsimjava \
+    --name perfsimjava \
+    --settings IDLE_TIMEOUT_MINUTES=30
+```
+
+```bash
+# Set locally for testing
+export IDLE_TIMEOUT_MINUTES=30
+```
+
+```bash
+# Disable idle timeout entirely
+export IDLE_TIMEOUT_MINUTES=0
+```
 
 ## Deploy to Azure App Service
 

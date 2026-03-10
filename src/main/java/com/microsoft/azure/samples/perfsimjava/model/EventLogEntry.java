@@ -39,7 +39,9 @@ public class EventLogEntry {
         SERVER_STARTED,
         CLIENT_CONNECTED,
         CLIENT_DISCONNECTED,
-        LOAD_TEST_STATS
+        LOAD_TEST_STATS,
+        GOING_IDLE,
+        WAKING_UP
     }
 
     private String id;

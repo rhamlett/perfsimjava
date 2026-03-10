@@ -523,6 +523,10 @@
                     <td style="padding: 0.5rem;"><code>HEALTH_PROBE_RATE</code></td>
                     <td style="padding: 0.5rem;">Latency probe interval in milliseconds. Default: 200ms. Minimum: 100ms.</td>
                 </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><code>IDLE_TIMEOUT_MINUTES</code></td>
+                    <td style="padding: 0.5rem;">Idle timeout in minutes. When app is idle, health probes stop to reduce traffic. Default: 20. Set to 0 to disable.</td>
+                </tr>
             </tbody>
         </table>
 
@@ -560,6 +564,41 @@
         <pre><code>export PAGE_FOOTER='Created by &lt;a href="https://speckit.org/" target="_blank"&gt;SpecKit&lt;/a&gt; and &lt;a href="https://github.com/copilot" target="_blank"&gt;Github Copilot&lt;/a&gt;'</code></pre>
 
         <p>The footer is retrieved via the <code>/api/health/footer</code> endpoint and rendered in the dashboard's footer section. If <code>PAGE_FOOTER</code> is not set, the footer credits section is hidden.</p>
+
+        <h3>IDLE_TIMEOUT_MINUTES</h3>
+        <p>The <code>IDLE_TIMEOUT_MINUTES</code> environment variable controls how long the application can remain idle before health probes are paused. This reduces unnecessary traffic to AppLens and Application Insights when the app is not being actively used.</p>
+        
+        <ul>
+            <li><strong>Default:</strong> 20 minutes</li>
+            <li><strong>Minimum:</strong> 1 minute (set to 0 to disable idle timeout entirely)</li>
+            <li><strong>Wake-up:</strong> The app automatically wakes when a page is loaded or a load test request is received</li>
+        </ul>
+
+        <h4>Behavior When Idle:</h4>
+        <ul>
+            <li>Local health probes stop being sent</li>
+            <li>Frontend probes (Azure AppLens visibility) stop being sent</li>
+            <li>Event log shows "Application going idle, no health probes being sent. There will be gaps in diagnostics and logs."</li>
+        </ul>
+
+        <h4>Behavior When Waking:</h4>
+        <ul>
+            <li>Page load or load test activity resets the idle timer</li>
+            <li>Event log shows "App waking up from idle state. There may be gaps in diagnostics and logs."</li>
+            <li>Health probes resume immediately</li>
+        </ul>
+
+        <h4>Setting via Azure CLI:</h4>
+        <pre><code>az webapp config appsettings set \
+    --resource-group rg-perfsimjava \
+    --name perfsimjava \
+    --settings IDLE_TIMEOUT_MINUTES=30</code></pre>
+
+        <h4>Setting Locally:</h4>
+        <pre><code>export IDLE_TIMEOUT_MINUTES=30</code></pre>
+
+        <h4>Disabling Idle Timeout:</h4>
+        <pre><code>export IDLE_TIMEOUT_MINUTES=0</code></pre>
         </section>
     </main>
     

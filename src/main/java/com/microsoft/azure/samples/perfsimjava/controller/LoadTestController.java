@@ -3,6 +3,7 @@ package com.microsoft.azure.samples.perfsimjava.controller;
 import com.microsoft.azure.samples.perfsimjava.model.LoadTestResult;
 import com.microsoft.azure.samples.perfsimjava.model.LoadTestStats;
 import com.microsoft.azure.samples.perfsimjava.model.dto.LoadTestRequest;
+import com.microsoft.azure.samples.perfsimjava.service.IdleService;
 import com.microsoft.azure.samples.perfsimjava.service.LoadTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,9 +58,11 @@ public class LoadTestController {
     private static final Logger logger = LoggerFactory.getLogger(LoadTestController.class);
 
     private final LoadTestService loadTestService;
+    private final IdleService idleService;
 
-    public LoadTestController(LoadTestService loadTestService) {
+    public LoadTestController(LoadTestService loadTestService, IdleService idleService) {
         this.loadTestService = loadTestService;
+        this.idleService = idleService;
     }
 
     /**
@@ -97,6 +100,9 @@ public class LoadTestController {
         request.setDegradationFactor(clamp(degradationFactor, 0, 10000));
         request.setErrorAfterSeconds(Math.max(0, errorAfter));
         request.setErrorPercent(clamp(errorPercent, 0, 100));
+
+        // Record activity to prevent idle timeout
+        idleService.recordActivity("load_test");
 
         try {
             LoadTestResult result = loadTestService.execute(request);

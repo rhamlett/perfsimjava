@@ -17,6 +17,9 @@ const SocketClient = (function() {
     let firstConnection = true;
     let disconnectTimer = null;
     let disconnectTime = null;
+    
+    // Idle state tracking
+    let activityRecorded = false;
 
     // Callbacks
     const callbacks = {
@@ -83,6 +86,9 @@ const SocketClient = (function() {
      */
     function connect() {
         updateConnectionStatus('connecting');
+        
+        // Record activity on page load/connection to prevent idle timeout
+        recordActivity();
 
         // Create SockJS connection
         const socket = new SockJS('/ws');
@@ -253,12 +259,47 @@ const SocketClient = (function() {
         return connected;
     }
 
+    /**
+     * Records activity with the server to prevent idle timeout.
+     * Called on page load, connection, and periodically.
+     * Wakes the app from idle state if necessary.
+     */
+    async function recordActivity() {
+        if (activityRecorded) {
+            return; // Only record once per page load to avoid spam
+        }
+        
+        try {
+            const response = await fetch('/api/health/activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                activityRecorded = true;
+                
+                if (result.wokeFromIdle) {
+                    console.log('[SocketClient] App woken from idle state');
+                    if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
+                        Dashboard.addEvent('info', 'App resumed from idle state - probes restarting');
+                    }
+                } else {
+                    console.log('[SocketClient] Activity recorded, idle timeout:', result.idleTimeoutMinutes, 'minutes');
+                }
+            }
+        } catch (error) {
+            console.warn('[SocketClient] Failed to record activity:', error.message);
+        }
+    }
+
     // Public API
     return {
         connect,
         disconnect,
         send,
         on,
-        isConnected
+        isConnected,
+        recordActivity
     };
 })();

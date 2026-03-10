@@ -1,8 +1,10 @@
 package com.microsoft.azure.samples.perfsimjava.controller;
 
 import com.microsoft.azure.samples.perfsimjava.config.AppConfig;
+import com.microsoft.azure.samples.perfsimjava.service.IdleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +30,8 @@ import java.util.Map;
  *   GET /api/health/config      → Frontend configuration (probe intervals, etc.)
  *   GET /api/health/footer      → Footer info (PAGE_FOOTER env var and build time)
  *   GET /api/health/environment → Environment info (SKU, Azure detection)
+ *   POST /api/health/activity   → Record activity to prevent idle timeout
+ *   GET /api/health/idle        → Get idle state information
  */
 @RestController
 @RequestMapping("/api/health")
@@ -35,9 +39,11 @@ public class HealthController {
 
     private final String buildTime;
     private final AppConfig appConfig;
+    private final IdleService idleService;
 
-    public HealthController(AppConfig appConfig) {
+    public HealthController(AppConfig appConfig, IdleService idleService) {
         this.appConfig = appConfig;
+        this.idleService = idleService;
         // Capture build time at startup
         this.buildTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 .withZone(ZoneOffset.UTC)
@@ -120,5 +126,32 @@ public class HealthController {
         response.put("computerName", computerName != null ? computerName : "local-worker");
         
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Records user activity to prevent idle timeout.
+     * Called by the frontend on page load and periodically to keep the app active.
+     * 
+     * @return Activity status including whether the app was woken from idle
+     */
+    @PostMapping("/activity")
+    public ResponseEntity<Map<String, Object>> recordActivity() {
+        boolean wokeFromIdle = idleService.recordActivity("page_load");
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("recorded", true);
+        response.put("wokeFromIdle", wokeFromIdle);
+        response.putAll(idleService.getStatus());
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Returns current idle state information.
+     * Useful for diagnostics and monitoring.
+     */
+    @GetMapping("/idle")
+    public ResponseEntity<Map<String, Object>> idleStatus() {
+        return ResponseEntity.ok(idleService.getStatus());
     }
 }
