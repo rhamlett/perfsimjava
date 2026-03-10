@@ -20,6 +20,7 @@ This application allows you to deliberately trigger different types of performan
 | 📊 **Memory Pressure** | Allocates heap memory chunks that stack up | Size (MB), Release button |
 | 🧵 **Thread Pool Starvation** | Blocks servlet threads to exhaust the pool | Blocked Threads, Duration |
 | 🔌 **Connection Pool** | Simulates JDBC connection pool exhaustion | Pool Size, Query Duration, Concurrent Queries, Timeout |
+| ❌ **Failed Requests** | Generates HTTP 5xx errors visible in AppLens and App Insights | Number of Requests |
 | 💥 **Crash** | Triggers various crash scenarios | Type: Fail Fast, Stack Overflow, Exception, OOM |
 
 ### Real-time Dashboard
@@ -256,6 +257,7 @@ perfsimjava/
 │   │   ├── MemoryPressureService.java    # Memory allocation
 │   │   ├── ThreadStarvationService.java  # Thread blocking
 │   │   ├── ConnectionPoolService.java    # Connection pool exhaustion
+│   │   ├── FailedRequestsService.java    # HTTP 5xx error generation
 │   │   ├── CrashService.java             # Crash triggers
 │   │   └── ProbeService.java             # Health probing
 │   └── controller/
@@ -265,6 +267,7 @@ perfsimjava/
 │       ├── MemoryController.java         # Memory simulation API
 │       ├── ThreadStarvationController.java # Thread starvation API
 │       ├── ConnectionPoolController.java # Connection pool API
+│       ├── FailedRequestsController.java # Failed requests API
 │       ├── CrashController.java          # Crash simulation API
 │       └── AdminController.java          # Admin endpoints
 ├── src/main/resources/

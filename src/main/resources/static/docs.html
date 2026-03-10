@@ -79,6 +79,7 @@
             <li><strong>Memory Pressure</strong> - Allocate and retain memory to simulate leaks</li>
             <li><strong>Thread Starvation</strong> - Block the servlet thread pool with synchronous operations</li>
             <li><strong>Connection Pool</strong> - Simulate JDBC connection pool exhaustion</li>
+            <li><strong>Failed Requests</strong> - Generate HTTP 5xx errors visible in AppLens and App Insights</li>
             <li><strong>Crash Simulation</strong> - Trigger unhandled exceptions or OOM conditions</li>
         </ul>
         </section>
@@ -285,6 +286,59 @@
             <li>Timeout errors when wait exceeds the configured timeout</li>
             <li>Dashboard shows real-time pool utilization and timeout counts</li>
         </ul>
+        </section>
+
+        <section id="failed-requests">
+        <h2>Failed Requests Simulation</h2>
+
+        <div class="note">
+            <h4>How It Works</h4>
+            <p>The Failed Requests simulation generates HTTP 5xx errors by making internal requests to the load test endpoint with 100% error probability. Each request produces a visible server error that appears in Azure diagnostics.</p>
+        </div>
+
+        <h3>Understanding HTTP 5xx Errors</h3>
+        <p>HTTP 5xx errors indicate server-side failures. This simulation helps you practice identifying and diagnosing error patterns using Azure tools:</p>
+        <ul>
+            <li><strong>AppLens:</strong> HTTP 5xx errors appear on the availability timeline and in error reports</li>
+            <li><strong>Application Insights:</strong> Failed requests are tracked with full exception details</li>
+            <li><strong>Azure Monitor:</strong> Http5xx metric increases, triggering any configured alerts</li>
+            <li><strong>Log Analytics:</strong> Error details available via KQL queries</li>
+        </ul>
+
+        <h3>Configuration Options</h3>
+        <ul>
+            <li><strong>Number of Requests</strong> — How many failed requests to generate (1-1000, default: 10)</li>
+        </ul>
+
+        <h3>What You'll See in Diagnostics</h3>
+        <ul>
+            <li><strong>AppLens:</strong> HTTP 5xx error spike on timeline, availability drop</li>
+            <li><strong>Application Insights:</strong> Failed requests with exception types like TimeoutException, IOException</li>
+            <li><strong>Azure Monitor:</strong> Http5xx metric increase</li>
+            <li><strong>Request Latency:</strong> Each request takes ~2+ seconds to execute before failing</li>
+        </ul>
+
+        <h4>API Endpoint</h4>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulations/failed-requests</span>
+            <p>Triggers a batch of HTTP 5xx error requests.</p>
+            <h4>Request Body:</h4>
+            <pre><code>{
+    "numberOfRequests": 10
+}</code></pre>
+            <h4>Response:</h4>
+            <pre><code>{
+    "simulationId": "abc123",
+    "type": "FAILED_REQUESTS",
+    "numberOfRequests": 10,
+    "status": "RUNNING",
+    "message": "Generating 10 failed HTTP requests"
+}</code></pre>
+        </div>
+
+        <h4>Dashboard Controls</h4>
+        <p>Use the <strong>Failed Requests</strong> panel on the dashboard to generate errors. Enter the number of requests and click <strong>Generate Errors</strong>. The simulation executes quickly and produces HTTP 5xx responses visible in Azure diagnostics tools.</p>
         </section>
 
         <section id="crash-simulation">
@@ -615,6 +669,7 @@
             <a href="#memory-simulation" class="doc-toc-link"><span class="toc-icon">📊</span> Memory Pressure</a>
             <a href="#thread-simulation" class="doc-toc-link"><span class="toc-icon">🟣</span> Thread Starvation</a>
             <a href="#connection-pool" class="doc-toc-link"><span class="toc-icon">🔌</span> Connection Pool</a>
+            <a href="#failed-requests" class="doc-toc-link"><span class="toc-icon">❌</span> Failed Requests</a>
             <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Crash Simulation</a>
             <a href="#load-testing" class="doc-toc-link"><span class="toc-icon">🧪</span> Load Testing</a>
             

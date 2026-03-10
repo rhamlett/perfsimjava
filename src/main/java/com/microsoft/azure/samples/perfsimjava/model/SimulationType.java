@@ -60,5 +60,12 @@ public enum SimulationType {
     /**
      * Crashes via StackOverflowError (infinite recursion).
      */
-    CRASH_STACKOVERFLOW
+    CRASH_STACKOVERFLOW,
+
+    /**
+     * Generates HTTP 5xx responses by triggering load test requests with 100% error probability.
+     * These failed requests perform visible "work" to appear in request latency monitoring
+     * and produce HTTP 500 errors visible in AppLens and Application Insights.
+     */
+    FAILED_REQUESTS
 }

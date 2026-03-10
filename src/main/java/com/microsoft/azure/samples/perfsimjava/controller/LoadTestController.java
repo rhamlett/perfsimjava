@@ -79,6 +79,7 @@ public class LoadTestController {
      * @param degradationFactor Delay per request over limit (0-10000, default: 500)
      * @param errorAfter        Seconds before random errors may occur (0+ , default: 120, 0 disables)
      * @param errorPercent      Percentage chance of error after threshold (0-100, default: 20, 0 disables)
+     * @param internal          Internal flag to exclude from stats logging (default: false)
      * @return Load test result with timing metrics
      */
     @GetMapping
@@ -89,7 +90,8 @@ public class LoadTestController {
             @RequestParam(required = false, defaultValue = "25") int softLimit,
             @RequestParam(required = false, defaultValue = "500") int degradationFactor,
             @RequestParam(required = false, defaultValue = "120") int errorAfter,
-            @RequestParam(required = false, defaultValue = "20") int errorPercent) {
+            @RequestParam(required = false, defaultValue = "20") int errorPercent,
+            @RequestParam(required = false, defaultValue = "false") boolean internal) {
 
         // Build request from query parameters
         LoadTestRequest request = new LoadTestRequest();
@@ -100,6 +102,7 @@ public class LoadTestController {
         request.setDegradationFactor(clamp(degradationFactor, 0, 10000));
         request.setErrorAfterSeconds(Math.max(0, errorAfter));
         request.setErrorPercent(clamp(errorPercent, 0, 100));
+        request.setInternal(internal);
 
         // Record activity to prevent idle timeout
         idleService.recordActivity("load_test");

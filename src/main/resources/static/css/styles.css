@@ -958,6 +958,17 @@ section h2, section h3 {
   background: rgba(255, 140, 0, 0.05);
 }
 
+.failed-requests-section {
+  border: 2px solid #a0522d;
+  background: rgba(139, 69, 19, 0.05);
+}
+
+.failed-requests-note {
+  background: #fff3e0;
+  border-color: #8B4513;
+  color: #6b3410;
+}
+
 .crash-section {
   border: 2px solid var(--color-danger);
   background: rgba(209, 52, 56, 0.05);
@@ -1095,6 +1106,22 @@ button:disabled {
   50% { box-shadow: 0 0 12px rgba(255, 140, 0, 0.5); }
 }
 
+.btn-failed-requests {
+  background: linear-gradient(135deg, #8B4513 0%, #6b3410 100%);
+  border: 2px solid #a0522d;
+  animation: pulse-failed-requests 3s infinite;
+}
+
+.btn-failed-requests:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a0522d 0%, #8B4513 100%);
+  border-color: #cd853f;
+}
+
+@keyframes pulse-failed-requests {
+  0%, 100% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
+  50% { box-shadow: 0 0 12px rgba(139, 69, 19, 0.5); }
+}
+
 .btn-stop {
   background: #dc3545;
   color: white;
@@ -1228,6 +1255,7 @@ button:disabled {
 .event.sim-memory { color: var(--color-memory); }
 .event.sim-threads { color: var(--color-threads); }
 .event.sim-connection-pool { color: #ff8c00; }
+.event.sim-failed-requests { color: #8B4513; }
 .event.sim-crash { color: var(--color-danger); }
 
 .event .timestamp {

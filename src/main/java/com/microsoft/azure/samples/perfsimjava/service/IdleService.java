@@ -3,7 +3,6 @@ package com.microsoft.azure.samples.perfsimjava.service;
 import com.microsoft.azure.samples.perfsimjava.model.EventLogEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;

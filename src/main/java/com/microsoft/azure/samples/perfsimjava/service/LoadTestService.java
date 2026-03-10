@@ -92,6 +92,7 @@ public class LoadTestService {
     private final AtomicLong periodTotalRequests = new AtomicLong(0);
     private final AtomicLong periodSuccessfulRequests = new AtomicLong(0);
     private final AtomicLong periodFailedRequests = new AtomicLong(0);
+    private final AtomicLong periodInternalRequests = new AtomicLong(0);
     private final AtomicLong periodTotalResponseTimeMs = new AtomicLong(0);
     private final AtomicLong periodMaxResponseTimeMs = new AtomicLong(0);
     private final AtomicLong periodMinResponseTimeMs = new AtomicLong(Long.MAX_VALUE);
@@ -232,6 +233,11 @@ public class LoadTestService {
             // Update statistics
             updateStatistics(durationMs);
 
+            // Track internal requests (e.g., from FailedRequests simulation)
+            if (request.isInternal()) {
+                periodInternalRequests.incrementAndGet();
+            }
+
             // Broadcast latency to Request Latency Monitor
             broadcastLatency(endMs, durationMs, result.isSuccess(), result.getErrorMessage());
 
@@ -294,41 +300,50 @@ public class LoadTestService {
     public void resetPeriodStats() {
         LoadTestStats stats = getStats();
 
-        // Only log if there were requests in this period
-        if (periodTotalRequests.get() > 0) {
+        // Calculate period values
+        long periodTotal = periodTotalRequests.get();
+        long periodFailed = periodFailedRequests.get();
+        long periodInternal = periodInternalRequests.get();
+        long periodExternal = periodTotal - periodInternal;
+        double periodErrorRate = periodTotal > 0 ? (double) periodFailed / periodTotal * 100 : 0;
+
+        // Only log if there were external (non-internal) requests in this period
+        // Internal requests come from FailedRequests simulation and should not pollute stats
+        if (periodExternal > 0) {
             eventLogService.info(
                     EventLogEntry.EventType.LOAD_TEST_STATS,
                     String.format("Load test period stats (60s): %d requests, %.1f avg ms, %d max ms, %.2f RPS, %.1f%% errors",
-                            periodTotalRequests.get(),
+                            periodExternal,
                             stats.getAvgResponseTimeMs(),
                             stats.getMaxResponseTimeMs(),
                             stats.getRequestsPerSecond(),
-                            stats.getErrorRate()),
+                            periodErrorRate),
                     null,
                     null,
                     Map.of(
-                            "periodRequests", periodTotalRequests.get(),
+                            "periodRequests", periodExternal,
                             "avgResponseTimeMs", stats.getAvgResponseTimeMs(),
                             "maxResponseTimeMs", stats.getMaxResponseTimeMs(),
                             "requestsPerSecond", stats.getRequestsPerSecond(),
-                            "errorRate", stats.getErrorRate(),
+                            "errorRate", periodErrorRate,
                             "currentConcurrent", stats.getCurrentConcurrent(),
                             "peakConcurrent", stats.getPeakConcurrent()
                     )
             );
 
             logger.info("[LoadTestService] Period stats: requests={}, avgMs={:.1f}, maxMs={}, rps={:.2f}, errors={:.1f}%",
-                    periodTotalRequests.get(),
+                    periodExternal,
                     stats.getAvgResponseTimeMs(),
                     stats.getMaxResponseTimeMs(),
                     stats.getRequestsPerSecond(),
-                    stats.getErrorRate());
+                    periodErrorRate);
         }
 
         // Reset period counters
         periodTotalRequests.set(0);
         periodSuccessfulRequests.set(0);
         periodFailedRequests.set(0);
+        periodInternalRequests.set(0);
         periodTotalResponseTimeMs.set(0);
         periodMaxResponseTimeMs.set(0);
         periodMinResponseTimeMs.set(Long.MAX_VALUE);

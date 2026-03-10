@@ -292,6 +292,22 @@
                     </form>
                 </div>
 
+                <!-- Failed Requests Simulation -->
+                <div class="control-section failed-requests-section">
+                    <h3>❌ Failed Requests <span class="info-icon" title="Generates HTTP 5xx errors visible in AppLens and Application Insights">ℹ️</span></h3>
+                    <p class="control-description">Generates HTTP 500 errors by triggering requests with 100% error probability. Errors appear in AppLens and Application Insights.</p>
+                    <div class="note-box failed-requests-note">
+                        📊 Each request performs visible work before failing, appearing in the Request Latency Monitor.
+                    </div>
+                    <form id="failed-requests-form">
+                        <label>
+                            Number of Requests <span class="info-icon" title="How many HTTP 5xx errors to generate">ⓘ</span>:
+                            <input type="number" id="numberOfFailedRequests" value="10" min="1" max="1000">
+                        </label>
+                        <button type="submit" class="btn-trigger btn-failed-requests">❌ Generate Errors</button>
+                    </form>
+                </div>
+
                 <!-- Crash Simulation -->
                 <div class="control-section crash-section">
                     <h3>💥 Application Crash <span class="info-icon" title="Process terminates immediately. Azure App Service auto-restarts.">⚠️</span></h3>
@@ -407,6 +423,11 @@
         });
 
         document.getElementById('stop-connection-pool').addEventListener('click', stopConnectionPool);
+
+        document.getElementById('failed-requests-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            triggerFailedRequests();
+        });
 
         document.getElementById('crash-form').addEventListener('submit', (e) => {
             e.preventDefault();

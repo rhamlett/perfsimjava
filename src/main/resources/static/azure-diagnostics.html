@@ -87,6 +87,7 @@
             <li><strong>Memory Pressure:</strong> Memory usage spikes, potential OOM patterns</li>
             <li><strong>Thread Starvation:</strong> Increased request latency, request queuing</li>
             <li><strong>Connection Pool:</strong> Thread dumps show WAITING state, timeout errors</li>
+            <li><strong>Failed Requests:</strong> HTTP 5xx error spikes, availability drops, error rate increases</li>
             <li><strong>Crashes:</strong> Instance restarts, availability drops</li>
         </ul>
         </section>
@@ -102,7 +103,7 @@
             <li><strong>Memory Working Set:</strong> Increases during memory pressure simulations</li>
             <li><strong>HTTP Queue Length:</strong> Grows during thread starvation</li>
             <li><strong>Response Time:</strong> Watch for P95/P99 latency increases</li>
-            <li><strong>Http 5xx:</strong> May increase during crash simulations</li>
+            <li><strong>Http 5xx:</strong> Increases during failed requests and crash simulations</li>
         </ul>
 
         <h3>JVM Metrics (if App Insights enabled)</h3>

@@ -176,6 +176,26 @@ async function stopConnectionPool() {
 }
 
 /**
+ * Starts failed requests simulation (generates HTTP 5xx errors)
+ */
+async function triggerFailedRequests() {
+    const numberOfRequests = parseInt(document.getElementById('numberOfFailedRequests').value) || 10;
+
+    try {
+        const response = await fetch('/api/simulations/failed-requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numberOfRequests })
+        });
+        const result = await response.json();
+        console.log('[Dashboard] Failed Requests simulation started:', result);
+    } catch (error) {
+        console.error('[Dashboard] Failed Requests simulation failed:', error);
+        Dashboard.addEvent('error', 'Failed Requests simulation failed: ' + error.message);
+    }
+}
+
+/**
  * Triggers a crash simulation
  */
 async function triggerCrash() {
@@ -493,6 +513,7 @@ const Dashboard = (function() {
             'MEMORY_PRESSURE': '📊',
             'THREAD_STARVATION': '🧵',
             'CONNECTION_POOL_EXHAUSTION': '🔌',
+            'FAILED_REQUESTS': '❌',
             'CRASH_EXCEPTION': '💥',
             'CRASH_MEMORY': '💥',
             'CRASH_FAILFAST': '💥',
@@ -511,6 +532,7 @@ const Dashboard = (function() {
             'MEMORY_PRESSURE': 'sim-memory',
             'THREAD_STARVATION': 'sim-threads',
             'CONNECTION_POOL_EXHAUSTION': 'sim-connection-pool',
+            'FAILED_REQUESTS': 'sim-failed-requests',
             'CRASH_EXCEPTION': 'sim-crash',
             'CRASH_MEMORY': 'sim-crash',
             'CRASH_FAILFAST': 'sim-crash',

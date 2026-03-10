@@ -36,6 +36,12 @@ public class LoadTestRequest {
 
     private int errorPercent = 20;
 
+    /**
+     * Internal flag - when true, request stats are excluded from period logging.
+     * Used by FailedRequests simulation to prevent polluting load test stats.
+     */
+    private boolean internal = false;
+
     // Getters and Setters
 
     public int getWorkIterations() {
@@ -94,9 +100,17 @@ public class LoadTestRequest {
         this.errorPercent = errorPercent;
     }
 
+    public boolean isInternal() {
+        return internal;
+    }
+
+    public void setInternal(boolean internal) {
+        this.internal = internal;
+    }
+
     @Override
     public String toString() {
-        return String.format("LoadTestRequest{workIterations=%d, bufferSizeKb=%d, baselineDelayMs=%d, softLimit=%d, degradationFactor=%d, errorAfterSeconds=%d, errorPercent=%d}",
-                workIterations, bufferSizeKb, baselineDelayMs, softLimit, degradationFactor, errorAfterSeconds, errorPercent);
+        return String.format("LoadTestRequest{workIterations=%d, bufferSizeKb=%d, baselineDelayMs=%d, softLimit=%d, degradationFactor=%d, errorAfterSeconds=%d, errorPercent=%d, internal=%b}",
+                workIterations, bufferSizeKb, baselineDelayMs, softLimit, degradationFactor, errorAfterSeconds, errorPercent, internal);
     }
 }
