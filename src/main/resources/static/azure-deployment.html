@@ -56,7 +56,7 @@
             </a>
         </nav>
         <div class="sidebar-footer">
-            <div>Performance Problem Simulator - Java 21</div>
+            <div id="sidebar-build-info">Build: Loading...</div>
         </div>
     </aside>
 
@@ -335,6 +335,11 @@
                 const buildInfo = document.getElementById('build-info');
                 if (buildInfo) {
                     buildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+                
+                const sidebarBuildInfo = document.getElementById('sidebar-build-info');
+                if (sidebarBuildInfo) {
+                    sidebarBuildInfo.textContent = `Build: ${data.buildTime}`;
                 }
             } catch (error) {
                 console.log('Could not load footer info');
