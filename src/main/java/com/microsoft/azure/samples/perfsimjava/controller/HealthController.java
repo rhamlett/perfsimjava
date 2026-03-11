@@ -130,7 +130,8 @@ public class HealthController {
 
     /**
      * Records user activity to prevent idle timeout.
-     * Called by the frontend on page load and periodically to keep the app active.
+     * Called by the frontend on initial page load (not reconnections).
+     * WebSocket reconnections should NOT reset the idle timeout.
      * 
      * @return Activity status including whether the app was woken from idle
      */

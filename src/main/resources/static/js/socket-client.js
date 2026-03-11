@@ -87,8 +87,11 @@ const SocketClient = (function() {
     function connect() {
         updateConnectionStatus('connecting');
         
-        // Record activity on page load/connection to prevent idle timeout
-        recordActivity();
+        // Record activity only on initial page load, not on reconnections
+        // Reconnections should NOT reset the idle timeout - only explicit user activity should
+        if (firstConnection) {
+            recordActivity();
+        }
 
         // Create SockJS connection
         const socket = new SockJS('/ws');
@@ -261,7 +264,9 @@ const SocketClient = (function() {
 
     /**
      * Records activity with the server to prevent idle timeout.
-     * Called on page load, connection, and periodically.
+     * Should only be called on:
+     *   - Initial page load (not reconnections)
+     *   - Explicit user activity events
      * Wakes the app from idle state if necessary.
      */
     async function recordActivity() {
