@@ -53,6 +53,28 @@ body {
   padding-top: 56px;
 }
 
+/* Dashboard page: 135-degree diagonal gradient with orange accent tints */
+body.page-dashboard {
+  background-color: #F9F4EF;
+  background-image: linear-gradient(
+    135deg,
+    #FBEEE2 5%,
+    #F9F4EF 50%,
+    #F5DCC1 100%
+  );
+}
+
+/* Secondary pages: horizontal gradient with orange accent tints */
+body.page-secondary {
+  background-color: #FBF8F5;
+  background-image: linear-gradient(
+    90deg,
+    #FDF3EC 5%,
+    #FBF8F5 40%,
+    #F9E8D6 80%
+  );
+}
+
 html {
   scroll-padding-top: 72px;
 }
