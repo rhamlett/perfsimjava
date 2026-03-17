@@ -179,8 +179,7 @@ The `IDLE_TIMEOUT_MINUTES` environment variable controls how long the applicatio
 - **Wake-up:** The app automatically wakes when a page is loaded or a load test request is received
 
 **Behavior when idle:**
-- Local health probes stop being sent
-- Frontend probes (Azure AppLens visibility) stop being sent
+- Health probes stop being sent
 - Event log shows "Application going idle, no health probes being sent. There will be gaps in diagnostics and logs."
 
 **Behavior when waking:**
