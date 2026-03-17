@@ -186,7 +186,13 @@
             <!-- Event Log -->
             <section id="events-section">
                 <div class="event-log-card">
-                    <h3>📜 Event Log</h3>
+                    <div class="event-log-header">
+                        <h3>📜 Event Log</h3>
+                        <button id="copy-event-log-btn" class="copy-btn" title="Copy event log to clipboard">
+                            <span class="copy-icon">📋</span>
+                            <span class="copy-text">Copy</span>
+                        </button>
+                    </div>
                     <div id="eventLog" class="event-log"></div>
                 </div>
             </section>

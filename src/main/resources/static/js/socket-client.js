@@ -62,7 +62,7 @@ const SocketClient = (function() {
         const statusEl = document.getElementById('connection-status');
         if (statusEl) {
             // Remove all status classes
-            statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting');
+            statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
             
             switch (status) {
                 case 'connected':
@@ -76,6 +76,10 @@ const SocketClient = (function() {
                 case 'connecting':
                     statusEl.classList.add('status-reconnecting');
                     statusEl.textContent = 'Connecting...';
+                    break;
+                case 'idle':
+                    statusEl.classList.add('status-idle');
+                    statusEl.textContent = 'Idle';
                     break;
             }
         }
@@ -286,6 +290,7 @@ const SocketClient = (function() {
                 
                 if (result.wokeFromIdle) {
                     console.log('[SocketClient] App woken from idle state');
+                    updateConnectionStatus('connected');
                     if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
                         Dashboard.addEvent('info', 'App resumed from idle state - probes restarting');
                     }

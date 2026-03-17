@@ -248,6 +248,9 @@ const Dashboard = (function() {
         SocketClient.on('onEvent', handleEvent);
         SocketClient.on('onSimulationUpdate', handleSimulationUpdate);
 
+        // Set up copy event log button
+        initCopyEventLogButton();
+
         // Load initial data
         loadSkuInfo();
         loadActiveSimulations();
@@ -405,6 +408,23 @@ const Dashboard = (function() {
      */
     function handleEvent(event) {
         addEventToLog(event);
+        
+        // Update connection status based on idle state changes
+        if (event.event === 'GOING_IDLE') {
+            const statusEl = document.getElementById('connection-status');
+            if (statusEl) {
+                statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
+                statusEl.classList.add('status-idle');
+                statusEl.textContent = 'Idle';
+            }
+        } else if (event.event === 'WAKING_UP') {
+            const statusEl = document.getElementById('connection-status');
+            if (statusEl) {
+                statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
+                statusEl.classList.add('status-connected');
+                statusEl.textContent = 'Connected';
+            }
+        }
     }
 
     /**
@@ -539,6 +559,96 @@ const Dashboard = (function() {
             'CRASH_STACKOVERFLOW': 'sim-crash'
         };
         return classMap[simulationType] || '';
+    }
+
+    /**
+     * Initializes the copy event log button
+     */
+    function initCopyEventLogButton() {
+        const copyBtn = document.getElementById('copy-event-log-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', copyEventLogToClipboard);
+        }
+    }
+
+    /**
+     * Copies all event log content to clipboard
+     */
+    function copyEventLogToClipboard() {
+        const copyBtn = document.getElementById('copy-event-log-btn');
+        
+        // Format event log entries as text (include emojis like the UI display)
+        const logText = eventLog.map(event => {
+            const time = new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' }) + ' UTC';
+            const level = event.level ? `[${event.level}]` : '';
+            const emoji = getSimulationEmoji(event.simulationType, event.event);
+            const prefix = emoji ? emoji + ' ' : '';
+            return `${time} ${level} ${prefix}${event.message}`;
+        }).join('\n');
+
+        const textToCopy = logText || 'No events to copy';
+        
+        // Show copied feedback
+        function showCopiedFeedback() {
+            if (copyBtn) {
+                const iconSpan = copyBtn.querySelector('.copy-icon');
+                const textSpan = copyBtn.querySelector('.copy-text');
+                const originalIcon = iconSpan.textContent;
+                const originalText = textSpan.textContent;
+                
+                copyBtn.classList.add('copied');
+                iconSpan.textContent = '✓';
+                textSpan.textContent = 'Copied!';
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    iconSpan.textContent = originalIcon;
+                    textSpan.textContent = originalText;
+                }, 2000);
+            }
+        }
+
+        // Try modern clipboard API first, fall back to execCommand
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textToCopy)
+                .then(showCopiedFeedback)
+                .catch(function(error) {
+                    console.error('[Dashboard] Clipboard API failed, trying fallback:', error);
+                    fallbackCopyToClipboard(textToCopy, showCopiedFeedback);
+                });
+        } else {
+            fallbackCopyToClipboard(textToCopy, showCopiedFeedback);
+        }
+    }
+
+    /**
+     * Fallback copy method using execCommand for older browsers or when clipboard API fails
+     */
+    function fallbackCopyToClipboard(text, onSuccess) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            const successful = document.execCommand('copy');
+            if (successful && onSuccess) {
+                onSuccess();
+            } else {
+                console.error('[Dashboard] execCommand copy failed');
+                addEvent('error', 'Failed to copy event log to clipboard');
+            }
+        } catch (error) {
+            console.error('[Dashboard] Fallback copy failed:', error);
+            addEvent('error', 'Failed to copy event log to clipboard');
+        }
+        
+        document.body.removeChild(textArea);
     }
 
     /**
