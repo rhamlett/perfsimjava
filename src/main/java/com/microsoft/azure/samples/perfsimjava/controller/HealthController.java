@@ -91,7 +91,8 @@ public class HealthController {
     public ResponseEntity<Map<String, Object>> config() {
         return ResponseEntity.ok(Map.of(
                 "latencyProbeIntervalMs", appConfig.getProbeIntervalMs(),
-                "metricsIntervalMs", appConfig.getMetricsIntervalMs()
+                "metricsIntervalMs", appConfig.getMetricsIntervalMs(),
+                "idleTimeoutMinutes", idleService.getIdleTimeoutMinutes()
         ));
     }
 

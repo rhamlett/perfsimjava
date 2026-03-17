@@ -253,8 +253,8 @@ const Dashboard = (function() {
         loadActiveSimulations();
         loadBuildInfo();
 
-        // Add initial event
-        addEvent('success', 'Dashboard initialized');
+        // Fetch config and add initialization event with actual values
+        loadConfigAndLogInit();
 
         console.log('[Dashboard] Initialization complete');
     }
@@ -591,6 +591,25 @@ const Dashboard = (function() {
             addEvent('info', `Application is currently running on ${data.sku} SKU on worker ${data.computerName}`);
         } catch (error) {
             console.error('[Dashboard] Failed to load SKU info:', error);
+        }
+    }
+
+    /**
+     * Loads config from the server and logs initialization event with actual values
+     */
+    async function loadConfigAndLogInit() {
+        try {
+            const response = await fetch('/api/health/config');
+            const config = await response.json();
+            
+            const probeRate = config.latencyProbeIntervalMs || 200;
+            const idleTimeout = config.idleTimeoutMinutes;
+            const idleTimeoutStr = idleTimeout === 0 ? 'disabled' : `${idleTimeout}m`;
+            
+            addEvent('success', `Dashboard initialized (probe rate: ${probeRate}ms, idle timeout: ${idleTimeoutStr})`);
+        } catch (error) {
+            console.error('[Dashboard] Failed to load config:', error);
+            addEvent('success', 'Dashboard initialized');
         }
     }
 
