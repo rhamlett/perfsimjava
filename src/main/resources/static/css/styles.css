@@ -107,6 +107,13 @@ header h1 {
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+header h1 .java-logo {
+  flex-shrink: 0;
 }
 
 .sku-badge {
@@ -290,6 +297,13 @@ header nav {
   font-size: 1rem;
   font-weight: 600;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-header h2 .java-logo {
+  flex-shrink: 0;
 }
 
 .sidebar-close {
@@ -340,6 +354,10 @@ header nav {
   font-size: 1.25rem;
   width: 1.5rem;
   text-align: center;
+}
+
+.sidebar-nav-item .nav-icon svg {
+  vertical-align: middle;
 }
 
 .sidebar-nav-item .nav-label {
