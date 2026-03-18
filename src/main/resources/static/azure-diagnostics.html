@@ -50,7 +50,7 @@
             </a>
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-label">External</div>
-            <a href="https://github.com/rhamlett/perfsimjava" target="_blank" class="sidebar-nav-item">
+            <a id="github-repo-link" href="#" target="_blank" class="sidebar-nav-item" style="display:none">
                 <span class="nav-icon">🐙</span>
                 <span class="nav-label">GitHub Repository<span class="nav-desc">Source code & issues</span></span>
             </a>
@@ -513,6 +513,24 @@
             }
         }
         loadBuildInfo();
+
+        // Load GitHub link configuration
+        async function loadGithubLink() {
+            try {
+                const response = await fetch('/api/health/config');
+                const config = await response.json();
+                if (config.githubUserName && config.githubRepoName) {
+                    const githubLink = document.getElementById('github-repo-link');
+                    if (githubLink) {
+                        githubLink.href = `https://github.com/${config.githubUserName}/${config.githubRepoName}`;
+                        githubLink.style.display = '';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load GitHub link config');
+            }
+        }
+        loadGithubLink();
     </script>
 </body>
 </html>

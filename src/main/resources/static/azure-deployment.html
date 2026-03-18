@@ -368,7 +368,7 @@
             </a>
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-label">External</div>
-            <a href="https://github.com/rhamlett/perfsimjava" target="_blank" class="sidebar-nav-item">
+            <a id="github-repo-link" href="#" target="_blank" class="sidebar-nav-item" style="display:none">
                 <span class="nav-icon">🐙</span>
                 <span class="nav-label">GitHub Repository<span class="nav-desc">Source code & issues</span></span>
             </a>
@@ -748,6 +748,41 @@ az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GRO
                 <li>Click <strong>Apply</strong>, then <strong>Confirm</strong></li>
             </ol>
 
+            <h3>GitHub Repository Link</h3>
+            <p>By default, the GitHub Repository link in the sidebar menu is hidden. Set both environment variables below to display a link to your GitHub repository in the navigation menu.</p>
+            
+            <h4>Environment Variables</h4>
+            <table class="env-table">
+                <thead>
+                    <tr>
+                        <th>Variable Name</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>GITHUB_USER_NAME</code></td>
+                        <td>The GitHub username or organization that owns the repository.</td>
+                    </tr>
+                    <tr>
+                        <td><code>GITHUB_REPO_NAME</code></td>
+                        <td>The name of the GitHub repository.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Example</h4>
+            <p>To link to <code>https://github.com/myorg/myrepo</code>, set:</p>
+            <ul>
+                <li><code>GITHUB_USER_NAME=myorg</code></li>
+                <li><code>GITHUB_REPO_NAME=myrepo</code></li>
+            </ul>
+
+            <h4>Setting via Azure CLI</h4>
+            <pre><code># Set the GitHub repository link
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings GITHUB_USER_NAME=myorg GITHUB_REPO_NAME=myrepo</code></pre>
+
         </section>
 
         <section id="troubleshooting" class="card">
@@ -990,6 +1025,23 @@ echo "AZURE_SUBSCRIPTION_ID=$SUB_ID"</code></pre>
                 }
             } catch (e) {
                 console.error('Failed to fetch config', e);
+            }
+        })();
+
+        // Load GitHub link configuration
+        (async function() {
+            try {
+                const response = await fetch('/api/health/config');
+                const config = await response.json();
+                if (config.githubUserName && config.githubRepoName) {
+                    const githubLink = document.getElementById('github-repo-link');
+                    if (githubLink) {
+                        githubLink.href = `https://github.com/${config.githubUserName}/${config.githubRepoName}`;
+                        githubLink.style.display = '';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load GitHub link config');
             }
         })();
     </script>

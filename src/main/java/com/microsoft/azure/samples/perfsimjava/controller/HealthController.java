@@ -89,11 +89,18 @@ public class HealthController {
      */
     @GetMapping("/config")
     public ResponseEntity<Map<String, Object>> config() {
-        return ResponseEntity.ok(Map.of(
-                "latencyProbeIntervalMs", appConfig.getProbeIntervalMs(),
-                "metricsIntervalMs", appConfig.getMetricsIntervalMs(),
-                "idleTimeoutMinutes", idleService.getIdleTimeoutMinutes()
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("latencyProbeIntervalMs", appConfig.getProbeIntervalMs());
+        response.put("metricsIntervalMs", appConfig.getMetricsIntervalMs());
+        response.put("idleTimeoutMinutes", idleService.getIdleTimeoutMinutes());
+        
+        // GitHub repository link configuration (optional)
+        String githubRepoName = System.getenv("GITHUB_REPO_NAME");
+        String githubUserName = System.getenv("GITHUB_USER_NAME");
+        response.put("githubRepoName", githubRepoName);
+        response.put("githubUserName", githubUserName);
+        
+        return ResponseEntity.ok(response);
     }
 
     /**

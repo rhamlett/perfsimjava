@@ -717,6 +717,15 @@ const Dashboard = (function() {
             const idleTimeoutStr = idleTimeout === 0 ? 'disabled' : `${idleTimeout}m`;
             
             addEvent('success', `Dashboard initialized (probe rate: ${probeRate}ms, idle timeout: ${idleTimeoutStr})`);
+            
+            // Show GitHub link if both GITHUB_USER_NAME and GITHUB_REPO_NAME are configured
+            if (config.githubUserName && config.githubRepoName) {
+                const githubLink = document.getElementById('github-repo-link');
+                if (githubLink) {
+                    githubLink.href = `https://github.com/${config.githubUserName}/${config.githubRepoName}`;
+                    githubLink.style.display = '';
+                }
+            }
         } catch (error) {
             console.error('[Dashboard] Failed to load config:', error);
             addEvent('success', 'Dashboard initialized');
