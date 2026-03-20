@@ -87,7 +87,7 @@ section[id] {
    Header
    -------------------------------------------------------------------------- */
 header {
-  background: #1E3A5F;
+  background: linear-gradient(90deg, #A34400 0%, #1E3A5F 70%);
   color: white;
   padding: 0.75rem 1.5rem;
   display: flex;
@@ -114,6 +114,7 @@ header h1 {
 
 header h1 .java-logo {
   flex-shrink: 0;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
 }
 
 .sku-badge {
@@ -290,6 +291,7 @@ header nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: linear-gradient(90deg, #A34400 0%, #1A3353 70%);
 }
 
 .sidebar-header h2 {
@@ -304,6 +306,7 @@ header nav {
 
 .sidebar-header h2 .java-logo {
   flex-shrink: 0;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
 }
 
 .sidebar-close {
@@ -917,7 +920,7 @@ section h2, section h3 {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(90deg, #A34400 0%, #1E3A5F 70%);
   color: white;
 }
 
