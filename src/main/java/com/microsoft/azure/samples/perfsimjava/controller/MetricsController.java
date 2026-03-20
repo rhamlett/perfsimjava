@@ -3,13 +3,10 @@ package com.microsoft.azure.samples.perfsimjava.controller;
 import com.microsoft.azure.samples.perfsimjava.model.SystemMetrics;
 import com.microsoft.azure.samples.perfsimjava.service.ConnectionPoolService;
 import com.microsoft.azure.samples.perfsimjava.service.MetricsService;
-import com.microsoft.azure.samples.perfsimjava.service.ProbeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * =============================================================================
@@ -30,13 +27,11 @@ import java.util.Map;
 public class MetricsController {
 
     private final MetricsService metricsService;
-    private final ProbeService probeService;
     private final ConnectionPoolService connectionPoolService;
 
-    public MetricsController(MetricsService metricsService, ProbeService probeService,
+    public MetricsController(MetricsService metricsService,
                              ConnectionPoolService connectionPoolService) {
         this.metricsService = metricsService;
-        this.probeService = probeService;
         this.connectionPoolService = connectionPoolService;
     }
 
@@ -63,13 +58,5 @@ public class MetricsController {
         connectionPoolService.acquireProbeConnection();
         
         return ResponseEntity.ok(metricsService.getProbeResponse());
-    }
-
-    /**
-     * Gets probe service statistics.
-     */
-    @GetMapping("/probe/stats")
-    public ResponseEntity<Map<String, Object>> probeStats() {
-        return ResponseEntity.ok(probeService.getStats());
     }
 }

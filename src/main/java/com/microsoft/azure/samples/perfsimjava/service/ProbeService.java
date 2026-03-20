@@ -64,7 +64,6 @@ public class ProbeService {
     private final AtomicLong probeCount = new AtomicLong(0);
     private final AtomicLong errorCount = new AtomicLong(0);
     private volatile long lastLatencyMs = 0;
-    private volatile boolean usesFrontend = false;
 
     public ProbeService(SimpMessagingTemplate messagingTemplate, AppConfig config, 
                          ApplicationContext applicationContext) {
@@ -105,11 +104,9 @@ public class ProbeService {
         String hostname = System.getenv("WEBSITE_HOSTNAME");
         if (hostname != null && !hostname.isEmpty()) {
             probeUrl = "https://" + hostname + "/api/metrics/probe";
-            usesFrontend = true;
             logger.info("[ProbeService] Probe URL (frontend): {}", probeUrl);
         } else {
             probeUrl = "http://localhost:" + port + "/api/metrics/probe";
-            usesFrontend = false;
             logger.info("[ProbeService] Probe URL (localhost): {}", probeUrl);
         }
 
@@ -182,20 +179,6 @@ public class ProbeService {
                 "error", error != null ? error : ""
         );
         messagingTemplate.convertAndSend("/topic/probe", result);
-    }
-
-    /**
-     * Gets probe statistics.
-     */
-    public Map<String, Object> getStats() {
-        return Map.of(
-                "probeUrl", probeUrl != null ? probeUrl : "",
-                "probeCount", probeCount.get(),
-                "errorCount", errorCount.get(),
-                "lastLatencyMs", lastLatencyMs,
-                "intervalMs", config.getProbeIntervalMs(),
-                "usesFrontend", usesFrontend
-        );
     }
 
     /**

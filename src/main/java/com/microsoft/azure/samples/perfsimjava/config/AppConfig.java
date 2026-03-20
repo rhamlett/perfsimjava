@@ -66,11 +66,6 @@ public class AppConfig {
     private int maxMemoryAllocationMb = 65536;
 
     /**
-     * Maximum number of event log entries to retain (ring buffer).
-     */
-    private int eventLogMaxEntries = 100;
-
-    /**
      * Thread pool size for CPU stress simulations.
      * Defaults to available processors.
      */
@@ -134,14 +129,6 @@ public class AppConfig {
 
     public void setMaxMemoryAllocationMb(int maxMemoryAllocationMb) {
         this.maxMemoryAllocationMb = maxMemoryAllocationMb;
-    }
-
-    public int getEventLogMaxEntries() {
-        return eventLogMaxEntries;
-    }
-
-    public void setEventLogMaxEntries(int eventLogMaxEntries) {
-        this.eventLogMaxEntries = eventLogMaxEntries;
     }
 
     public int getCpuStressThreadPoolSize() {

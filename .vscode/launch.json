@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "PerfSimJava",
+            "request": "launch",
+            "mainClass": "com.microsoft.azure.samples.perfsimjava.PerfSimJavaApplication",
+            "projectName": "perfsimjava"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-PerfSimJavaApplication",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.microsoft.azure.samples.perfsimjava.PerfSimJavaApplication",
+            "projectName": "perfsimjava",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

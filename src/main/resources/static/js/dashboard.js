@@ -226,7 +226,6 @@ async function triggerCrash() {
 const Dashboard = (function() {
     'use strict';
 
-    const MAX_EVENTS = 100;
     const eventLog = [];
     let lastKnownJvmStartTime = null;
 
@@ -656,9 +655,6 @@ const Dashboard = (function() {
      */
     function addEventToLog(event) {
         eventLog.unshift(event);
-        if (eventLog.length > MAX_EVENTS) {
-            eventLog.pop();
-        }
 
         const logEl = document.getElementById('eventLog');
         if (logEl) {
@@ -673,11 +669,6 @@ const Dashboard = (function() {
             eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}${event.message}`;
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
-
-            // Remove excess events
-            while (logEl.children.length > MAX_EVENTS) {
-                logEl.removeChild(logEl.lastChild);
-            }
         }
     }
 

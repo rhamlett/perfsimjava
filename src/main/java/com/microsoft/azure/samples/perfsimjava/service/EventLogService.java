@@ -1,6 +1,5 @@
 package com.microsoft.azure.samples.perfsimjava.service;
 
-import com.microsoft.azure.samples.perfsimjava.config.AppConfig;
 import com.microsoft.azure.samples.perfsimjava.model.EventLogEntry;
 import com.microsoft.azure.samples.perfsimjava.model.SimulationType;
 import org.slf4j.Logger;
@@ -20,24 +19,23 @@ import java.util.concurrent.locks.ReentrantLock;
  * =============================================================================
  *
  * PURPOSE:
- *   Maintains an in-memory ring buffer of event log entries and broadcasts
+ *   Maintains an in-memory list of event log entries and broadcasts
  *   them to connected WebSocket clients. Events provide visibility into
  *   simulation lifecycle and system state changes.
  *
- * RING BUFFER:
- *   Older entries are automatically removed when the buffer reaches its
- *   configured maximum size. This prevents unbounded memory growth while
- *   retaining recent history for debugging.
+ * MEMORY:
+ *   The log is cleared on each page reset/app restart, so no limit is
+ *   enforced. For long-running sessions, consider periodic clearing.
  *
  * BROADCASTING:
  *   New events are immediately pushed to all WebSocket clients via
  *   SimpMessagingTemplate. Clients don't need to poll for updates.
  *
  * PORTING NOTES:
- *   - Node.js: Array with shift() to remove oldest, Socket.IO emit for broadcast
- *   - Python: collections.deque(maxlen=N) with Flask-SocketIO emit
- *   - C#: ConcurrentQueue with SignalR Clients.All.SendAsync
- *   - PHP: Session storage or Redis list with LPUSH/LTRIM
+ *   - Node.js: Array with Socket.IO emit for broadcast
+ *   - Python: list with Flask-SocketIO emit
+ *   - C#: List with SignalR Clients.All.SendAsync
+ *   - PHP: Session storage or Redis list with LPUSH
  */
 @Service
 public class EventLogService {
@@ -46,11 +44,9 @@ public class EventLogService {
 
     private final LinkedList<EventLogEntry> entries = new LinkedList<>();
     private final ReentrantLock lock = new ReentrantLock();
-    private final int maxEntries;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public EventLogService(AppConfig config, SimpMessagingTemplate messagingTemplate) {
-        this.maxEntries = config.getEventLogMaxEntries();
+    public EventLogService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -120,13 +116,10 @@ public class EventLogService {
             case ERROR -> logger.error("[{}] {}", event, message);
         }
 
-        // Add to ring buffer
+        // Add to event log
         lock.lock();
         try {
             entries.addFirst(entry);
-            while (entries.size() > maxEntries) {
-                entries.removeLast();
-            }
         } finally {
             lock.unlock();
         }
