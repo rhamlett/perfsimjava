@@ -1,7 +1,6 @@
 package com.microsoft.azure.samples.perfsimjava.service;
 
 import com.microsoft.applicationinsights.TelemetryClient;
-import com.microsoft.applicationinsights.TelemetryConfiguration;
 import com.microsoft.applicationinsights.telemetry.EventTelemetry;
 import io.opentelemetry.api.trace.Span;
 import org.slf4j.Logger;
@@ -27,14 +26,12 @@ import java.util.Map;
  *   4. Logged to server output for kubectl/App Service log analysis
  *
  * CONFIGURATION:
- *   Application Insights is optional. If the APPLICATIONINSIGHTS_CONNECTION_STRING
- *   environment variable is not set, this service gracefully degrades:
+ *   Application Insights is optional. The App Insights Java agent auto-configures
+ *   when APPLICATIONINSIGHTS_CONNECTION_STRING is set (auto-set by Azure App Service).
+ *   If not configured, this service gracefully degrades:
  *   - Simulation IDs still appear in event log
  *   - MDC context still available for log correlation
  *   - No telemetry is sent to Azure (no-op)
- *
- *   Azure App Service automatically sets APPLICATIONINSIGHTS_CONNECTION_STRING
- *   when Application Insights is enabled in the portal.
  *
  * KQL CORRELATION:
  *   Once telemetry flows to Application Insights, use these queries:
@@ -73,15 +70,14 @@ public class SimulationTelemetryService {
     private final boolean telemetryEnabled;
 
     public SimulationTelemetryService() {
-        // Check if Application Insights is configured
+        // Check if Application Insights is configured via environment
         String connectionString = System.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING");
         this.telemetryEnabled = connectionString != null && !connectionString.isBlank();
         
         if (telemetryEnabled) {
-            // Initialize TelemetryClient with connection string
-            TelemetryConfiguration config = TelemetryConfiguration.createDefault();
-            config.setConnectionString(connectionString);
-            this.telemetryClient = new TelemetryClient(config);
+            // In App Insights 3.x, the Java agent auto-configures the TelemetryClient.
+            // Just create a default instance - the agent handles connection string.
+            this.telemetryClient = new TelemetryClient();
             logger.info("[SimulationTelemetry] Application Insights enabled - custom events will be sent");
         } else {
             this.telemetryClient = null;
