@@ -1,13 +1,16 @@
 package com.microsoft.azure.samples.perfsimjava.service;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import com.microsoft.applicationinsights.TelemetryClient;
+import com.microsoft.applicationinsights.TelemetryConfiguration;
+import com.microsoft.applicationinsights.telemetry.EventTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * =============================================================================
@@ -16,14 +19,12 @@ import org.springframework.stereotype.Service;
  *
  * PURPOSE:
  *   Provides methods to correlate simulation IDs with Azure Application Insights
- *   telemetry. When a simulation starts, its unique ID is added to:
+ *   telemetry. When a simulation starts, its unique ID is:
  *   
- *   1. OpenTelemetry span attributes (for Application Insights correlation)
- *   2. SLF4J MDC (for structured logging correlation)
- *   3. Server logs (for kubectl and App Service log analysis)
- *
- * TELEMETRY FLOW:
- *   Dashboard → API → This Service → OpenTelemetry Span → Azure Monitor
+ *   1. Sent as a custom event to Application Insights (SimulationStarted/SimulationEnded)
+ *   2. Set on the current OpenTelemetry span for request correlation
+ *   3. Added to SLF4J MDC for structured logging correlation
+ *   4. Logged to server output for kubectl/App Service log analysis
  *
  * CONFIGURATION:
  *   Application Insights is optional. If the APPLICATIONINSIGHTS_CONNECTION_STRING
@@ -38,35 +39,37 @@ import org.springframework.stereotype.Service;
  * KQL CORRELATION:
  *   Once telemetry flows to Application Insights, use these queries:
  *
- *   // Find all events for a simulation
- *   traces
- *   | where customDimensions["SimulationId"] == "YOUR-GUID-HERE"
- *   | order by timestamp asc
- *
- *   // Find failed requests during simulation
- *   requests
- *   | where customDimensions["SimulationId"] == "YOUR-GUID-HERE"
- *   | where success == false
+ *   // Find simulation events
+ *   AppEvents
+ *   | where Name in ("SimulationStarted", "SimulationEnded")
+ *   | where Properties["SimulationId"] == "YOUR-GUID-HERE"
+ *   | project TimeGenerated, Name, Properties
+ *   | order by TimeGenerated asc
  *
  * PORTING NOTES:
- *   - .NET: Uses Activity.Current.SetTag("SimulationId", id)
- *   - Node.js: Uses OpenTelemetry span.setAttribute()
- *   - Python: Uses opentelemetry.trace.get_current_span().set_attribute()
+ *   - .NET: Uses TelemetryClient.TrackEvent()
+ *   - Node.js: Uses applicationinsights.defaultClient.trackEvent()
+ *   - Python: Uses opencensus or azure-monitor-opentelemetry
  */
 @Service
 public class SimulationTelemetryService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulationTelemetryService.class);
     
-    // OpenTelemetry attribute keys (used in KQL queries)
+    // Custom event names (used in KQL queries)
+    public static final String EVENT_SIMULATION_STARTED = "SimulationStarted";
+    public static final String EVENT_SIMULATION_ENDED = "SimulationEnded";
+    
+    // Property keys
     public static final String SIMULATION_ID_KEY = "SimulationId";
     public static final String SIMULATION_TYPE_KEY = "SimulationType";
+    public static final String END_REASON_KEY = "EndReason";
     
     // MDC keys for structured logging
     public static final String MDC_SIMULATION_ID = "simulationId";
     public static final String MDC_SIMULATION_TYPE = "simulationType";
 
-    private final Tracer tracer;
+    private final TelemetryClient telemetryClient;
     private final boolean telemetryEnabled;
 
     public SimulationTelemetryService() {
@@ -75,18 +78,19 @@ public class SimulationTelemetryService {
         this.telemetryEnabled = connectionString != null && !connectionString.isBlank();
         
         if (telemetryEnabled) {
-            // Get the global OpenTelemetry tracer
-            // When Azure Monitor agent is attached, this connects to App Insights
-            this.tracer = GlobalOpenTelemetry.getTracer("perfsimjava-simulations");
-            logger.info("[SimulationTelemetry] Application Insights enabled - simulation IDs will flow to telemetry");
+            // Initialize TelemetryClient with connection string
+            TelemetryConfiguration config = TelemetryConfiguration.createDefault();
+            config.setConnectionString(connectionString);
+            this.telemetryClient = new TelemetryClient(config);
+            logger.info("[SimulationTelemetry] Application Insights enabled - custom events will be sent");
         } else {
-            this.tracer = null;
-            logger.info("[SimulationTelemetry] Application Insights not configured - telemetry correlation disabled");
+            this.telemetryClient = null;
+            logger.info("[SimulationTelemetry] Application Insights not configured - telemetry disabled");
         }
     }
 
     /**
-     * Sets the simulation context on the current span for telemetry correlation.
+     * Sets the simulation context on the current span and MDC for telemetry correlation.
      * Call this at the start of a simulation to ensure all subsequent telemetry
      * is tagged with the simulation ID.
      *
@@ -98,35 +102,31 @@ public class SimulationTelemetryService {
             return;
         }
 
-        // 1. Set MDC for structured logging (works regardless of App Insights)
+        // Set MDC for structured logging (works regardless of App Insights)
         MDC.put(MDC_SIMULATION_ID, simulationId);
         if (simulationType != null) {
             MDC.put(MDC_SIMULATION_TYPE, simulationType);
         }
 
-        // 2. Set OpenTelemetry span attributes if telemetry is enabled
-        if (telemetryEnabled) {
-            try {
-                Span currentSpan = Span.current();
-                if (currentSpan != null && currentSpan.isRecording()) {
-                    currentSpan.setAttribute(SIMULATION_ID_KEY, simulationId);
-                    if (simulationType != null) {
-                        currentSpan.setAttribute(SIMULATION_TYPE_KEY, simulationType);
-                    }
+        // Set on current OpenTelemetry span if available
+        try {
+            Span currentSpan = Span.current();
+            if (currentSpan != null && currentSpan.isRecording()) {
+                currentSpan.setAttribute(SIMULATION_ID_KEY, simulationId);
+                if (simulationType != null) {
+                    currentSpan.setAttribute(SIMULATION_TYPE_KEY, simulationType);
                 }
-            } catch (Exception e) {
-                // Gracefully handle if OpenTelemetry is not properly initialized
-                logger.debug("[SimulationTelemetry] Could not set span attributes: {}", e.getMessage());
             }
+        } catch (Exception e) {
+            logger.debug("[SimulationTelemetry] Could not set span attributes: {}", e.getMessage());
         }
 
-        // 3. Log for traditional log analysis (App Service logs, kubectl logs)
         logger.info("[Simulation] Context set - SimulationId={}, Type={}", simulationId, simulationType);
     }
 
     /**
-     * Tracks a simulation started event in telemetry.
-     * Creates a custom span/event that can be queried in Application Insights.
+     * Tracks a simulation started event in Application Insights.
+     * Creates a custom event that can be queried in Log Analytics.
      *
      * @param simulationId The unique simulation identifier
      * @param simulationType The type of simulation being started
@@ -134,19 +134,18 @@ public class SimulationTelemetryService {
     public void trackSimulationStarted(String simulationId, String simulationType) {
         setSimulationContext(simulationId, simulationType);
         
-        if (telemetryEnabled && tracer != null) {
+        if (telemetryEnabled && telemetryClient != null) {
             try {
-                // Create a span for the simulation start event
-                Span span = tracer.spanBuilder("SimulationStarted")
-                        .setParent(Context.current())
-                        .setAttribute(SIMULATION_ID_KEY, simulationId)
-                        .setAttribute(SIMULATION_TYPE_KEY, simulationType != null ? simulationType : "Unknown")
-                        .startSpan();
+                EventTelemetry event = new EventTelemetry(EVENT_SIMULATION_STARTED);
+                event.getProperties().put(SIMULATION_ID_KEY, simulationId);
+                event.getProperties().put(SIMULATION_TYPE_KEY, simulationType != null ? simulationType : "Unknown");
                 
-                // End immediately - this is just a marker event
-                span.end();
+                telemetryClient.trackEvent(event);
+                telemetryClient.flush();
+                
+                logger.debug("[SimulationTelemetry] Tracked SimulationStarted event");
             } catch (Exception e) {
-                logger.debug("[SimulationTelemetry] Could not track simulation start: {}", e.getMessage());
+                logger.warn("[SimulationTelemetry] Could not track simulation start: {}", e.getMessage());
             }
         }
         
@@ -154,50 +153,46 @@ public class SimulationTelemetryService {
     }
 
     /**
-     * Tracks a simulation completed event in telemetry.
+     * Tracks a simulation completed event in Application Insights.
      *
      * @param simulationId The unique simulation identifier
      * @param simulationType The type of simulation that completed
      */
     public void trackSimulationCompleted(String simulationId, String simulationType) {
-        if (telemetryEnabled && tracer != null) {
-            try {
-                Span span = tracer.spanBuilder("SimulationCompleted")
-                        .setParent(Context.current())
-                        .setAttribute(SIMULATION_ID_KEY, simulationId)
-                        .setAttribute(SIMULATION_TYPE_KEY, simulationType != null ? simulationType : "Unknown")
-                        .startSpan();
-                span.end();
-            } catch (Exception e) {
-                logger.debug("[SimulationTelemetry] Could not track simulation completion: {}", e.getMessage());
-            }
-        }
-        
-        logger.info("[Simulation] Completed - SimulationId={}, Type={}", simulationId, simulationType);
-        clearSimulationContext();
+        trackSimulationEnded(simulationId, simulationType, "Completed");
     }
 
     /**
-     * Tracks a simulation stopped event (user-initiated stop) in telemetry.
+     * Tracks a simulation stopped event (user-initiated stop) in Application Insights.
      *
      * @param simulationId The unique simulation identifier
      * @param simulationType The type of simulation that was stopped
      */
     public void trackSimulationStopped(String simulationId, String simulationType) {
-        if (telemetryEnabled && tracer != null) {
+        trackSimulationEnded(simulationId, simulationType, "Stopped");
+    }
+    
+    /**
+     * Internal method to track simulation end events.
+     */
+    private void trackSimulationEnded(String simulationId, String simulationType, String reason) {
+        if (telemetryEnabled && telemetryClient != null) {
             try {
-                Span span = tracer.spanBuilder("SimulationStopped")
-                        .setParent(Context.current())
-                        .setAttribute(SIMULATION_ID_KEY, simulationId)
-                        .setAttribute(SIMULATION_TYPE_KEY, simulationType != null ? simulationType : "Unknown")
-                        .startSpan();
-                span.end();
+                EventTelemetry event = new EventTelemetry(EVENT_SIMULATION_ENDED);
+                event.getProperties().put(SIMULATION_ID_KEY, simulationId);
+                event.getProperties().put(SIMULATION_TYPE_KEY, simulationType != null ? simulationType : "Unknown");
+                event.getProperties().put(END_REASON_KEY, reason);
+                
+                telemetryClient.trackEvent(event);
+                telemetryClient.flush();
+                
+                logger.debug("[SimulationTelemetry] Tracked SimulationEnded event ({})", reason);
             } catch (Exception e) {
-                logger.debug("[SimulationTelemetry] Could not track simulation stop: {}", e.getMessage());
+                logger.warn("[SimulationTelemetry] Could not track simulation end: {}", e.getMessage());
             }
         }
         
-        logger.info("[Simulation] Stopped - SimulationId={}, Type={}", simulationId, simulationType);
+        logger.info("[Simulation] {} - SimulationId={}, Type={}", reason, simulationId, simulationType);
         clearSimulationContext();
     }
 

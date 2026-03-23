@@ -870,6 +870,7 @@ section h2, section h3 {
 .simulation-badge.memory { border: 2px solid var(--color-memory); }
 .simulation-badge.threads { border: 2px solid var(--color-threads); }
 .simulation-badge.slow, .simulation-badge.connection-pool { border: 2px solid #ff8c00; }
+.simulation-badge.failed-requests { border: 2px solid #a0522d; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.9); }
@@ -888,6 +889,7 @@ section h2, section h3 {
 .simulation-badge.memory .spinner { border-top-color: var(--color-memory); }
 .simulation-badge.threads .spinner { border-top-color: var(--color-threads); }
 .simulation-badge.slow .spinner, .simulation-badge.connection-pool .spinner { border-top-color: #ff8c00; }
+.simulation-badge.failed-requests .spinner { border-top-color: #a0522d; }
 
 @keyframes spin {
   to { transform: rotate(360deg); }

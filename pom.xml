@@ -77,6 +77,13 @@
             <version>1.35.0</version>
         </dependency>
 
+        <!-- Application Insights SDK for custom events -->
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>applicationinsights-core</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+
         <!-- OpenAPI / Swagger UI -->
         <dependency>
             <groupId>org.springdoc</groupId>
