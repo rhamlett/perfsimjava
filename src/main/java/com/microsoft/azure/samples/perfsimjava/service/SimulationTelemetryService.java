@@ -130,6 +130,21 @@ public class SimulationTelemetryService {
     public void trackSimulationStarted(String simulationId, String simulationType) {
         setSimulationContext(simulationId, simulationType);
         
+        // First, try to add an event to the current OpenTelemetry span (works with AI agent)
+        try {
+            Span currentSpan = Span.current();
+            if (currentSpan != null && currentSpan.isRecording()) {
+                currentSpan.addEvent(EVENT_SIMULATION_STARTED, 
+                    io.opentelemetry.api.common.Attributes.builder()
+                        .put(SIMULATION_ID_KEY, simulationId)
+                        .put(SIMULATION_TYPE_KEY, simulationType != null ? simulationType : "Unknown")
+                        .build());
+            }
+        } catch (Exception e) {
+            logger.debug("[SimulationTelemetry] Could not add span event: {}", e.getMessage());
+        }
+        
+        // Also try TelemetryClient for direct AppEvents (if agent is configured)
         if (telemetryEnabled && telemetryClient != null) {
             try {
                 EventTelemetry event = new EventTelemetry(EVENT_SIMULATION_STARTED);
@@ -139,7 +154,7 @@ public class SimulationTelemetryService {
                 telemetryClient.trackEvent(event);
                 telemetryClient.flush();
                 
-                logger.debug("[SimulationTelemetry] Tracked SimulationStarted event");
+                logger.debug("[SimulationTelemetry] Tracked SimulationStarted event via TelemetryClient");
             } catch (Exception e) {
                 logger.warn("[SimulationTelemetry] Could not track simulation start: {}", e.getMessage());
             }
@@ -172,6 +187,22 @@ public class SimulationTelemetryService {
      * Internal method to track simulation end events.
      */
     private void trackSimulationEnded(String simulationId, String simulationType, String reason) {
+        // First, try to add an event to the current OpenTelemetry span (works with AI agent)
+        try {
+            Span currentSpan = Span.current();
+            if (currentSpan != null && currentSpan.isRecording()) {
+                currentSpan.addEvent(EVENT_SIMULATION_ENDED, 
+                    io.opentelemetry.api.common.Attributes.builder()
+                        .put(SIMULATION_ID_KEY, simulationId)
+                        .put(SIMULATION_TYPE_KEY, simulationType != null ? simulationType : "Unknown")
+                        .put(END_REASON_KEY, reason)
+                        .build());
+            }
+        } catch (Exception e) {
+            logger.debug("[SimulationTelemetry] Could not add span event: {}", e.getMessage());
+        }
+        
+        // Also try TelemetryClient for direct AppEvents (if agent is configured)
         if (telemetryEnabled && telemetryClient != null) {
             try {
                 EventTelemetry event = new EventTelemetry(EVENT_SIMULATION_ENDED);
