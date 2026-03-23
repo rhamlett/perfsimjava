@@ -251,6 +251,7 @@ const Dashboard = (function() {
         initCopyEventLogButton();
 
         // Load initial data
+        loadHistoricalEvents();  // Load historical events first (includes startup disclaimer)
         loadSkuInfo();
         loadActiveSimulations();
         loadBuildInfo();
@@ -804,6 +805,26 @@ const Dashboard = (function() {
         } catch (error) {
             console.error('[Dashboard] Failed to load config:', error);
             addEvent('success', 'Dashboard initialized');
+        }
+    }
+
+    /**
+     * Loads historical events from server (includes startup events like disclaimer)
+     */
+    async function loadHistoricalEvents() {
+        try {
+            const response = await fetch('/admin/events?limit=50');
+            const data = await response.json();
+            
+            if (data.events && data.events.length > 0) {
+                // Events come newest-first, reverse to add oldest first
+                const reversedEvents = [...data.events].reverse();
+                reversedEvents.forEach(event => {
+                    addEventToLog(event);
+                });
+            }
+        } catch (error) {
+            console.log('[Dashboard] Could not load historical events');
         }
     }
 
