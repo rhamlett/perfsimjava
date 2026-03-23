@@ -1359,41 +1359,30 @@ button:disabled {
 }
 
 /* --------------------------------------------------------------------------
-   Simulation ID - Click to Copy
+   Simulation ID - Click to Copy (Message Underline Style)
    -------------------------------------------------------------------------- */
-.event .sim-id {
-  font-family: 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  background: rgba(0, 0, 0, 0.05);
-  padding: 0.125rem 0.375rem;
-  border-radius: 3px;
-  margin-right: 0.5rem;
-  border-bottom: 1px dotted var(--color-text-muted);
+.event .sim-message {
+  border-bottom: 1px dotted currentColor;
   cursor: pointer;
   transition: all var(--transition-fast);
-  display: inline-block;
 }
 
-.event .sim-id:hover {
-  background: rgba(0, 120, 212, 0.1);
-  border-bottom-color: var(--color-cpu);
-  color: var(--color-cpu);
+.event .sim-message:hover {
+  background: rgba(0, 120, 212, 0.08);
+  border-bottom-style: solid;
 }
 
-.event .sim-id.copied {
-  background: rgba(29, 111, 29, 0.15);
-  border-bottom-color: var(--color-success);
-  color: var(--color-success);
+.event .sim-message.copied {
+  background: rgba(29, 111, 29, 0.12);
   animation: copyFlash 0.3s ease-out;
 }
 
 @keyframes copyFlash {
   0% {
-    background: rgba(29, 111, 29, 0.4);
+    background: rgba(29, 111, 29, 0.3);
   }
   100% {
-    background: rgba(29, 111, 29, 0.15);
+    background: rgba(29, 111, 29, 0.12);
   }
 }
 

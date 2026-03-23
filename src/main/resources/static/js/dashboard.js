@@ -667,20 +667,25 @@ const Dashboard = (function() {
             const eventDiv = document.createElement('div');
             eventDiv.className = `event ${levelClass} ${simClass}`.trim();
             
-            // Build message with optional simulation ID
-            let messageHtml = `<span class="timestamp">${time}</span> ${prefix}`;
+            // Check if this is a simulation start/complete/stop event that should have clickable ID
+            const isSimulationBoundaryEvent = event.simulationId && 
+                event.simulationType !== 'CRASH_EXCEPTION' &&
+                (event.event === 'SIMULATION_STARTED' || 
+                 event.event === 'SIMULATION_COMPLETED' || 
+                 event.event === 'SIMULATION_STOPPED' ||
+                 event.event === 'MEMORY_ALLOCATED' ||
+                 event.event === 'MEMORY_RELEASED');
             
-            // Add clickable simulation ID if present (exclude crash simulations)
-            if (event.simulationId && event.simulationType !== 'CRASH_EXCEPTION') {
-                const simIdShort = event.simulationId.substring(0, 8);
-                messageHtml += `<span class="sim-id" 
+            if (isSimulationBoundaryEvent) {
+                // Make the message text clickable with dotted underline
+                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}<span class="sim-message" 
                     data-sim-id="${event.simulationId}" 
                     title="Click to copy Simulation ID: ${event.simulationId}"
-                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${simIdShort}…</span> `;
+                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${event.message}</span>`;
+            } else {
+                // Regular event without clickable simulation ID
+                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}${event.message}`;
             }
-            
-            messageHtml += event.message;
-            eventDiv.innerHTML = messageHtml;
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
         }
