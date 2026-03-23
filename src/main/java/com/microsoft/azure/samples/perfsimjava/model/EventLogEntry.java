@@ -37,6 +37,7 @@ public class EventLogEntry {
         MEMORY_ALLOCATED,
         MEMORY_RELEASED,
         SERVER_STARTED,
+        DISCLAIMER,
         CLIENT_CONNECTED,
         CLIENT_DISCONNECTED,
         LOAD_TEST_STATS,

@@ -90,6 +90,12 @@ public class MetricsService {
                 EventLogEntry.EventType.SERVER_STARTED,
                 String.format("Server started (JVM: %d, PID: %d)", jvmStartTime, processId)
         );
+        
+        // Log MIT License disclaimer
+        eventLogService.warn(
+                EventLogEntry.EventType.DISCLAIMER,
+                "\u2696\uFE0F This software is provided \"AS IS\" without warranty. The author shall not be liable for any damages arising from use or misuse. Deploy only in isolated, non-production environments. Licensed under MIT License."
+        );
     }
     
     /**
