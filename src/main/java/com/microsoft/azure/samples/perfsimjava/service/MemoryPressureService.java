@@ -58,12 +58,16 @@ public class MemoryPressureService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    private final SimulationTelemetryService telemetryService;
     private final Map<String, MemoryAllocation> allocations;
     private final ExecutorService allocator;
 
-    public MemoryPressureService(SimulationTrackerService simulationTracker, EventLogService eventLogService) {
+    public MemoryPressureService(SimulationTrackerService simulationTracker, 
+                                  EventLogService eventLogService,
+                                  SimulationTelemetryService telemetryService) {
         this.simulationTracker = simulationTracker;
         this.eventLogService = eventLogService;
+        this.telemetryService = telemetryService;
         this.allocations = new ConcurrentHashMap<>();
         this.allocator = Executors.newSingleThreadExecutor();
     }
@@ -96,6 +100,9 @@ public class MemoryPressureService {
                 SimulationType.MEMORY_PRESSURE,
                 params
         );
+
+        // Track simulation start in Application Insights
+        telemetryService.trackSimulationStarted(simulation.getId(), SimulationType.MEMORY_PRESSURE.name());
 
         // Initialize allocation tracking
         MemoryAllocation allocation = new MemoryAllocation(sizeMb);
@@ -134,6 +141,9 @@ public class MemoryPressureService {
                 SimulationType.MEMORY_PRESSURE,
                 Map.of("sizeMb", releasedMb)
         );
+
+        // Track simulation stop in Application Insights
+        telemetryService.trackSimulationStopped(simulationId, SimulationType.MEMORY_PRESSURE.name());
 
         // Suggest garbage collection
         System.gc();

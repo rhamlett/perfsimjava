@@ -49,6 +49,7 @@ public class ThreadStarvationService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    private final SimulationTelemetryService telemetryService;
     
     @Value("${server.port:8080}")
     private int serverPort;
@@ -66,9 +67,11 @@ public class ThreadStarvationService {
     private final Map<String, AtomicInteger> activeBlockers = new ConcurrentHashMap<>();
 
     public ThreadStarvationService(SimulationTrackerService simulationTracker, 
-                                   EventLogService eventLogService) {
+                                   EventLogService eventLogService,
+                                   SimulationTelemetryService telemetryService) {
         this.simulationTracker = simulationTracker;
         this.eventLogService = eventLogService;
+        this.telemetryService = telemetryService;
     }
 
     /**
@@ -104,6 +107,9 @@ public class ThreadStarvationService {
                 SimulationType.THREAD_STARVATION,
                 params
         );
+
+        // Track simulation start in Application Insights
+        telemetryService.trackSimulationStarted(simulation.getId(), SimulationType.THREAD_STARVATION.name());
 
         // Spawn internal HTTP requests to block servlet threads
         String simulationId = simulation.getId();
@@ -239,6 +245,7 @@ public class ThreadStarvationService {
                 SimulationType.THREAD_STARVATION,
                 null
         );
+        telemetryService.trackSimulationCompleted(simulationId, SimulationType.THREAD_STARVATION.name());
     }
 
     /**
@@ -269,6 +276,7 @@ public class ThreadStarvationService {
                     SimulationType.THREAD_STARVATION,
                     null
             );
+            telemetryService.trackSimulationStopped(simulationId, SimulationType.THREAD_STARVATION.name());
             
             // Delay cleanup to give blocking threads time to see the stop flag
             // They check stopFlag.get() in their while loop

@@ -49,6 +49,7 @@ public class FailedRequestsService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    private final SimulationTelemetryService telemetryService;
 
     @Value("${server.port:8080}")
     private int serverPort;
@@ -72,9 +73,11 @@ public class FailedRequestsService {
     private volatile int totalRequestsForCompletion = 0;
 
     public FailedRequestsService(SimulationTrackerService simulationTracker,
-                                  EventLogService eventLogService) {
+                                  EventLogService eventLogService,
+                                  SimulationTelemetryService telemetryService) {
         this.simulationTracker = simulationTracker;
         this.eventLogService = eventLogService;
+        this.telemetryService = telemetryService;
     }
 
     /**
@@ -118,6 +121,9 @@ public class FailedRequestsService {
                 SimulationType.FAILED_REQUESTS,
                 params
         );
+
+        // Track simulation start in Application Insights
+        telemetryService.trackSimulationStarted(simId, SimulationType.FAILED_REQUESTS.name());
 
         // Spawn all requests via internal HTTP calls
         // Each request calls the load test endpoint with 100% error probability
@@ -291,6 +297,8 @@ public class FailedRequestsService {
                     )
             );
 
+            telemetryService.trackSimulationCompleted(simulationId, SimulationType.FAILED_REQUESTS.name());
+
             logger.info("[FailedRequests:{}] Simulation completed: {}/{} failed",
                     simulationId, failed, totalRequestsForCompletion);
 
@@ -339,6 +347,8 @@ public class FailedRequestsService {
                             "total", totalRequestsForCompletion
                     )
             );
+            
+            telemetryService.trackSimulationStopped(activeSimulationId, SimulationType.FAILED_REQUESTS.name());
         }
 
         stopFlags.clear();

@@ -57,14 +57,18 @@ public class CpuStressService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    private final SimulationTelemetryService telemetryService;
     private final ScheduledExecutorService scheduler;
     private final Map<String, SimulationContext> activeSimulations;
 
     private final int availableProcessors;
 
-    public CpuStressService(SimulationTrackerService simulationTracker, EventLogService eventLogService) {
+    public CpuStressService(SimulationTrackerService simulationTracker, 
+                            EventLogService eventLogService,
+                            SimulationTelemetryService telemetryService) {
         this.simulationTracker = simulationTracker;
         this.eventLogService = eventLogService;
+        this.telemetryService = telemetryService;
         this.scheduler = Executors.newScheduledThreadPool(2);
         this.activeSimulations = new ConcurrentHashMap<>();
         this.availableProcessors = Runtime.getRuntime().availableProcessors();
@@ -104,6 +108,9 @@ public class CpuStressService {
                 SimulationType.CPU_STRESS,
                 params
         );
+
+        // Track simulation start in Application Insights
+        telemetryService.trackSimulationStarted(simulation.getId(), SimulationType.CPU_STRESS.name());
 
         // Create worker threads
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -183,6 +190,7 @@ public class CpuStressService {
                     SimulationType.CPU_STRESS,
                     null
             );
+            telemetryService.trackSimulationCompleted(simulationId, SimulationType.CPU_STRESS.name());
         } else {
             simulation = simulationTracker.stopSimulation(simulationId);
             eventLogService.info(
@@ -192,6 +200,7 @@ public class CpuStressService {
                     SimulationType.CPU_STRESS,
                     null
             );
+            telemetryService.trackSimulationStopped(simulationId, SimulationType.CPU_STRESS.name());
         }
 
         return simulation;

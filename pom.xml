@@ -68,6 +68,15 @@
             <artifactId>micrometer-core</artifactId>
         </dependency>
 
+        <!-- OpenTelemetry API for Application Insights correlation -->
+        <!-- Note: The Azure Monitor OpenTelemetry agent provides the implementation -->
+        <!-- This just provides the API for setting span attributes -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>1.35.0</version>
+        </dependency>
+
         <!-- OpenAPI / Swagger UI -->
         <dependency>
             <groupId>org.springdoc</groupId>

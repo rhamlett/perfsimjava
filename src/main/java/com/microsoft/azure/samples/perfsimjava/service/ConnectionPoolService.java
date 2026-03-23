@@ -52,6 +52,7 @@ public class ConnectionPoolService {
 
     private final SimulationTrackerService simulationTracker;
     private final EventLogService eventLogService;
+    private final SimulationTelemetryService telemetryService;
 
     @Value("${server.port:8080}")
     private int serverPort;
@@ -85,9 +86,11 @@ public class ConnectionPoolService {
     private volatile String activeSimulationId = null;
 
     public ConnectionPoolService(SimulationTrackerService simulationTracker,
-                                  EventLogService eventLogService) {
+                                  EventLogService eventLogService,
+                                  SimulationTelemetryService telemetryService) {
         this.simulationTracker = simulationTracker;
         this.eventLogService = eventLogService;
+        this.telemetryService = telemetryService;
         this.connectionPool = new Semaphore(currentPoolSize);
     }
 
@@ -145,6 +148,9 @@ public class ConnectionPoolService {
                 SimulationType.CONNECTION_POOL_EXHAUSTION,
                 params
         );
+
+        // Track simulation start in Application Insights
+        telemetryService.trackSimulationStarted(simId, SimulationType.CONNECTION_POOL_EXHAUSTION.name());
 
         // Spawn all queries immediately via internal HTTP requests
         // This blocks SERVLET threads, not background threads
@@ -290,6 +296,8 @@ public class ConnectionPoolService {
                 SimulationType.CONNECTION_POOL_EXHAUSTION,
                 Map.of("successful", successfulQueries.get(), "timedOut", timedOutRequests.get())
         );
+        
+        telemetryService.trackSimulationCompleted(simulationId, SimulationType.CONNECTION_POOL_EXHAUSTION.name());
     }
 
     /**
@@ -328,6 +336,11 @@ public class ConnectionPoolService {
                 SimulationType.CONNECTION_POOL_EXHAUSTION,
                 null
         );
+        
+        // Track all stopped simulations in Application Insights
+        for (String id : ids) {
+            telemetryService.trackSimulationStopped(id, SimulationType.CONNECTION_POOL_EXHAUSTION.name());
+        }
     }
 
     /**

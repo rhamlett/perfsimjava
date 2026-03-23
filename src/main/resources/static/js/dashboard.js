@@ -666,9 +666,88 @@ const Dashboard = (function() {
             
             const eventDiv = document.createElement('div');
             eventDiv.className = `event ${levelClass} ${simClass}`.trim();
-            eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}${event.message}`;
+            
+            // Build message with optional simulation ID
+            let messageHtml = `<span class="timestamp">${time}</span> ${prefix}`;
+            
+            // Add clickable simulation ID if present (exclude crash simulations)
+            if (event.simulationId && event.simulationType !== 'CRASH_EXCEPTION') {
+                const simIdShort = event.simulationId.substring(0, 8);
+                messageHtml += `<span class="sim-id" 
+                    data-sim-id="${event.simulationId}" 
+                    title="Click to copy Simulation ID: ${event.simulationId}"
+                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${simIdShort}…</span> `;
+            }
+            
+            messageHtml += event.message;
+            eventDiv.innerHTML = messageHtml;
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
+        }
+    }
+
+    /**
+     * Copies simulation ID to clipboard with visual feedback
+     */
+    function copySimulationId(simulationId, element) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(simulationId).then(() => {
+                showCopyFeedback(element, true);
+            }).catch(() => {
+                fallbackCopySimulationId(simulationId, element);
+            });
+        } else {
+            fallbackCopySimulationId(simulationId, element);
+        }
+    }
+
+    /**
+     * Fallback copy method using textarea
+     */
+    function fallbackCopySimulationId(simulationId, element) {
+        const textArea = document.createElement('textarea');
+        textArea.value = simulationId;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            const successful = document.execCommand('copy');
+            showCopyFeedback(element, successful);
+        } catch (error) {
+            console.error('[Dashboard] Failed to copy simulation ID:', error);
+            showCopyFeedback(element, false);
+        }
+        
+        document.body.removeChild(textArea);
+    }
+
+    /**
+     * Shows visual feedback after copy attempt
+     */
+    function showCopyFeedback(element, success) {
+        if (!element) return;
+        
+        const originalTitle = element.getAttribute('title');
+        const originalText = element.textContent;
+        
+        if (success) {
+            element.classList.add('copied');
+            element.setAttribute('title', 'Copied!');
+            
+            // Reset after 1.5 seconds
+            setTimeout(() => {
+                element.classList.remove('copied');
+                element.setAttribute('title', originalTitle);
+            }, 1500);
+        } else {
+            element.setAttribute('title', 'Copy failed');
+            setTimeout(() => {
+                element.setAttribute('title', originalTitle);
+            }, 1500);
         }
     }
 
@@ -809,7 +888,8 @@ const Dashboard = (function() {
     return {
         init,
         addEvent,
-        loadActiveSimulations
+        loadActiveSimulations,
+        copySimulationId
     };
 })();
 
