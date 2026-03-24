@@ -251,7 +251,7 @@ const Dashboard = (function() {
         initCopyEventLogButton();
 
         // Load initial data
-        loadHistoricalEvents();  // Load historical events first (includes startup disclaimer)
+        showDisclaimer();  // Show MIT license disclaimer on every page load
         loadSkuInfo();
         loadActiveSimulations();
         loadBuildInfo();
@@ -809,23 +809,15 @@ const Dashboard = (function() {
     }
 
     /**
-     * Loads historical events from server (includes startup events like disclaimer)
+     * Displays the MIT license disclaimer in the event log (shown on every page load)
      */
-    async function loadHistoricalEvents() {
-        try {
-            const response = await fetch('/api/admin/events?limit=50');
-            const data = await response.json();
-            
-            if (data.events && data.events.length > 0) {
-                // Events come newest-first, reverse to add oldest first
-                const reversedEvents = [...data.events].reverse();
-                reversedEvents.forEach(event => {
-                    addEventToLog(event);
-                });
-            }
-        } catch (error) {
-            console.log('[Dashboard] Could not load historical events');
-        }
+    function showDisclaimer() {
+        addEventToLog({
+            level: 'WARN',
+            event: 'DISCLAIMER',
+            message: '⚖️ This software is provided "AS IS" without warranty. The author shall not be liable for any damages arising from use or misuse. Deploy only in isolated, non-production environments. Licensed under MIT License.',
+            timestamp: new Date().toISOString()
+        });
     }
 
     /**
@@ -890,6 +882,7 @@ const Dashboard = (function() {
         if (type.includes('MEMORY')) return 'memory';
         if (type.includes('THREAD')) return 'threads';
         if (type.includes('CONNECTION_POOL')) return 'connection-pool';
+        if (type.includes('FAILED_REQUESTS')) return 'failed-requests';
         return '';
     }
 
@@ -902,6 +895,7 @@ const Dashboard = (function() {
             'MEMORY_PRESSURE': '💾 Memory Pressure',
             'THREAD_STARVATION': '🧵 Thread Starvation',
             'CONNECTION_POOL_EXHAUSTION': '🔌 Connection Pool',
+            'FAILED_REQUESTS': '❌ Failed Requests',
             'CRASH_FAILFAST': '💥 Crash (Exit)',
             'CRASH_STACKOVERFLOW': '💥 Stack Overflow',
             'CRASH_EXCEPTION': '💥 Exception',
