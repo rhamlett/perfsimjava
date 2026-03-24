@@ -664,22 +664,20 @@ Content-Type: application/json
         window.addEventListener('scroll', updateActiveTocLink);
         updateActiveTocLink(); // Initial call
 
-        // Fetch and display SKU
-        async function fetchAzureSku() {
+        // Load SKU info
+        async function loadSkuInfo() {
             try {
-                const response = await fetch('/api/sku');
-                if (response.ok) {
-                    const data = await response.json();
-                    const skuElement = document.getElementById('sku-badge');
-                    if (skuElement) {
-                        skuElement.textContent = `SKU: ${data.sku}`;
-                    }
+                const response = await fetch('/api/health/environment');
+                const data = await response.json();
+                const skuBadge = document.getElementById('sku-badge');
+                if (skuBadge) {
+                    skuBadge.textContent = data.isAzure ? `SKU: ${data.sku}` : 'SKU: Local';
                 }
             } catch (error) {
-                console.error('Failed to fetch Azure SKU', error);
+                console.log('Could not load SKU info');
             }
         }
-        fetchAzureSku();
+        loadSkuInfo();
 
         // Fetch and display build info and GitHub repo
         async function fetchBuildInfo() {

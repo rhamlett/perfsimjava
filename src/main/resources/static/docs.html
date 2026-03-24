@@ -6,6 +6,153 @@
     <title>Documentation - Performance Problem Simulator - Java 21</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Card-based Documentation Styles - Matching Deployment Page */
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 80px;
+            border: 1px solid #d0d0d0;
+        }
+
+        .card h2 {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-bg);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            color: var(--color-text);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card h4 {
+            color: var(--color-text-muted);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p, .card li {
+            line-height: 1.6;
+            color: var(--color-text-muted);
+        }
+
+        .card ul, .card ol {
+            margin: 0.5rem 0 1rem 1.5rem;
+        }
+
+        .card li {
+            margin-bottom: 0.25rem;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin: 1rem 0;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+
+        code {
+            background: rgba(0,0,0,0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            color: var(--color-danger);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid var(--color-bg);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--color-bg);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .note {
+            background: rgba(231, 111, 0, 0.1);
+            border-left: 4px solid var(--color-primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .note h4 {
+            color: var(--color-primary-dark);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .note p {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .warning {
+            background: rgba(209, 52, 56, 0.1);
+            border-left: 4px solid var(--color-danger);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .warning p {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .api-endpoint {
+            background: var(--color-bg);
+            border: 1px solid #d0d0d0;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .api-endpoint .method {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            color: white;
+        }
+
+        .api-endpoint .method.get { background-color: var(--color-success); }
+        .api-endpoint .method.post { background-color: var(--color-cpu); }
+        .api-endpoint .method.delete { background-color: var(--color-danger); }
+
+        .api-endpoint .path {
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+    </style>
 </head>
 <body class="page-secondary">
     <header>
@@ -77,7 +224,7 @@
     
     <div class="doc-layout">
     <main class="doc-content">
-        <section id="overview">
+        <section id="overview" class="card">
         <h2>🎯 Performance Problem Simulator</h2>
         <p>An educational Azure App Service application that intentionally creates performance problems for learning and demonstration purposes.</p>
 
@@ -125,7 +272,7 @@
         </div>
         </section>
 
-        <section id="architecture">
+        <section id="architecture" class="card">
         <h2>Architecture</h2>
         <p>The application runs as a Spring Boot 3.3 application with embedded Tomcat, STOMP over WebSocket for real-time metrics, and in-memory state. A dedicated probe service measures request latency by probing the app through Azure's frontend.</p>
 
@@ -184,7 +331,7 @@
             └── socket-client.js      # STOMP/SockJS client</code></pre>
         </section>
 
-        <section id="cpu-simulation">
+        <section id="cpu-simulation" class="card">
         <h2>CPU Stress Simulation</h2>
 
         <div class="note">
@@ -218,7 +365,7 @@
         <p>Use the <strong>CPU Stress</strong> panel on the dashboard to start/stop simulations. Select intensity level and duration, then click <strong>Trigger CPU Stress</strong>.</p>
         </section>
 
-        <section id="memory-simulation">
+        <section id="memory-simulation" class="card">
         <h2>Memory Pressure Simulation</h2>
 
         <div class="note">
@@ -253,7 +400,7 @@
         <p>Use the <strong>Memory</strong> panel on the dashboard to allocate memory and watch heap usage grow in real-time. Click <strong>Release</strong> to free all allocated memory on demand.</p>
         </section>
 
-        <section id="thread-simulation">
+        <section id="thread-simulation" class="card">
         <h2>Thread Pool Starvation Simulation</h2>
         
         <div class="note">
@@ -312,7 +459,7 @@
         </ul>
         </section>
 
-        <section id="connection-pool">
+        <section id="connection-pool" class="card">
         <h2>Connection Pool Exhaustion</h2>
 
         <div class="note">
@@ -376,7 +523,7 @@
         </ul>
         </section>
 
-        <section id="failed-requests">
+        <section id="failed-requests" class="card">
         <h2>Failed Requests Simulation</h2>
 
         <div class="note">
@@ -429,7 +576,7 @@
         <p>Use the <strong>Failed Requests</strong> panel on the dashboard to generate errors. Enter the number of requests and click <strong>Generate Errors</strong>. The simulation executes quickly and produces HTTP 5xx responses visible in Azure diagnostics tools.</p>
         </section>
 
-        <section id="crash-simulation">
+        <section id="crash-simulation" class="card">
         <h2>Crash Simulation</h2>
         
         <div class="warning">

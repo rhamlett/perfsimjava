@@ -6,6 +6,133 @@
     <title>Azure Diagnostics - Performance Problem Simulator - Java 21</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Card-based Documentation Styles - Matching Deployment Page */
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 80px;
+            border: 1px solid #d0d0d0;
+        }
+
+        .card h2 {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-bg);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            color: var(--color-text);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card h4 {
+            color: var(--color-text-muted);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p, .card li {
+            line-height: 1.6;
+            color: var(--color-text-muted);
+        }
+
+        .card ul, .card ol {
+            margin: 0.5rem 0 1rem 1.5rem;
+        }
+
+        .card li {
+            margin-bottom: 0.25rem;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin: 1rem 0;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+
+        code {
+            background: rgba(0,0,0,0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            color: var(--color-danger);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid var(--color-bg);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--color-bg);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .note {
+            background: rgba(231, 111, 0, 0.1);
+            border-left: 4px solid var(--color-primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .note h4 {
+            color: var(--color-primary-dark);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .note p {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .warning {
+            background: rgba(209, 52, 56, 0.1);
+            border-left: 4px solid var(--color-danger);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .warning h4 {
+            color: var(--color-danger);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning p {
+            margin: 0;
+            color: var(--color-text);
+        }
+    </style>
 </head>
 <body class="page-secondary">
     <header>
@@ -77,12 +204,12 @@
     
     <div class="doc-layout">
     <main class="doc-content">
-        <section id="overview">
+        <section id="overview" class="card">
         <h2>Overview</h2>
         <p>This guide explains how to use Azure diagnostic tools to analyze performance issues simulated by this application.</p>
         </section>
 
-        <section id="simulation-ids">
+        <section id="simulation-ids" class="card">
         <h2>🔗 Simulation ID Correlation</h2>
         
         <p>Every simulation instance is assigned a unique Simulation ID (GUID) that enables end-to-end correlation 
@@ -174,7 +301,7 @@ AppRequests
         </div>
         </section>
 
-        <section id="applens">
+        <section id="applens" class="card">
         <h2>AppLens Integration</h2>
         
         <p>This application is designed to work with Azure AppLens by sending health probes every 100ms 
@@ -192,7 +319,7 @@ AppRequests
         </ul>
         </section>
 
-        <section id="azure-monitor">
+        <section id="azure-monitor" class="card">
         <h2>Azure Monitor Metrics</h2>
 
         <p>Key metrics to watch in Azure Monitor when running simulations:</p>
@@ -214,7 +341,7 @@ AppRequests
         </ul>
         </section>
 
-        <section id="app-insights">
+        <section id="app-insights" class="card">
         <h2>Application Insights</h2>
 
         <p>If Application Insights is configured, you can use these features:</p>
@@ -244,7 +371,7 @@ AppRequests
         </ol>
         </section>
 
-        <section id="diagnose-solve">
+        <section id="diagnose-solve" class="card">
         <h2>Diagnose and Solve Problems</h2>
 
         <p>Azure App Service provides built-in diagnostic tools:</p>
@@ -267,7 +394,7 @@ AppRequests
         </ul>
         </section>
 
-        <section id="kql-queries">
+        <section id="kql-queries" class="card">
         <h2>Log Analytics / KQL Queries</h2>
 
         <p>Useful KQL queries for analyzing simulation effects:</p>
@@ -294,7 +421,7 @@ AppRequests
 | order by TimeGenerated desc</code></pre>
         </section>
 
-        <section id="java-diagnostics">
+        <section id="java-diagnostics" class="card">
         <h2>Java-Specific Diagnostics</h2>
 
         <h3>Enable JMX for Remote Monitoring</h3>
@@ -335,7 +462,7 @@ AppRequests
         <p>Many threads in TIMED_WAITING on pool acquisition = connection pool exhaustion. Increase pool size or reduce query hold time.</p>
         </section>
 
-        <section id="mapping">
+        <section id="mapping" class="card">
         <h2>Simulation → Diagnostic Mapping</h2>
 
         <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
@@ -376,7 +503,7 @@ AppRequests
         </table>
         </section>
 
-        <section id="best-practices">
+        <section id="best-practices" class="card">
         <h2>Best Practices</h2>
 
         <div class="note">
