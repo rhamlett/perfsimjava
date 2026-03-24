@@ -813,7 +813,7 @@ const Dashboard = (function() {
      */
     async function loadHistoricalEvents() {
         try {
-            const response = await fetch('/admin/events?limit=50');
+            const response = await fetch('/api/admin/events?limit=50');
             const data = await response.json();
             
             if (data.events && data.events.length > 0) {
