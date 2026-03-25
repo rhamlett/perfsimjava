@@ -812,10 +812,17 @@ const Dashboard = (function() {
      * Displays the MIT license disclaimer in the event log (shown on every page load)
      */
     function showDisclaimer() {
+        // Add Line 2 first so Line 1 appears on top (newer entries appear at top)
         addEventToLog({
             level: 'WARN',
             event: 'DISCLAIMER',
-            message: '⚖️ This software is provided "AS IS" without warranty. The author shall not be liable for any damages arising from use or misuse. Deploy only in isolated, non-production environments. Licensed under MIT License.',
+            message: '⚖️ Deploy only in isolated, non-production environments. Licensed under MIT License.',
+            timestamp: new Date().toISOString()
+        });
+        addEventToLog({
+            level: 'WARN',
+            event: 'DISCLAIMER',
+            message: '⚖️ This software is provided "AS IS" without warranty. The author shall not be liable for any damages arising from use or misuse.',
             timestamp: new Date().toISOString()
         });
     }
