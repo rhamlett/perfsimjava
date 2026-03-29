@@ -1,5 +1,9 @@
 # Copilot Instructions
 
+## Session Startup (MANDATORY)
+- At the start of every new chat session, before answering any questions, read `/memories/repo/project-overview.md` to load project-specific context.
+- If the file does not exist, continue normally without error.
+
 ## Git & Deployment Restrictions
 - NEVER run `git push`, `git commit`, or any command that pushes changes to remote repositories
 - NEVER trigger deployments or CI/CD pipelines
