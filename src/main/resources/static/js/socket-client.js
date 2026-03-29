@@ -20,6 +20,7 @@ const SocketClient = (function() {
     
     // Idle state tracking
     let activityRecorded = false;
+    let serverIsIdle = false;
 
     // Callbacks
     const callbacks = {
@@ -56,9 +57,12 @@ const SocketClient = (function() {
     }
 
     /**
-     * Updates the connection status UI
+     * Updates the connection status UI.
+     * While the server is idle, all status transitions are suppressed — only
+     * dashboard.js (via setServerIdle) may change the indicator in that state.
      */
     function updateConnectionStatus(status) {
+        if (serverIsIdle) return;
         const statusEl = document.getElementById('connection-status');
         if (statusEl) {
             // Remove all status classes
@@ -303,6 +307,15 @@ const SocketClient = (function() {
         }
     }
 
+    /**
+     * Marks the server as idle or active, controlling whether WebSocket
+     * reconnect/disconnect events may update the status indicator.
+     * Call with true on GOING_IDLE, false on WAKING_UP.
+     */
+    function setServerIdle(idle) {
+        serverIsIdle = idle;
+    }
+
     // Public API
     return {
         connect,
@@ -310,6 +323,7 @@ const SocketClient = (function() {
         send,
         on,
         isConnected,
-        recordActivity
+        recordActivity,
+        setServerIdle
     };
 })();

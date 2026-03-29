@@ -11,6 +11,15 @@
         ".specify/scripts/powershell/": true
     },
     "java.compile.nullAnalysis.mode": "disabled",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.jdt.ls.java.home": "C:\\Program Files\\Microsoft\\jdk-21.0.10.7-hotspot",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "C:\\Program Files\\Microsoft\\jdk-21.0.10.7-hotspot",
+            "default": true
+        }
+    ],
+    "java.suppressUpgradeNotification": true
 }
 

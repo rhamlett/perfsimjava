@@ -411,6 +411,10 @@ const Dashboard = (function() {
         
         // Update connection status based on idle state changes
         if (event.event === 'GOING_IDLE') {
+            // Lock the status indicator before updating it, so that any
+            // WebSocket reconnect/disconnect events that fire while the server
+            // is idle cannot overwrite the Idle indicator.
+            SocketClient.setServerIdle(true);
             const statusEl = document.getElementById('connection-status');
             if (statusEl) {
                 statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
@@ -418,6 +422,9 @@ const Dashboard = (function() {
                 statusEl.textContent = 'Idle';
             }
         } else if (event.event === 'WAKING_UP') {
+            // Unlock the status indicator before updating it, restoring normal
+            // WebSocket status reporting now that the server is active again.
+            SocketClient.setServerIdle(false);
             const statusEl = document.getElementById('connection-status');
             if (statusEl) {
                 statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
