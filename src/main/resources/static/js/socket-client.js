@@ -18,9 +18,9 @@ const SocketClient = (function() {
     let disconnectTimer = null;
     let disconnectTime = null;
     
-    // Idle state tracking
-    let activityRecorded = false;
-    let serverIsIdle = false;
+    // When true, the WebSocket was closed intentionally (idle transition).
+    // Suppresses disconnect status updates and prevents auto-reconnect.
+    let intentionalDisconnect = false;
 
     // Callbacks
     const callbacks = {
@@ -58,11 +58,8 @@ const SocketClient = (function() {
 
     /**
      * Updates the connection status UI.
-     * While the server is idle, all status transitions are suppressed — only
-     * dashboard.js (via setServerIdle) may change the indicator in that state.
      */
     function updateConnectionStatus(status) {
-        if (serverIsIdle) return;
         const statusEl = document.getElementById('connection-status');
         if (statusEl) {
             // Remove all status classes
@@ -94,12 +91,6 @@ const SocketClient = (function() {
      */
     function connect() {
         updateConnectionStatus('connecting');
-        
-        // Record activity only on initial page load, not on reconnections
-        // Reconnections should NOT reset the idle timeout - only explicit user activity should
-        if (firstConnection) {
-            recordActivity();
-        }
 
         // Create SockJS connection
         const socket = new SockJS('/ws');
@@ -121,6 +112,7 @@ const SocketClient = (function() {
             console.log('[SocketClient] Connected to WebSocket server');
             connected = true;
             reconnectAttempts = 0;
+            intentionalDisconnect = false;
             updateConnectionStatus('connected');
             
             // Clear any pending disconnect timer
@@ -160,6 +152,13 @@ const SocketClient = (function() {
         stompClient.onWebSocketClose = function(event) {
             console.log('[SocketClient] WebSocket closed');
             connected = false;
+
+            // Intentional close (idle transition) — do not update the status
+            // indicator or schedule a reconnect. Just let the connection sit closed.
+            if (intentionalDisconnect) {
+                return;
+            }
+
             updateConnectionStatus('disconnected');
             trigger('onDisconnect', event);
             
@@ -271,17 +270,36 @@ const SocketClient = (function() {
     }
 
     /**
+     * Intentionally closes the WebSocket during idle transition.
+     * Sets intentionalDisconnect so the onclose handler does not update the
+     * status indicator or schedule a reconnect.
+     */
+    function closeForIdle() {
+        intentionalDisconnect = true;
+        if (stompClient && stompClient.active) {
+            stompClient.deactivate();
+            connected = false;
+        }
+    }
+
+    /**
+     * Ensures the WebSocket is connected. If the STOMP client is not active
+     * (e.g., after an intentional idle disconnect), reconnects immediately.
+     * Called at the top of every simulation trigger so clicking a button while
+     * idle automatically re-establishes the connection before the API call.
+     */
+    function ensureWebSocket() {
+        if (!stompClient || !stompClient.active) {
+            connect();
+        }
+    }
+
+    /**
      * Records activity with the server to prevent idle timeout.
-     * Should only be called on:
-     *   - Initial page load (not reconnections)
-     *   - Explicit user activity events
-     * Wakes the app from idle state if necessary.
+     * Called once on page load (before WS init) to wake the server so the
+     * first WebSocket broadcast arrives with is_idle: false.
      */
     async function recordActivity() {
-        if (activityRecorded) {
-            return; // Only record once per page load to avoid spam
-        }
-        
         try {
             const response = await fetch('/api/health/activity', {
                 method: 'POST',
@@ -290,7 +308,6 @@ const SocketClient = (function() {
             
             if (response.ok) {
                 const result = await response.json();
-                activityRecorded = true;
                 
                 if (result.wokeFromIdle) {
                     console.log('[SocketClient] App woken from idle state');
@@ -307,15 +324,6 @@ const SocketClient = (function() {
         }
     }
 
-    /**
-     * Marks the server as idle or active, controlling whether WebSocket
-     * reconnect/disconnect events may update the status indicator.
-     * Call with true on GOING_IDLE, false on WAKING_UP.
-     */
-    function setServerIdle(idle) {
-        serverIsIdle = idle;
-    }
-
     // Public API
     return {
         connect,
@@ -324,6 +332,7 @@ const SocketClient = (function() {
         on,
         isConnected,
         recordActivity,
-        setServerIdle
+        closeForIdle,
+        ensureWebSocket
     };
 })();

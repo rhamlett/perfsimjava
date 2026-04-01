@@ -9,6 +9,7 @@
  * Starts CPU stress simulation
  */
 async function startCpuStress() {
+    SocketClient.ensureWebSocket();
     const durationSeconds = parseInt(document.getElementById('cpuDuration').value) || 30;
     const intensity = document.getElementById('cpuIntensity').value || 'HIGH';
 
@@ -64,6 +65,7 @@ async function stopThreadStarvation() {
 let isAllocating = false;
 
 async function allocateMemory() {
+    SocketClient.ensureWebSocket();
     // Prevent double-submission
     if (isAllocating) {
         console.log('[Dashboard] Allocation already in progress, ignoring');
@@ -114,6 +116,7 @@ async function releaseAllMemory() {
  * Server spawns N internal requests to block Tomcat servlet threads.
  */
 async function startThreadStarvation() {
+    SocketClient.ensureWebSocket();
     const threadCount = parseInt(document.getElementById('starvationCount').value) || 50;
     const durationSeconds = parseInt(document.getElementById('starvationDuration').value) || 30;
 
@@ -136,6 +139,7 @@ async function startThreadStarvation() {
  * Starts connection pool exhaustion simulation
  */
 async function triggerConnectionPool() {
+    SocketClient.ensureWebSocket();
     const poolSize = parseInt(document.getElementById('poolSize').value) || 10;
     const queryDurationSeconds = parseInt(document.getElementById('queryDuration').value) || 30;
     const concurrentQueries = parseInt(document.getElementById('concurrentQueries').value) || 20;
@@ -179,6 +183,7 @@ async function stopConnectionPool() {
  * Starts failed requests simulation (generates HTTP 5xx errors)
  */
 async function triggerFailedRequests() {
+    SocketClient.ensureWebSocket();
     const numberOfRequests = parseInt(document.getElementById('numberOfFailedRequests').value) || 10;
 
     try {
@@ -199,6 +204,7 @@ async function triggerFailedRequests() {
  * Triggers a crash simulation
  */
 async function triggerCrash() {
+    SocketClient.ensureWebSocket();
     const type = document.getElementById('crashType').value || 'EXCEPTION';
 
     if (!confirm(`⚠️ Are you sure you want to trigger a ${type} crash? This may terminate the application.`)) {
@@ -411,20 +417,18 @@ const Dashboard = (function() {
         
         // Update connection status based on idle state changes
         if (event.event === 'GOING_IDLE') {
-            // Lock the status indicator before updating it, so that any
-            // WebSocket reconnect/disconnect events that fire while the server
-            // is idle cannot overwrite the Idle indicator.
-            SocketClient.setServerIdle(true);
             const statusEl = document.getElementById('connection-status');
             if (statusEl) {
                 statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
                 statusEl.classList.add('status-idle');
                 statusEl.textContent = 'Idle';
             }
+            // Intentionally close WebSocket to prevent reconnect-induced status flicker
+            SocketClient.closeForIdle();
         } else if (event.event === 'WAKING_UP') {
-            // Unlock the status indicator before updating it, restoring normal
-            // WebSocket status reporting now that the server is active again.
-            SocketClient.setServerIdle(false);
+            // WebSocket will have already reconnected (via ensureWebSocket on button click)
+            // and onConnect will have set the status to Connected. This is a belt-and-
+            // suspenders update for any edge cases where the event arrives first.
             const statusEl = document.getElementById('connection-status');
             if (statusEl) {
                 statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
@@ -928,6 +932,13 @@ const Dashboard = (function() {
 })();
 
 // Initialize dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+// recordActivity fires an HTTP request first so the server wakes before the
+// WebSocket connects — ensuring the first broadcast arrives with is_idle: false.
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        await SocketClient.recordActivity();
+    } catch (e) {
+        // Non-blocking — WS will retry on its own
+    }
     Dashboard.init();
 });
