@@ -284,12 +284,16 @@ const SocketClient = (function() {
 
     /**
      * Ensures the WebSocket is connected. If the STOMP client is not active
-     * (e.g., after an intentional idle disconnect), reconnects immediately.
+     * (e.g., after an intentional idle disconnect), reconnects immediately
+     * and wakes the server so health probes resume.
      * Called at the top of every simulation trigger so clicking a button while
      * idle automatically re-establishes the connection before the API call.
      */
     function ensureWebSocket() {
         if (!stompClient || !stompClient.active) {
+            // Wake the server from idle so ProbeService resumes health probes.
+            // Fire-and-forget — the next probe cycle will pick up the wake state.
+            recordActivity();
             connect();
         }
     }
