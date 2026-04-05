@@ -665,6 +665,16 @@ const Dashboard = (function() {
      * @param {Object} event - The event object
      * @param {boolean} skipRender - If true, skip DOM rendering (used for batch init)
      */
+    /**
+     * Builds the timestamp HTML with a local-time tooltip
+     */
+    function buildTimestampHtml(isoTimestamp) {
+        const dt = new Date(isoTimestamp);
+        const utcTime = dt.toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' }) + ' UTC';
+        const localTime = dt.toLocaleTimeString('en-US', { hour12: false });
+        return `<span class="timestamp">${utcTime}<span class="timestamp-tooltip">Local Time: ${localTime}</span></span>`;
+    }
+
     function addEventToLog(event, skipRender) {
         eventLog.unshift(event);
         if (skipRender) return;
@@ -673,7 +683,7 @@ const Dashboard = (function() {
         if (logEl) {
             const levelClass = event.level.toLowerCase();
             const simClass = getSimulationClass(event.simulationType);
-            const time = new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' }) + ' UTC';
+            const timestampHtml = buildTimestampHtml(event.timestamp);
             const emoji = getSimulationEmoji(event.simulationType, event.event);
             const prefix = emoji ? emoji + ' ' : '';
             
@@ -692,13 +702,13 @@ const Dashboard = (function() {
             
             if (isSimulationBoundaryEvent) {
                 // Make the message text clickable with dotted underline
-                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}<span class="sim-message" 
+                eventDiv.innerHTML = `${timestampHtml} ${prefix}<span class="sim-message" 
                     data-sim-id="${event.simulationId}" 
                     title="Click to copy Simulation ID: ${event.simulationId}"
                     onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${event.message}</span>`;
             } else {
                 // Regular event without clickable simulation ID
-                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}${event.message}`;
+                eventDiv.innerHTML = `${timestampHtml} ${prefix}${event.message}`;
             }
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
@@ -720,7 +730,7 @@ const Dashboard = (function() {
         eventLog.forEach(event => {
             const levelClass = event.level.toLowerCase();
             const simClass = getSimulationClass(event.simulationType);
-            const time = new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' }) + ' UTC';
+            const timestampHtml = buildTimestampHtml(event.timestamp);
             const emoji = getSimulationEmoji(event.simulationType, event.event);
             const prefix = emoji ? emoji + ' ' : '';
             const nonSimClass = simClass ? '' : 'non-sim';
@@ -737,12 +747,12 @@ const Dashboard = (function() {
                  event.event === 'MEMORY_RELEASED');
 
             if (isSimulationBoundaryEvent) {
-                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}<span class="sim-message"
+                eventDiv.innerHTML = `${timestampHtml} ${prefix}<span class="sim-message"
                     data-sim-id="${event.simulationId}"
                     title="Click to copy Simulation ID: ${event.simulationId}"
                     onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${event.message}</span>`;
             } else {
-                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}${event.message}`;
+                eventDiv.innerHTML = `${timestampHtml} ${prefix}${event.message}`;
             }
 
             logEl.appendChild(eventDiv);
