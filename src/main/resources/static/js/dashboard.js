@@ -238,7 +238,7 @@ const Dashboard = (function() {
     /**
      * Initializes the dashboard
      */
-    function init() {
+    async function init() {
         console.log('[Dashboard] Initializing...');
 
         // Initialize charts
@@ -256,14 +256,12 @@ const Dashboard = (function() {
         // Set up copy event log button
         initCopyEventLogButton();
 
-        // Load initial data
-        showDisclaimer();  // Show MIT license disclaimer on every page load
-        loadSkuInfo();
+        // Load initial event log with deterministic order
+        await loadEventLog();
+
+        // Load non-event-log data (fire-and-forget)
         loadActiveSimulations();
         loadBuildInfo();
-
-        // Fetch config and add initialization event with actual values
-        loadConfigAndLogInit();
 
         console.log('[Dashboard] Initialization complete');
     }
@@ -664,9 +662,12 @@ const Dashboard = (function() {
 
     /**
      * Adds an event entry to the log
+     * @param {Object} event - The event object
+     * @param {boolean} skipRender - If true, skip DOM rendering (used for batch init)
      */
-    function addEventToLog(event) {
+    function addEventToLog(event, skipRender) {
         eventLog.unshift(event);
+        if (skipRender) return;
 
         const logEl = document.getElementById('eventLog');
         if (logEl) {
@@ -677,7 +678,8 @@ const Dashboard = (function() {
             const prefix = emoji ? emoji + ' ' : '';
             
             const eventDiv = document.createElement('div');
-            eventDiv.className = `event ${levelClass} ${simClass}`.trim();
+            const nonSimClass = simClass ? '' : 'non-sim';
+            eventDiv.className = `event ${levelClass} ${simClass} ${nonSimClass}`.trim();
             
             // Check if this is a simulation start/complete/stop event that should have clickable ID
             const isSimulationBoundaryEvent = event.simulationId && 
@@ -701,6 +703,50 @@ const Dashboard = (function() {
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
         }
+    }
+
+    /**
+     * Re-renders the entire event log sorted by timestamp descending (newest first).
+     * Used after batch-loading initial events with deterministic timestamps.
+     */
+    function renderEventLog() {
+        const logEl = document.getElementById('eventLog');
+        if (!logEl) return;
+
+        // Sort newest first
+        eventLog.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        logEl.innerHTML = '';
+        eventLog.forEach(event => {
+            const levelClass = event.level.toLowerCase();
+            const simClass = getSimulationClass(event.simulationType);
+            const time = new Date(event.timestamp).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' }) + ' UTC';
+            const emoji = getSimulationEmoji(event.simulationType, event.event);
+            const prefix = emoji ? emoji + ' ' : '';
+            const nonSimClass = simClass ? '' : 'non-sim';
+
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `event ${levelClass} ${simClass} ${nonSimClass}`.trim();
+
+            const isSimulationBoundaryEvent = event.simulationId &&
+                event.simulationType !== 'CRASH_EXCEPTION' &&
+                (event.event === 'SIMULATION_STARTED' ||
+                 event.event === 'SIMULATION_COMPLETED' ||
+                 event.event === 'SIMULATION_STOPPED' ||
+                 event.event === 'MEMORY_ALLOCATED' ||
+                 event.event === 'MEMORY_RELEASED');
+
+            if (isSimulationBoundaryEvent) {
+                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}<span class="sim-message"
+                    data-sim-id="${event.simulationId}"
+                    title="Click to copy Simulation ID: ${event.simulationId}"
+                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${event.message}</span>`;
+            } else {
+                eventDiv.innerHTML = `<span class="timestamp">${time}</span> ${prefix}${event.message}`;
+            }
+
+            logEl.appendChild(eventDiv);
+        });
     }
 
     /**
@@ -769,43 +815,39 @@ const Dashboard = (function() {
     }
 
     /**
-     * Loads SKU info from the server
+     * Loads the initial event log with deterministic order using timestamp offsets.
+     * Messages are listed oldest-first; renderEventLog() sorts newest-first.
+     * This ensures consistent ordering across all sister projects.
      */
-    async function loadSkuInfo() {
-        try {
-            const response = await fetch('/api/health/environment');
-            const data = await response.json();
-            
-            // Update SKU badge in header
-            const skuBadge = document.getElementById('sku-badge');
-            if (skuBadge) {
-                skuBadge.textContent = data.isAzure 
-                    ? `SKU: ${data.sku}`
-                    : 'SKU: Local';
-            }
-            
-            // Log event with SKU and worker info
-            addEvent('info', `Application is currently running on ${data.sku} SKU on worker ${data.computerName}`);
-        } catch (error) {
-            console.error('[Dashboard] Failed to load SKU info:', error);
-        }
-    }
+    async function loadEventLog() {
+        eventLog.length = 0;
+        const baseTime = Date.now();
 
-    /**
-     * Loads config from the server and logs initialization event with actual values
-     */
-    async function loadConfigAndLogInit() {
+        // 1. Liability disclaimers (oldest — appear at bottom of log)
+        addEventToLog({
+            level: 'WARN',
+            event: 'DISCLAIMER',
+            message: '⚖️ Deploy only in isolated, non-production environments. Licensed under MIT License.',
+            timestamp: new Date(baseTime).toISOString()
+        }, true);
+        addEventToLog({
+            level: 'WARN',
+            event: 'DISCLAIMER',
+            message: '⚖️ This software is provided "AS IS" without warranty. The author shall not be liable for any damages arising from use or misuse.',
+            timestamp: new Date(baseTime + 1).toISOString()
+        }, true);
+
+        // 2. Dashboard config info
+        let probeRate = 200;
+        let idleTimeoutStr = '5m';
         try {
-            const response = await fetch('/api/health/config');
-            const config = await response.json();
-            
-            const probeRate = config.latencyProbeIntervalMs || 200;
+            const configResponse = await fetch('/api/health/config');
+            const config = await configResponse.json();
+            probeRate = config.latencyProbeIntervalMs || 200;
             const idleTimeout = config.idleTimeoutMinutes;
-            const idleTimeoutStr = idleTimeout === 0 ? 'disabled' : `${idleTimeout}m`;
-            
-            addEvent('success', `Dashboard initialized (probe rate: ${probeRate}ms, idle timeout: ${idleTimeoutStr})`);
-            
-            // Show GitHub link if both GITHUB_USER_NAME and GITHUB_REPO_NAME are configured
+            idleTimeoutStr = idleTimeout === 0 ? 'disabled' : `${idleTimeout}m`;
+
+            // Show GitHub link if configured
             if (config.githubUserName && config.githubRepoName) {
                 const githubLink = document.getElementById('github-repo-link');
                 if (githubLink) {
@@ -814,28 +856,54 @@ const Dashboard = (function() {
                 }
             }
         } catch (error) {
-            console.error('[Dashboard] Failed to load config:', error);
-            addEvent('success', 'Dashboard initialized');
+            console.log('[Dashboard] Could not load config values for event log');
         }
-    }
+        addEventToLog({
+            level: 'SUCCESS',
+            message: `Dashboard initialized (probe rate: ${probeRate}ms, idle timeout: ${idleTimeoutStr})`,
+            timestamp: new Date(baseTime + 2).toISOString()
+        }, true);
 
-    /**
-     * Displays the MIT license disclaimer in the event log (shown on every page load)
-     */
-    function showDisclaimer() {
-        // Add Line 2 first so Line 1 appears on top (newer entries appear at top)
+        // 3. Environment/SKU info
+        try {
+            const response = await fetch('/api/health/environment');
+            const data = await response.json();
+
+            // Update SKU badge in header
+            const skuBadge = document.getElementById('sku-badge');
+            if (skuBadge) {
+                skuBadge.textContent = data.isAzure
+                    ? `SKU: ${data.sku}`
+                    : 'SKU: Local';
+            }
+
+            addEventToLog({
+                level: 'INFO',
+                message: `Application is currently running on ${data.sku} SKU on worker ${data.computerName}`,
+                timestamp: new Date(baseTime + 3).toISOString()
+            }, true);
+        } catch (error) {
+            console.log('[Dashboard] Could not load environment info for event log');
+        }
+
+        // 4. Connected message
         addEventToLog({
-            level: 'WARN',
-            event: 'DISCLAIMER',
-            message: '⚖️ Deploy only in isolated, non-production environments. Licensed under MIT License.',
-            timestamp: new Date().toISOString()
-        });
-        addEventToLog({
-            level: 'WARN',
-            event: 'DISCLAIMER',
-            message: '⚖️ This software is provided "AS IS" without warranty. The author shall not be liable for any damages arising from use or misuse.',
-            timestamp: new Date().toISOString()
-        });
+            level: 'INFO',
+            message: 'Connected to metrics hub',
+            timestamp: new Date(baseTime + 4).toISOString()
+        }, true);
+
+        // 5. Wake from idle message (newest — appears at top of log)
+        if (window._wokeFromIdle) {
+            addEventToLog({
+                level: 'INFO',
+                message: 'App waking up from idle state. There may be gaps in diagnostics and logs.',
+                timestamp: new Date(baseTime + 5).toISOString()
+            }, true);
+            window._wokeFromIdle = false;
+        }
+
+        renderEventLog();
     }
 
     /**

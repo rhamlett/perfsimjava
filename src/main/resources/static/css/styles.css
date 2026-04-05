@@ -1346,6 +1346,7 @@ button:disabled {
 .event.success { color: var(--color-success); }
 .event.warn, .event.warning { color: var(--color-warning); }
 .event.error, .event.danger { color: var(--color-danger); }
+.event.non-sim { color: var(--color-warning); }
 
 /* Simulation-type specific event colors */
 .event.sim-cpu { color: var(--color-cpu); }

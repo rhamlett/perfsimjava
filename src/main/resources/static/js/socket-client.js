@@ -121,12 +121,9 @@ const SocketClient = (function() {
                 disconnectTimer = null;
             }
             
-            // Log connection events
+            // Log connection events (skip first connection — handled by Dashboard.loadEventLog)
             if (firstConnection) {
                 firstConnection = false;
-                if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
-                    Dashboard.addEvent('info', 'WebSocket connected - real-time metrics active');
-                }
             } else if (disconnectTime) {
                 // We were disconnected, now reconnected
                 const downtime = ((Date.now() - disconnectTime) / 1000).toFixed(1);
@@ -316,9 +313,7 @@ const SocketClient = (function() {
                 if (result.wokeFromIdle) {
                     console.log('[SocketClient] App woken from idle state');
                     updateConnectionStatus('connected');
-                    if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
-                        Dashboard.addEvent('info', 'App resumed from idle state - probes restarting');
-                    }
+                    window._wokeFromIdle = true;
                 } else {
                     console.log('[SocketClient] Activity recorded, idle timeout:', result.idleTimeoutMinutes, 'minutes');
                 }
