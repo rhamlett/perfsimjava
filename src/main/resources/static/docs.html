@@ -272,65 +272,6 @@
         </div>
         </section>
 
-        <section id="architecture" class="card">
-        <h2>Architecture</h2>
-        <p>The application runs as a Spring Boot 3.3 application with embedded Tomcat, STOMP over WebSocket for real-time metrics, and in-memory state. A dedicated probe service measures request latency by probing the app through Azure's frontend.</p>
-
-        <h3>Key Components</h3>
-        <ul>
-            <li><strong>Spring Boot Application</strong> — Embedded Tomcat server with REST controllers and WebSocket support</li>
-            <li><strong>Probe Service</strong> — Background scheduled task that measures request latency by sending HTTP probes through the Azure frontend</li>
-            <li><strong>Simulation Services</strong> — CPU stress, memory pressure, and thread blocking simulations run in dedicated thread pools to avoid starving the servlet threads</li>
-            <li><strong>WebSocket Broker</strong> — STOMP messaging via SockJS for real-time dashboard updates (metrics, events, simulation status)</li>
-        </ul>
-
-        <h3>Source Structure</h3>
-        <pre><code>src/main/java/com/microsoft/azure/samples/perfsimjava/
-├── PerfSimJavaApplication.java       # Main entry point
-│
-├── config/                           # Configuration
-│   ├── AppConfig.java                # Application settings
-│   ├── OpenApiConfig.java            # Swagger/OpenAPI setup
-│   └── WebSocketConfig.java          # STOMP/WebSocket setup
-│
-├── controller/                       # REST API endpoints
-│   ├── AdminController.java          # Status and event log
-│   ├── CpuController.java            # CPU stress simulation
-│   ├── CrashController.java          # Crash simulations
-│   ├── HealthController.java         # Health probes and config
-│   ├── MemoryController.java         # Memory pressure simulation
-│   ├── MetricsController.java        # System metrics API
-│   └── ThreadStarvationController.java
-│
-├── service/                          # Business logic
-│   ├── CpuStressService.java         # Thread pool for CPU work
-│   ├── CrashService.java             # Crash triggers
-│   ├── EventLogService.java          # Event broadcasting
-│   ├── IdleService.java              # Idle timeout management
-│   ├── MemoryPressureService.java    # Memory allocation
-│   ├── MetricsService.java           # JMX metrics collection
-│   ├── ProbeService.java             # Latency measurement
-│   └── ThreadStarvationService.java  # Servlet thread blocking
-│
-├── model/                            # Data models and DTOs
-│   ├── Simulation.java
-│   ├── SystemMetrics.java
-│   └── dto/                          # Request/response DTOs
-│
-└── resources/
-    ├── application.properties        # Spring configuration
-    └── static/                       # Dashboard files
-        ├── index.html                # Main dashboard
-        ├── docs.html                 # Documentation
-        ├── azure-diagnostics.html    # Azure diagnostics guide
-        ├── azure-deployment.html     # Deployment guide
-        ├── css/styles.css
-        └── js/
-            ├── charts.js             # Real-time Chart.js charts
-            ├── dashboard.js          # UI interactions & controls
-            └── socket-client.js      # STOMP/SockJS client</code></pre>
-        </section>
-
         <section id="cpu-simulation" class="card">
         <h2>CPU Stress Simulation</h2>
 
@@ -604,6 +545,194 @@
             <li>Heap dump collection configuration</li>
         </ul>
         </section>
+
+        <section id="optional-config" class="card">
+        <h2>Optional Configuration</h2>
+        <p>You can customize the application behavior using Azure App Service environment variables.</p>
+
+        <h3>Health Probe Rate</h3>
+        <p>Control how often the server sends health probes to measure request latency. All probes are routed through the Azure frontend to capture realistic end-to-end latency.</p>
+        
+        <h4>Environment Variable</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Variable Name</th>
+                    <th>Description</th>
+                    <th>Default</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>HEALTH_PROBE_RATE</code></td>
+                    <td>Probe interval in milliseconds. Minimum 100ms.</td>
+                    <td><code>200</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Setting via Azure CLI</h4>
+        <pre><code># Slow down probes if CLR profiler shows overlapping requests
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings HEALTH_PROBE_RATE=400</code></pre>
+
+        <h3>Idle Timeout</h3>
+        <p>When the application is idle (no dashboard connections or load test requests), health probes are automatically suspended to reduce unnecessary network traffic to Azure's frontend and Application Insights telemetry.</p>
+        
+        <h4>Environment Variable</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Variable Name</th>
+                    <th>Description</th>
+                    <th>Default</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IDLE_TIMEOUT_MINUTES</code></td>
+                    <td>Minutes of inactivity before suspending health probes. Activity resumes automatically when the dashboard is opened or any request is received.</td>
+                    <td><code>20</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Setting via Azure CLI</h4>
+        <pre><code># Extend idle timeout to 30 minutes
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings IDLE_TIMEOUT_MINUTES=30</code></pre>
+
+        <h3>Custom Page Footer</h3>
+        <p>Set a custom footer message that appears on all pages. The footer supports HTML, allowing you to include links.</p>
+        
+        <h4>Environment Variable</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Variable Name</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>PAGE_FOOTER</code></td>
+                    <td>HTML content for the footer's second line. If not set, only the app description and build info are shown.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Example Value</h4>
+        <pre><code>Created by &lt;a href="https://yoursite.com"&gt;Your Team&lt;/a&gt; for training purposes</code></pre>
+
+        <h4>Setting via Azure CLI</h4>
+        <pre><code># Set the footer via Azure CLI
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings 'PAGE_FOOTER=Created by &lt;a href="https://yoursite.com"&gt;Your Team&lt;/a&gt; for training purposes'</code></pre>
+
+        <h4>Setting via Azure Portal</h4>
+        <ol>
+            <li>Navigate to your App Service in the Azure Portal</li>
+            <li>Go to <strong>Settings</strong> → <strong>Environment variables</strong></li>
+            <li>Click <strong>+ Add</strong></li>
+            <li>Set Name: <code>PAGE_FOOTER</code></li>
+            <li>Set Value: Your HTML footer content</li>
+            <li>Click <strong>Apply</strong>, then <strong>Confirm</strong></li>
+        </ol>
+
+        <h3>GitHub Repository Link</h3>
+        <p>By default, the GitHub Repository link in the sidebar menu is hidden. Set both environment variables below to display a link to your GitHub repository in the navigation menu.</p>
+        
+        <h4>Environment Variables</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Variable Name</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>GITHUB_USER_NAME</code></td>
+                    <td>The GitHub username or organization that owns the repository.</td>
+                </tr>
+                <tr>
+                    <td><code>GITHUB_REPO_NAME</code></td>
+                    <td>The name of the GitHub repository.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Example</h4>
+        <p>To link to <code>https://github.com/myorg/myrepo</code>, set:</p>
+        <ul>
+            <li><code>GITHUB_USER_NAME=myorg</code></li>
+            <li><code>GITHUB_REPO_NAME=myrepo</code></li>
+        </ul>
+
+        <h4>Setting via Azure CLI</h4>
+        <pre><code># Set the GitHub repository link
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings GITHUB_USER_NAME=myorg GITHUB_REPO_NAME=myrepo</code></pre>
+        </section>
+
+        <section id="architecture" class="card">
+        <h2>Architecture</h2>
+        <p>The application runs as a Spring Boot 3.3 application with embedded Tomcat, STOMP over WebSocket for real-time metrics, and in-memory state. A dedicated probe service measures request latency by probing the app through Azure's frontend.</p>
+
+        <h3>Key Components</h3>
+        <ul>
+            <li><strong>Spring Boot Application</strong> — Embedded Tomcat server with REST controllers and WebSocket support</li>
+            <li><strong>Probe Service</strong> — Background scheduled task that measures request latency by sending HTTP probes through the Azure frontend</li>
+            <li><strong>Simulation Services</strong> — CPU stress, memory pressure, and thread blocking simulations run in dedicated thread pools to avoid starving the servlet threads</li>
+            <li><strong>WebSocket Broker</strong> — STOMP messaging via SockJS for real-time dashboard updates (metrics, events, simulation status)</li>
+        </ul>
+
+        <h3>Source Structure</h3>
+        <pre><code>src/main/java/com/microsoft/azure/samples/perfsimjava/
+├── PerfSimJavaApplication.java       # Main entry point
+│
+├── config/                           # Configuration
+│   ├── AppConfig.java                # Application settings
+│   ├── OpenApiConfig.java            # Swagger/OpenAPI setup
+│   └── WebSocketConfig.java          # STOMP/WebSocket setup
+│
+├── controller/                       # REST API endpoints
+│   ├── AdminController.java          # Status and event log
+│   ├── CpuController.java            # CPU stress simulation
+│   ├── CrashController.java          # Crash simulations
+│   ├── HealthController.java         # Health probes and config
+│   ├── MemoryController.java         # Memory pressure simulation
+│   ├── MetricsController.java        # System metrics API
+│   └── ThreadStarvationController.java
+│
+├── service/                          # Business logic
+│   ├── CpuStressService.java         # Thread pool for CPU work
+│   ├── CrashService.java             # Crash triggers
+│   ├── EventLogService.java          # Event broadcasting
+│   ├── IdleService.java              # Idle timeout management
+│   ├── MemoryPressureService.java    # Memory allocation
+│   ├── MetricsService.java           # JMX metrics collection
+│   ├── ProbeService.java             # Latency measurement
+│   └── ThreadStarvationService.java  # Servlet thread blocking
+│
+├── model/                            # Data models and DTOs
+│   ├── Simulation.java
+│   ├── SystemMetrics.java
+│   └── dto/                          # Request/response DTOs
+│
+└── resources/
+    ├── application.properties        # Spring configuration
+    └── static/                       # Dashboard files
+        ├── index.html                # Main dashboard
+        ├── docs.html                 # Documentation
+        ├── azure-diagnostics.html    # Azure diagnostics guide
+        ├── azure-deployment.html     # Deployment guide
+        ├── css/styles.css
+        └── js/
+            ├── charts.js             # Real-time Chart.js charts
+            ├── dashboard.js          # UI interactions & controls
+            └── socket-client.js      # STOMP/SockJS client</code></pre>
+        </section>
     </main>
     
     <!-- Right-side Table of Contents -->
@@ -611,7 +740,6 @@
         <div class="doc-toc-inner">
             <h2>ON THIS PAGE</h2>
             <a href="#overview" class="doc-toc-link active"><span class="toc-icon">📄</span> Overview</a>
-            <a href="#architecture" class="doc-toc-link"><span class="toc-icon">🏗️</span> Architecture</a>
             
             <div class="doc-toc-section-label toc-section-simulations">
                 <span class="toc-section-icon">🎮</span> SIMULATIONS
@@ -622,6 +750,8 @@
             <a href="#connection-pool" class="doc-toc-link"><span class="toc-icon">🔌</span> Connection Pool</a>
             <a href="#failed-requests" class="doc-toc-link"><span class="toc-icon">❌</span> Failed Requests</a>
             <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Crash Simulation</a>
+            <a href="#optional-config" class="doc-toc-link"><span class="toc-icon">⚙️</span> Optional Config</a>
+            <a href="#architecture" class="doc-toc-link"><span class="toc-icon">🏗️</span> Architecture</a>
         </div>
     </aside>
     </div>

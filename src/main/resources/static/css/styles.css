@@ -400,71 +400,52 @@ header nav {
    Connection Status
    -------------------------------------------------------------------------- */
 #connection-status {
-  padding: 0.3rem 0.6rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.4);
-}
-
-.status-connected {
-  background: transparent;
+  gap: 0.5rem;
+  font-size: 0.875rem;
   color: white;
 }
 
 .status-connected::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #5CB85C;
+  background: #2ecc40;
+  box-shadow: 0 0 8px #2ecc40;
   display: inline-block;
-}
-
-.status-disconnected {
-  background: transparent;
-  color: white;
+  transition: background 150ms ease;
 }
 
 .status-disconnected::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #ff6b6b;
+  background: #d13438;
   display: inline-block;
-}
-
-.status-idle {
-  background: transparent;
-  color: white;
+  transition: background 150ms ease;
 }
 
 .status-idle::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #888;
+  background: #8a8886;
   display: inline-block;
-}
-
-.status-reconnecting {
-  background: transparent;
-  color: white;
+  transition: background 150ms ease;
 }
 
 .status-reconnecting::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #ffb900;
   display: inline-block;
+  transition: background 150ms ease;
 }
 
 /* --------------------------------------------------------------------------
