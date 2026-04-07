@@ -39,7 +39,7 @@ public class PerfSimJavaApplication {
     public static void main(String[] args) {
         // Print startup banner
         System.out.println("=".repeat(70));
-        System.out.println(" Performance Problem Simulator - Java Blessed Image (Java|21)");
+        System.out.println(" Performance Problem Simulator - Java (Java|21)");
         System.out.println("=".repeat(70));
         System.out.println(" WARNING: This application intentionally causes performance problems!");
         System.out.println(" Use only in controlled environments for training purposes.");

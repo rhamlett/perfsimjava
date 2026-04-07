@@ -100,7 +100,7 @@
     </dependencies>
 
     <build>
-        <!-- Output JAR named 'app.jar' for Azure App Service blessed image compatibility -->
+        <!-- Output JAR named 'app.jar' for Azure App Service deployment -->
         <finalName>app</finalName>
         <plugins>
             <plugin>

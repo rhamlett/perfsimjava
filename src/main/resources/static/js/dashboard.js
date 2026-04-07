@@ -1,5 +1,5 @@
 /* =============================================================================
-   Performance Problem Simulator - Java Blessed Image
+   Performance Problem Simulator - Java
    Dashboard Module (UI Logic)
    ============================================================================= */
 

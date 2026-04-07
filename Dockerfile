@@ -1,9 +1,9 @@
 # =============================================================================
-# Performance Problem Simulator - Java Blessed Image
-# Dockerfile for Azure App Service Linux Container
+# Performance Problem Simulator - Java
+# Dockerfile for local development and testing
 # =============================================================================
 
-# Use Microsoft's official Java 21 runtime image (matches Azure blessed image)
+# Use Microsoft's official Java 21 runtime image
 FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu
 
 # Set working directory

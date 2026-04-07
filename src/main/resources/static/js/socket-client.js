@@ -1,5 +1,5 @@
 /* =============================================================================
-   Performance Problem Simulator - Java Blessed Image
+   Performance Problem Simulator - Java
    WebSocket Client (STOMP over SockJS)
    ============================================================================= */
 

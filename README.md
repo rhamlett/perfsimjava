@@ -1,4 +1,4 @@
-# Performance Problem Simulator - Java Blessed Image
+# Performance Problem Simulator - Java
 
 A Java 21 Spring Boot application designed to simulate various performance problems for testing Azure App Service diagnostics and monitoring tools.
 
@@ -33,7 +33,7 @@ This application allows you to deliberately trigger different types of performan
 
 ## Technology Stack
 
-- **Runtime**: Java 21 (Blessed Image)
+- **Runtime**: Java 21 (Built-in Linux Runtime)
 - **Framework**: Spring Boot 3.3
 - **Build**: Maven
 - **WebSocket**: STOMP over SockJS
@@ -42,13 +42,13 @@ This application allows you to deliberately trigger different types of performan
 
 ## Deployment
 
-This application is designed to run on Azure App Service using the Java 21 Blessed Image on Linux.
+This application is designed to run on Azure App Service using the built-in Java 21 SE runtime on Linux.
 
 ### GitHub Actions CI/CD (Recommended)
 
-1. Create an Azure App Service (Linux, Java 21)
-2. Download the publish profile from Azure Portal
-3. Add it as a GitHub secret named `AZURE_WEBAPP_PUBLISH_PROFILE`
+1. Create an Azure App Service (Linux, Java 21 SE built-in runtime)
+2. Configure OIDC authentication (see [Azure Deployment Guide](/azure-deployment.html))
+3. Add GitHub secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
 4. Push to `main` branch - the workflow will build and deploy automatically
 
 ### Manual Deployment

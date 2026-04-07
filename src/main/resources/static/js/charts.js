@@ -1,5 +1,5 @@
 /* =============================================================================
-   Performance Problem Simulator - Java Blessed Image
+   Performance Problem Simulator - Java
    Charts Module (Chart.js Integration) - Updated for new layout
    ============================================================================= */
 

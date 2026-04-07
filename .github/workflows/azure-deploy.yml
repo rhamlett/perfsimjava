@@ -1,6 +1,6 @@
 # =============================================================================
-# Performance Problem Simulator - Java Blessed Image
-# GitHub Actions Workflow for Azure App Service Deployment
+# Performance Problem Simulator - Java
+# GitHub Actions Workflow for Azure App Service (Java SE on Linux)
 # =============================================================================
 
 name: Build and Deploy to Azure App Service
@@ -13,7 +13,7 @@ on:
 
 env:
   JAVA_VERSION: '21'
-  AZURE_WEBAPP_NAME: perfsimjava3
+  AZURE_WEBAPP_NAME: perfsimjava
   AZURE_RESOURCE_GROUP: rhamlettRG
   
 permissions:
