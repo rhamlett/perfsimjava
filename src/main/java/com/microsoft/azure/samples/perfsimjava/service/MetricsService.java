@@ -18,6 +18,8 @@ import java.lang.management.ThreadMXBean;
 import java.time.Duration;
 import java.time.Instant;
 
+import org.springframework.context.ApplicationContext;
+
 /**
  * =============================================================================
  * METRICS SERVICE — Real-Time System Metrics Collection
@@ -53,6 +55,10 @@ public class MetricsService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final EventLogService eventLogService;
+    private final ApplicationContext applicationContext;
+
+    // Lazy-loaded to avoid circular dependency
+    private IdleService idleService;
 
     private final OperatingSystemMXBean osBean;
     private final MemoryMXBean memoryBean;
@@ -65,9 +71,11 @@ public class MetricsService {
     private volatile long lastGcTimeMs = 0;
     private volatile long lastGcTimestamp = System.currentTimeMillis();
 
-    public MetricsService(SimpMessagingTemplate messagingTemplate, EventLogService eventLogService) {
+    public MetricsService(SimpMessagingTemplate messagingTemplate, EventLogService eventLogService,
+                          ApplicationContext applicationContext) {
         this.messagingTemplate = messagingTemplate;
         this.eventLogService = eventLogService;
+        this.applicationContext = applicationContext;
 
         // Initialize MXBeans
         this.osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
@@ -100,11 +108,25 @@ public class MetricsService {
     }
 
     /**
+     * Gets the IdleService lazily to avoid circular dependency.
+     */
+    private IdleService getIdleService() {
+        if (idleService == null) {
+            idleService = applicationContext.getBean(IdleService.class);
+        }
+        return idleService;
+    }
+
+    /**
      * Scheduled task to collect and broadcast metrics.
      * Runs at the configured interval (default 250ms).
+     * Skipped when application is idle to eliminate background activity.
      */
     @Scheduled(fixedRateString = "${perfsim.metrics-interval-ms:250}")
     public void broadcastMetrics() {
+        if (getIdleService().isIdle()) {
+            return;
+        }
         SystemMetrics metrics = collectMetrics();
         messagingTemplate.convertAndSend("/topic/metrics", metrics);
     }

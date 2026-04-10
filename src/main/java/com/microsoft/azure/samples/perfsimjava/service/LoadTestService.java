@@ -295,9 +295,13 @@ public class LoadTestService {
     /**
      * Resets period statistics and logs summary.
      * Called every 60 seconds by scheduler.
+     * Skipped when application is idle to eliminate background activity.
      */
     @Scheduled(fixedRate = 60000)
     public void resetPeriodStats() {
+        if (currentConcurrent.get() == 0 && periodTotalRequests.get() == 0) {
+            return;
+        }
         LoadTestStats stats = getStats();
 
         // Calculate period values
