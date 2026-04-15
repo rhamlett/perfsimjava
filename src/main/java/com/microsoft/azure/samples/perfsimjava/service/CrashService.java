@@ -77,7 +77,8 @@ public class CrashService {
                 String.format("Crash simulation initiated: %s", crashType),
                 null,
                 SimulationType.valueOf("CRASH_" + crashType.name()),
-                Map.of("method", getMethodDescription(crashType))
+                Map.of("method", getMethodDescription(crashType)),
+                "srv.crash.initiated", Map.of("type", String.valueOf(crashType))
         );
 
         // Warn about recovery for certain crash types
@@ -89,7 +90,8 @@ public class CrashService {
                             "Manual restart from Azure Portal may be required.", crashType),
                     null,
                     null,
-                    Map.of("recoveryHint", "Azure Portal > App Service > Restart")
+                    Map.of("recoveryHint", "Azure Portal > App Service > Restart"),
+                    "srv.crash.warning", Map.of("type", String.valueOf(crashType))
             );
         }
 

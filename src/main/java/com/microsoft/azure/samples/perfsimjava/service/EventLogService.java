@@ -98,16 +98,84 @@ public class EventLogService {
         return log(EventLogEntry.Level.ERROR, event, message, simulationId, simulationType, details);
     }
 
+    // ---- i18n-aware overloads (messageKey + messageParams) ----
+
+    /**
+     * Logs an INFO event with an i18n message key (no simulation context).
+     */
+    public EventLogEntry info(EventLogEntry.EventType event, String message,
+                               String messageKey, Map<String, Object> messageParams) {
+        return log(EventLogEntry.Level.INFO, event, message, null, null, null, messageKey, messageParams);
+    }
+
+    /**
+     * Logs an INFO event with an i18n message key and simulation context.
+     */
+    public EventLogEntry info(EventLogEntry.EventType event, String message,
+                               String simulationId, SimulationType simulationType,
+                               Map<String, Object> details,
+                               String messageKey, Map<String, Object> messageParams) {
+        return log(EventLogEntry.Level.INFO, event, message, simulationId, simulationType, details, messageKey, messageParams);
+    }
+
+    /**
+     * Logs a WARN event with an i18n message key (no simulation context).
+     */
+    public EventLogEntry warn(EventLogEntry.EventType event, String message,
+                               String messageKey, Map<String, Object> messageParams) {
+        return log(EventLogEntry.Level.WARN, event, message, null, null, null, messageKey, messageParams);
+    }
+
+    /**
+     * Logs a WARN event with an i18n message key and simulation context.
+     */
+    public EventLogEntry warn(EventLogEntry.EventType event, String message,
+                               String simulationId, SimulationType simulationType,
+                               Map<String, Object> details,
+                               String messageKey, Map<String, Object> messageParams) {
+        return log(EventLogEntry.Level.WARN, event, message, simulationId, simulationType, details, messageKey, messageParams);
+    }
+
+    /**
+     * Logs an ERROR event with an i18n message key (no simulation context).
+     */
+    public EventLogEntry error(EventLogEntry.EventType event, String message,
+                                String messageKey, Map<String, Object> messageParams) {
+        return log(EventLogEntry.Level.ERROR, event, message, null, null, null, messageKey, messageParams);
+    }
+
+    /**
+     * Logs an ERROR event with an i18n message key and simulation context.
+     */
+    public EventLogEntry error(EventLogEntry.EventType event, String message,
+                                String simulationId, SimulationType simulationType,
+                                Map<String, Object> details,
+                                String messageKey, Map<String, Object> messageParams) {
+        return log(EventLogEntry.Level.ERROR, event, message, simulationId, simulationType, details, messageKey, messageParams);
+    }
+
     /**
      * Core logging method.
      */
     private EventLogEntry log(EventLogEntry.Level level, EventLogEntry.EventType event,
                                String message, String simulationId, 
                                SimulationType simulationType, Map<String, Object> details) {
+        return log(level, event, message, simulationId, simulationType, details, null, null);
+    }
+
+    /**
+     * Core logging method with i18n messageKey support.
+     */
+    private EventLogEntry log(EventLogEntry.Level level, EventLogEntry.EventType event,
+                               String message, String simulationId,
+                               SimulationType simulationType, Map<String, Object> details,
+                               String messageKey, Map<String, Object> messageParams) {
         EventLogEntry entry = new EventLogEntry(level, event, message);
         entry.setSimulationId(simulationId);
         entry.setSimulationType(simulationType);
         entry.setDetails(details);
+        entry.setMessageKey(messageKey);
+        entry.setMessageParams(messageParams);
 
         // Log to console as well
         switch (level) {

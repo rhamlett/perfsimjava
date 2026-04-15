@@ -1,0 +1,678 @@
+<!-- source_hash:e0da315ea6721c32 lang:zh generated:2026-04-14T21:09:16.098183600Z -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure 诊断 - 性能问题模拟器 - Java 21</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Card-based Documentation Styles - Matching Deployment Page */
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 80px;
+            border: 1px solid #d0d0d0;
+        }
+
+        .card h2 {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-bg);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            color: var(--color-text);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card h4 {
+            color: var(--color-text-muted);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p, .card li {
+            line-height: 1.6;
+            color: var(--color-text-muted);
+        }
+
+        .card ul, .card ol {
+            margin: 0.5rem 0 1rem 1.5rem;
+        }
+
+        .card li {
+            margin-bottom: 0.25rem;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin: 1rem 0;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+
+        code {
+            background: rgba(0,0,0,0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            color: var(--color-danger);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid var(--color-bg);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--color-bg);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .note {
+            background: rgba(231, 111, 0, 0.1);
+            border-left: 4px solid var(--color-primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .note h4 {
+            color: var(--color-primary-dark);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .note p {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .warning {
+            background: rgba(209, 52, 56, 0.1);
+            border-left: 4px solid var(--color-danger);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .warning h4 {
+            color: var(--color-danger);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning p {
+            margin: 0;
+            color: var(--color-text);
+        }
+    </style>
+</head>
+<body class="page-secondary">
+    <header>
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> 性能问题模拟器 - Java 21</h1>
+        <span id="sku-badge" class="sku-badge">SKU：本地</span>
+        <nav>
+            <a href="/" class="nav-link">🎮 仪表盘</a>
+        </nav>
+    </header>
+
+    <!-- Sidebar Drawer Navigation -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="sidebar-drawer" class="sidebar-drawer">
+        <div class="sidebar-header">
+            <h2><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> PerfSimJava</h2>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">×</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">应用</div>
+            <a href="/" class="sidebar-nav-item">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">仪表盘<span class="nav-desc">实时指标与控制</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">文献资料</div>
+            <a href="/docs.html" class="sidebar-nav-item">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">文献资料<span class="nav-desc">API 参考资料与指南</span></span>
+            </a>
+            <a href="/azure-diagnostics.html" class="sidebar-nav-item active">
+                <span class="nav-icon">☁️</span>
+                <span class="nav-label">Azure 诊断<span class="nav-desc">诊断App Service问题</span></span>
+            </a>
+            <a href="/azure-load-testing.html" class="sidebar-nav-item">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Azure 负载测试<span class="nav-desc">载荷测试终点及参数</span></span>
+            </a>
+            <a href="/azure-deployment.html" class="sidebar-nav-item">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">部署到 Azure<span class="nav-desc">GitHub 动作 + OIDC 设置</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">外部</div>
+            <a id="github-repo-link" href="#" target="_blank" class="sidebar-nav-item" style="display:none">
+                <span class="nav-icon">🐙</span>
+                <span class="nav-label">GitHub 仓库<span class="nav-desc">源代码与问题</span></span>
+            </a>
+            <a href="/swagger-ui/index.html" target="_blank" class="sidebar-nav-item">
+                <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="#85ea2d"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm0 1.144c5.995 0 10.856 4.861 10.856 10.856S17.995 22.856 12 22.856 1.144 17.995 1.144 12 6.005 1.144 12 1.144zm-.436 5.024c-.175.004-.353.013-.537.03-1.187.105-1.622.525-1.622 1.449v1.01H8v1.737h1.405v4.876h2.065v-4.876h1.405l.191-1.737h-1.596v-.88c0-.408.186-.52.504-.52h1.092V5.963s-.686-.095-1.502-.095zm3.156 1.117v.79h.54v2.18h-.54v.79h1.87v-.79h-.54v-2.97h-1.33z"/></svg></span>
+                <span class="nav-label">Swagger API<span class="nav-desc">互动 API 文档</span></span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar-build-info">建造：加载中......</div>
+        </div>
+    </aside>
+
+    <div class="app-container">
+    <!-- Page Header -->
+    <div class="doc-page-header">
+        <h1><span class="doc-icon">☁️</span>Azure 诊断</h1>
+        <p class="doc-subtitle">诊断 Azure 工具性能问题指南</p>
+    </div>
+    
+    <div class="doc-layout">
+    <main class="doc-content">
+        <section id="overview" class="card">
+        <h2>概述</h2>
+        <p>本指南将解释如何使用 Azure 诊断工具分析该应用模拟的性能问题。</p>
+        </section>
+
+        <section id="simulation-ids" class="card">
+        <h2>🔗 仿真ID相关性</h2>
+        
+        <p>每个仿真实例都被分配一个唯一的仿真ID（GUID），以实现端到端的相关性
+        在仪表盘界面和 Azure Application Insights 遥测之间。</p>
+
+        <h3>寻找仿真ID</h3>
+        <p><strong>在仪表盘中：</strong> 事件日志中的仿真开始和完成消息具有
+        细微的虚线下划线表示它们是互动的。将鼠标悬停在这些消息上可查看完整内容
+        提示中的仿真ID。点击复制到你的剪贴板。</p>
+
+        <p><strong>Azure：</strong> 相同的仿真ID也出现在服务器端日志中，并可在以下格式中找到：</p>
+        <ul>
+            <li><strong>Application Insights</strong> — 按仿真ID搜索痕迹和自定义事件</li>
+            <li><strong>日志分析</strong> — 使用ID作为筛选器的查询日志</li>
+            <li><strong>App Service 日志</strong>— 按 GUID 过滤标准/标准</li>
+        </ul>
+
+        <h3>相关性查询</h3>
+        <p>在Log Analytics中使用这些KQL查询，将仪表盘事件与服务器遥测数据关联起来：</p>
+
+        <div class="note">
+            <h4>⚠️ 表格名称差异</h4>
+            <p>Log Analytics 工作区使用与经典 Application Insights不同的表和列名。
+            如果你看到诸如“'traces'名称不指向任何已知表”这样的错误，请使用下面的Log Analytics名称：</p>
+            <table style="width:100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.875rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 0.5rem; text-align: left;">应用洞察</th>
+                        <th style="padding: 0.5rem; text-align: left;">日志分析</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>traces</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppTraces</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>customEvents</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppEvents</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>requests</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppRequests</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>exceptions</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppExceptions</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>dependencies</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppDependencies</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>message</code></td><td style="padding: 0.25rem 0.5rem;"><code>Message</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>timestamp</code></td><td style="padding: 0.25rem 0.5rem;"><code>TimeGenerated</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>customDimensions</code></td><td style="padding: 0.25rem 0.5rem;"><code>Properties</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <pre><code>// Find simulation start/end events by Simulation ID
+AppEvents
+| where Name in ("SimulationStarted", "SimulationEnded")
+| where Properties["SimulationId"] == "YOUR-SIMULATION-ID-HERE"
+| project TimeGenerated, Name, Properties
+| order by TimeGenerated asc</code></pre>
+
+        <pre><code>// Find all requests during a simulation time window
+let simStart = toscalar(
+    AppEvents 
+    | where Name == "SimulationStarted" and Properties["SimulationId"] == "YOUR-SIMULATION-ID-HERE"
+    | project TimeGenerated);
+let simEnd = toscalar(
+    AppEvents 
+    | where Name == "SimulationEnded" and Properties["SimulationId"] == "YOUR-SIMULATION-ID-HERE"
+    | project TimeGenerated);
+AppRequests
+| where TimeGenerated between (simStart .. simEnd)
+| order by TimeGenerated asc</code></pre>
+
+        <pre><code>// Find failed requests during a simulation
+let simId = "YOUR-SIMULATION-ID-HERE";
+let simEvents = AppEvents | where Properties["SimulationId"] == simId;
+let simStart = toscalar(simEvents | where Name == "SimulationStarted" | project TimeGenerated);
+let simEnd = toscalar(simEvents | where Name == "SimulationEnded" | project TimeGenerated);
+AppRequests
+| where TimeGenerated between (simStart .. simEnd)
+| where Success == false
+| project TimeGenerated, Name, ResultCode, DurationMs, Url
+| order by TimeGenerated asc</code></pre>
+
+        <h3>故障排除工作流程</h3>
+        <ol>
+            <li>从仪表盘开始模拟</li>
+            <li>将鼠标悬停在事件日志中的开始消息上，复制模拟ID</li>
+            <li>打开 Azure 门户→ Application Insights →日志（或日志分析）</li>
+            <li>使用仿真ID查询日志，查看所有相关的服务器端活动</li>
+            <li>将仪表盘事件与服务器指标的时间戳关联起来</li>
+        </ol>
+
+        <div class="note">
+            <h4>💡 提示</h4>
+            <p>仿真ID有助于在运行多个并发仿真时隔离遥测数据，或者
+            当仪表盘被多个用户使用时。</p>
+        </div>
+        </section>
+
+        <section id="applens" class="card">
+        <h2>AppLens 整合</h2>
+        
+        <p>该应用设计为与 Azure AppLens 工作，每100毫秒发送健康探针
+        通过 Azure Stamp前端。这种高频探测确保了延迟的尖峰和
+        可用性问题在 AppLens 仪表盘中可见。</p>
+
+        <h3>AppLens能检测到什么</h3>
+        <ul>
+            <li><strong>CPU 压力：</strong> 高 CPU 利用率图表，潜在限速警报</li>
+            <li><strong>记忆压力：</strong> 内存使用激增，潜在的 OOM 模式</li>
+            <li><strong>线索匮乏：</strong> 请求延迟增加，请求队列</li>
+            <li><strong>连接池：</strong> 线程转储显示等待状态，超时错误</li>
+            <li><strong>未通过的请求：</strong>HTTP 5xx 错误峰值、可用性下降、错误率增加</li>
+            <li><strong>崩溃情况：</strong> 实例重启，可用性下降</li>
+        </ul>
+        </section>
+
+        <section id="azure-monitor" class="card">
+        <h2>Azure 监测指标</h2>
+
+        <p>运行模拟时 Azure 监测中需要关注的关键指标：</p>
+
+        <h3>平台指标</h3>
+        <ul>
+            <li><strong>CPU 百分比：</strong> 在 CPU 应力模拟中注意尖峰</li>
+            <li><strong>记忆工作组：</strong> 内存压力模拟期间的增加</li>
+            <li><strong>HTTP 排队长度：</strong> 线材匮乏时生长</li>
+            <li><strong>响应时间：</strong> 注意P95/P99延迟增加</li>
+            <li><strong>http 5xx：</strong> 请求失败和崩溃模拟期间的增加</li>
+        </ul>
+
+        <h3>JVM 指标（如果启用了 App Insights）</h3>
+        <ul>
+            <li><strong>jvm_memory_used：</strong> 堆内存与非堆内存</li>
+            <li><strong>jvm_gc_pause：</strong>GC暂停时间</li>
+            <li><strong>jvm_threads_live：</strong> 主动线程计数</li>
+        </ul>
+        </section>
+
+        <section id="app-insights" class="card">
+        <h2>Application Insights</h2>
+
+        <p>如果 Application Insights 已配置，您可以使用以下功能：</p>
+
+        <h3>实时指标流</h3>
+        <p>在模拟过程中观看实时指标：</p>
+        <ol>
+            <li>在Azure门户中导航到你的App Service</li>
+            <li>前往 Application Insights →实时指标</li>
+            <li>实时观察 CPU、内存和请求速率</li>
+        </ol>
+
+        <h3>交易搜索</h3>
+        <p>查找慢或失败的请求：</p>
+        <ol>
+            <li>前往 Application Insights →交易搜索</li>
+            <li>按“失败请求”或“服务器响应时间>5秒”筛选</li>
+            <li>深入挖掘单个请求，查看时间分布</li>
+        </ol>
+
+        <h3>应用地图</h3>
+        <p>可视化服务健康状况和依赖关系：</p>
+        <ol>
+            <li>前往 Application Insights →申请地图</li>
+            <li>在模拟中注意红黄指示</li>
+            <li>检查故障率或延迟是否增加</li>
+        </ol>
+        </section>
+
+        <section id="diagnose-solve" class="card">
+        <h2>诊断与解决问题</h2>
+
+        <p>Azure App Service 提供了内置的诊断工具：</p>
+
+        <h3>可用性与性能</h3>
+        <ol>
+            <li>前往 App Service → 诊断与解决问题</li>
+            <li>选择“可用性和性能”</li>
+            <li>查看“HTTP 5xx 错误”以了解崩溃相关的问题</li>
+            <li>检查“高 CPU”以获得 CPU 应力检测</li>
+            <li>检查“内存”以检测内存压力</li>
+        </ol>
+
+        <h3>诊断工具</h3>
+        <ul>
+            <li><strong>CPU 深入分析：</strong> 请参见 CPU 实例的使用分解</li>
+            <li><strong>内存转储：</strong> 内存问题期间的捕获堆转储</li>
+            <li><strong>帖子倾倒：</strong> 饥饿期间的捕获线程堆栈</li>
+            <li><strong>JFR（爪哇飞行记录仪）：</strong> 配置文件 Java 应用</li>
+        </ul>
+        </section>
+
+        <section id="kql-queries" class="card">
+        <h2>日志分析 / KQL 查询</h2>
+
+        <p>用于分析仿真效应的实用KQL查询：</p>
+
+        <h3>高 CPU 请求</h3>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where ScStatus >= 500
+| summarize Count=count() by bin(TimeGenerated, 1m)
+| render timechart</code></pre>
+
+        <h3>响应时间缓慢</h3>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where TimeTaken > 5000
+| project TimeGenerated, CsUriStem, TimeTaken, ScStatus
+| order by TimeTaken desc</code></pre>
+
+        <h3>内存使用模式</h3>
+        <pre><code>AppServicePlatformLogs
+| where TimeGenerated > ago(1h)
+| where Level == "Informational"
+| project TimeGenerated, Message
+| order by TimeGenerated desc</code></pre>
+        </section>
+
+        <section id="java-diagnostics" class="card">
+        <h2>Java 专用诊断</h2>
+
+        <h3>启用JMX进行远程监控</h3>
+        <p>为JMX访问（仅开发）添加以下应用设置：</p>
+        <pre><code>JAVA_OPTS=-Dcom.sun.management.jmxremote \
+  -Dcom.sun.management.jmxremote.port=9010 \
+  -Dcom.sun.management.jmxremote.local.only=false \
+  -Dcom.sun.management.jmxremote.authenticate=false \
+  -Dcom.sun.management.jmxremote.ssl=false</code></pre>
+
+        <h3>启用 GC 日志</h3>
+        <pre><code>JAVA_OPTS=-Xlog:gc*:file=/home/LogFiles/gc.log:time,level,tags</code></pre>
+
+        <h3>堆积倾倒 OOM</h3>
+        <pre><code>JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError \
+  -XX:HeapDumpPath=/home/LogFiles/heapdump.hprof</code></pre>
+
+        <h3>读取线程转储：连接池耗尽</h3>
+        <p>诊断连接池问题时，要注意线程 <code>TIMED_WAITING</code> 资源获取时被封锁状态：</p>
+        <pre><code>"http-nio-8080-exec-42" #42 daemon prio=5 TIMED_WAITING
+    at jdk.internal.misc.Unsafe.park(Native Method)
+    at java.util.concurrent.locks.LockSupport.parkNanos(...)
+    at java.util.concurrent.Semaphore.tryAcquire(...)</code></pre>
+        
+        <p><strong>真实的HikariCP示例：</strong></p>
+        <pre><code>"http-nio-8080-exec-15" TIMED_WAITING
+    at com.zaxxer.hikari.pool.HikariPool.getConnection(...)
+    at com.zaxxer.hikari.HikariDataSource.getConnection(...)</code></pre>
+
+        <p><strong>帖子里说的意思是：</strong></p>
+        <ul>
+            <li><strong>可跑</strong> —— 积极执行（CPU 工作）</li>
+            <li><strong>被封锁</strong> — 等待监视器锁（同步块）</li>
+            <li><strong>等待</strong> — 无限期等待（Object.wait， Thread.join）</li>
+            <li><strong>TIMED_WAITING</strong> — 带暂停等待（泳池暂停常见）</li>
+        </ul>
+
+        <p>TIMED_WAITING中许多线程关于池获取 = 连接池耗尽。增加查询池大小或缩短查询等待时间。</p>
+        </section>
+
+        <section id="mapping" class="card">
+        <h2>仿真→诊断映射</h2>
+
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color);">
+                    <th style="padding: 0.75rem; text-align: left;">模拟</th>
+                    <th style="padding: 0.75rem; text-align: left;">Azure 工具</th>
+                    <th style="padding: 0.75rem; text-align: left;">注意点</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 0.75rem;">CPU 压力</td>
+                    <td style="padding: 0.75rem;">AppLens，度量</td>
+                    <td style="padding: 0.75rem;">CPU %峰值，可能降频</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">记忆压力</td>
+                    <td style="padding: 0.75rem;">指标，内存转储</td>
+                    <td style="padding: 0.75rem;">记忆工作组增加，频率GC</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">线缆饥饿</td>
+                    <td style="padding: 0.75rem;">AppLens，线程转储</td>
+                    <td style="padding: 0.75rem;">延迟峰值， HTTP 队列长度</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">连接池</td>
+                    <td style="padding: 0.75rem;">线程转储，日志</td>
+                    <td style="padding: 0.75rem;">线程等待信号量，日志中超时错误</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">坠毁</td>
+                    <td style="padding: 0.75rem;">AppLens，日志</td>
+                    <td style="padding: 0.75rem;">实例重启，可用性下降</td>
+                </tr>
+            </tbody>
+        </table>
+        </section>
+
+        <section id="best-practices" class="card">
+        <h2>最佳实践</h2>
+
+        <div class="note">
+            <h4>从小处开始</h4>
+            <p>从短时间（10-30秒）和低强度的模拟开始
+            （2-4名工作者，100-200MB内存）以便在扩展前了解基线影响。</p>
+        </div>
+
+        <div class="note">
+            <h4>模拟前先监控</h4>
+            <p>在比赛前观察几分钟的指标，建立基线
+            开始任何模拟。这使得识别变化变得更容易。</p>
+        </div>
+
+        <div class="warning">
+            <h4>制作注意</h4>
+            <p>绝不要在生产环境中运行碰撞模拟或高强度压力测试
+            环境。使用分期/开发时段进行测试。</p>
+        </div>
+        </section>
+    </main>
+    
+    <!-- Right-side Table of Contents -->
+    <aside class="doc-toc">
+        <div class="doc-toc-inner">
+            <h2>在本页</h2>
+            <a href="#overview" class="doc-toc-link active"><span class="toc-icon">📄</span> 概述</a>
+            <a href="#simulation-ids" class="doc-toc-link"><span class="toc-icon">🔗</span> 仿真ID</a>
+            
+            <div class="doc-toc-section-label">AZURE 工具</div>
+            <a href="#applens" class="doc-toc-link"><span class="toc-icon">🔍</span>AppLens</a>
+            <a href="#azure-monitor" class="doc-toc-link"><span class="toc-icon">📊</span>Azure 监视器</a>
+            <a href="#app-insights" class="doc-toc-link"><span class="toc-icon">💡</span>Application Insights</a>
+            <a href="#diagnose-solve" class="doc-toc-link"><span class="toc-icon">🔧</span> 诊断与解决</a>
+            <a href="#kql-queries" class="doc-toc-link"><span class="toc-icon">📝</span> KQL 查询</a>
+            
+            <div class="doc-toc-section-label">参考文献</div>
+            <a href="#java-diagnostics" class="doc-toc-link"><span class="toc-icon">☕</span> Java 诊断</a>
+            <a href="#mapping" class="doc-toc-link"><span class="toc-icon">🗺️</span> 诊断映射</a>
+            <a href="#best-practices" class="doc-toc-link"><span class="toc-icon">✅</span> 最佳实践</a>
+        </div>
+    </aside>
+    </div>
+
+    <footer>
+        <p>性能问题模拟器—— Azure App Service 诊断的教育工具</p>
+        <p id="footer-credits"></p>
+        <p id="build-info">建造：加载中......</p>
+    </footer>
+
+    <script>
+        // Sidebar navigation toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarDrawer = document.getElementById('sidebar-drawer');
+        const sidebarClose = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            hamburgerBtn.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            sidebarDrawer.classList.add('active');
+        }
+
+        function closeSidebar() {
+            hamburgerBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            sidebarDrawer.classList.remove('active');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        // TOC scroll highlighting
+        const tocLinks = document.querySelectorAll('.doc-toc-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        function highlightToc() {
+            let current = '';
+            const viewportHeight = window.innerHeight;
+            
+            // Find the section that's most visible in viewport
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                // Section is considered "current" if its top is in upper 40% of viewport
+                if (rect.top <= viewportHeight * 0.4 && rect.bottom > 0) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            // If no section found (scrolled to very top), use first section
+            if (!current && sections.length > 0) {
+                current = sections[0].getAttribute('id');
+            }
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', highlightToc);
+        highlightToc();
+
+        // Load SKU info
+        async function loadSkuInfo() {
+            try {
+                const response = await fetch('/api/health/environment');
+                const data = await response.json();
+                const skuBadge = document.getElementById('sku-badge');
+                if (skuBadge) {
+                    skuBadge.textContent = data.isAzure ? `SKU: ${data.sku}` : 'SKU: Local';
+                }
+            } catch (error) {
+                console.log('Could not load SKU info');
+            }
+        }
+        loadSkuInfo();
+
+        // Load footer info
+        async function loadBuildInfo() {
+            try {
+                const response = await fetch('/api/health/footer');
+                const data = await response.json();
+                
+                const footerCredits = document.getElementById('footer-credits');
+                if (footerCredits) {
+                    if (data.footer) {
+                        footerCredits.innerHTML = data.footer;
+                    } else {
+                        footerCredits.style.display = 'none';
+                    }
+                }
+                
+                const buildInfo = document.getElementById('build-info');
+                if (buildInfo) {
+                    buildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+                
+                const sidebarBuildInfo = document.getElementById('sidebar-build-info');
+                if (sidebarBuildInfo) {
+                    sidebarBuildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+            } catch (error) {
+                console.log('Could not load footer info');
+            }
+        }
+        loadBuildInfo();
+
+        // Load GitHub link configuration
+        async function loadGithubLink() {
+            try {
+                const response = await fetch('/api/health/config');
+                const config = await response.json();
+                if (config.githubUserName && config.githubRepoName) {
+                    const githubLink = document.getElementById('github-repo-link');
+                    if (githubLink) {
+                        githubLink.href = `https://github.com/${config.githubUserName}/${config.githubRepoName}`;
+                        githubLink.style.display = '';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load GitHub link config');
+            }
+        }
+        loadGithubLink();
+    </script>
+</body>
+</html>

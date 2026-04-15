@@ -53,6 +53,8 @@ public class EventLogEntry {
     private String simulationId;
     private SimulationType simulationType;
     private Map<String, Object> details;
+    private String messageKey;
+    private Map<String, Object> messageParams;
 
     public EventLogEntry() {
         this.id = UUID.randomUUID().toString();
@@ -130,5 +132,21 @@ public class EventLogEntry {
 
     public void setDetails(Map<String, Object> details) {
         this.details = details;
+    }
+
+    public String getMessageKey() {
+        return messageKey;
+    }
+
+    public void setMessageKey(String messageKey) {
+        this.messageKey = messageKey;
+    }
+
+    public Map<String, Object> getMessageParams() {
+        return messageParams;
+    }
+
+    public void setMessageParams(Map<String, Object> messageParams) {
+        this.messageParams = messageParams;
     }
 }

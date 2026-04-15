@@ -106,7 +106,8 @@ public class CpuStressService {
                         request.getIntensity(), threadCount, request.getDurationSeconds()),
                 simulation.getId(),
                 SimulationType.CPU_STRESS,
-                params
+                params,
+                "srv.cpu.started", Map.of("intensity", String.valueOf(request.getIntensity()), "threads", threadCount, "duration", request.getDurationSeconds())
         );
 
         // Track simulation start in Application Insights
@@ -188,7 +189,8 @@ public class CpuStressService {
                     "CPU stress completed",
                     simulationId,
                     SimulationType.CPU_STRESS,
-                    null
+                    null,
+                    "srv.cpu.completed", null
             );
             telemetryService.trackSimulationCompleted(simulationId, SimulationType.CPU_STRESS.name());
         } else {
@@ -198,7 +200,8 @@ public class CpuStressService {
                     "CPU stress stopped by user",
                     simulationId,
                     SimulationType.CPU_STRESS,
-                    null
+                    null,
+                    "srv.cpu.stopped", null
             );
             telemetryService.trackSimulationStopped(simulationId, SimulationType.CPU_STRESS.name());
         }

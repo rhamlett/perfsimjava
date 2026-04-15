@@ -733,6 +733,69 @@ az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GRO
             ├── dashboard.js          # UI interactions & controls
             └── socket-client.js      # STOMP/SockJS client</code></pre>
         </section>
+
+        <section id="language-selection" class="card">
+        <h2>🌐 Language Selection</h2>
+        <p>The dashboard UI can be displayed in any language supported by <strong>Azure Cognitive Services Translator</strong>. Translation is performed once at application startup and cached — there is zero runtime translation overhead.</p>
+
+        <h3>How It Works</h3>
+        <ol>
+            <li><strong>Set the <code>UI_LANGUAGE</code> environment variable</strong> to an ISO 639-1 language code (e.g., <code>es</code>, <code>fr</code>, <code>ja</code>, <code>zh-Hans</code>)</li>
+            <li><strong>Provide Azure Translator credentials</strong> via environment variables</li>
+            <li>On startup, the app translates all UI strings (<code>en.json</code> → <code>{lang}.json</code>) and HTML documentation pages</li>
+            <li>Translated files are cached with a SHA-256 hash of the source — they are only re-translated when the source changes</li>
+        </ol>
+
+        <h3>Required Environment Variables</h3>
+        <table style="width:100%; border-collapse:collapse; margin:1rem 0;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--color-bg);">
+                    <th style="text-align:left; padding:0.5rem;">Variable</th>
+                    <th style="text-align:left; padding:0.5rem;">Description</th>
+                    <th style="text-align:left; padding:0.5rem;">Default</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>UI_LANGUAGE</code></td>
+                    <td style="padding:0.5rem;">Target language code</td>
+                    <td style="padding:0.5rem;"><code>en</code> (no translation)</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>TRANSLATOR_API_KEY</code></td>
+                    <td style="padding:0.5rem;">Azure Translator API key</td>
+                    <td style="padding:0.5rem;">—</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>TRANSLATOR_ENDPOINT</code></td>
+                    <td style="padding:0.5rem;">Translator service endpoint</td>
+                    <td style="padding:0.5rem;"><code>https://api.cognitive.microsofttranslator.com</code></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>TRANSLATOR_REGION</code></td>
+                    <td style="padding:0.5rem;">Azure region of the Translator resource</td>
+                    <td style="padding:0.5rem;"><code>eastus</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Azure App Service Configuration</h3>
+        <p>In the Azure Portal, go to your App Service → <strong>Configuration</strong> → <strong>Application settings</strong> and add:</p>
+        <pre><code>UI_LANGUAGE=es
+TRANSLATOR_API_KEY=your-key-here
+TRANSLATOR_REGION=eastus</code></pre>
+
+        <h3>Protected Terms</h3>
+        <p>Technical terms listed in <code>locales/no-translate.json</code> (e.g., "Azure App Service", "CPU", "JVM", "STOMP") are automatically wrapped in <code>&lt;span class="notranslate"&gt;</code> tags before translation, ensuring they remain in English regardless of target language.</p>
+
+        <h3>Cache Behavior</h3>
+        <ul>
+            <li>Translated locale files are stored as <code>locales/{lang}.json</code> (e.g., <code>locales/es.json</code>)</li>
+            <li>Translated HTML documents are stored as <code>{name}.{lang}.html</code> (e.g., <code>docs.es.html</code>)</li>
+            <li>Each cached file includes a SHA-256 hash of the source — if the English source hasn't changed, translation is skipped</li>
+            <li>Delete the cached file to force re-translation on next restart</li>
+        </ul>
+        </section>
     </main>
     
     <!-- Right-side Table of Contents -->
@@ -752,6 +815,7 @@ az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GRO
             <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Crash Simulation</a>
             <a href="#optional-config" class="doc-toc-link"><span class="toc-icon">⚙️</span> Optional Config</a>
             <a href="#architecture" class="doc-toc-link"><span class="toc-icon">🏗️</span> Architecture</a>
+            <a href="#language-selection" class="doc-toc-link"><span class="toc-icon">🌐</span> Language Selection</a>
         </div>
     </aside>
     </div>

@@ -68,19 +68,19 @@ const SocketClient = (function() {
             switch (status) {
                 case 'connected':
                     statusEl.classList.add('status-connected');
-                    statusEl.textContent = 'Connected';
+                    statusEl.textContent = typeof I18N !== 'undefined' ? I18N.t('status.connected') : 'Connected';
                     break;
                 case 'disconnected':
                     statusEl.classList.add('status-disconnected');
-                    statusEl.textContent = 'Disconnected';
+                    statusEl.textContent = typeof I18N !== 'undefined' ? I18N.t('status.disconnected') : 'Disconnected';
                     break;
                 case 'connecting':
                     statusEl.classList.add('status-reconnecting');
-                    statusEl.textContent = 'Connecting...';
+                    statusEl.textContent = typeof I18N !== 'undefined' ? I18N.t('status.connecting') : 'Connecting...';
                     break;
                 case 'idle':
                     statusEl.classList.add('status-idle');
-                    statusEl.textContent = 'Idle';
+                    statusEl.textContent = typeof I18N !== 'undefined' ? I18N.t('status.idle') : 'Idle';
                     break;
             }
         }
@@ -128,7 +128,10 @@ const SocketClient = (function() {
                 // We were disconnected, now reconnected
                 const downtime = ((Date.now() - disconnectTime) / 1000).toFixed(1);
                 if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
-                    Dashboard.addEvent('info', `WebSocket reconnected after ${downtime}s`);
+                    const msg = typeof I18N !== 'undefined'
+                        ? I18N.t('event.wsReconnected').replace('{downtime}', downtime)
+                        : `WebSocket reconnected after ${downtime}s`;
+                    Dashboard.addEvent('info', msg);
                 }
             }
             disconnectTime = null;
@@ -168,7 +171,10 @@ const SocketClient = (function() {
             if (!disconnectTimer) {
                 disconnectTimer = setTimeout(function() {
                     if (typeof Dashboard !== 'undefined' && Dashboard.addEvent) {
-                        Dashboard.addEvent('warn', 'WebSocket disconnected - real-time metrics paused');
+                        const msg = typeof I18N !== 'undefined'
+                            ? I18N.t('event.wsDisconnected')
+                            : 'WebSocket disconnected - real-time metrics paused';
+                        Dashboard.addEvent('warn', msg);
                     }
                     disconnectTimer = null;
                 }, 5000);

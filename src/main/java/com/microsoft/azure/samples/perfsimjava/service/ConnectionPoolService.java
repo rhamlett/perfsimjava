@@ -146,7 +146,8 @@ public class ConnectionPoolService {
                         concurrentQueries, poolSize, queryDurationSeconds, connectionTimeoutSeconds),
                 simId,
                 SimulationType.CONNECTION_POOL_EXHAUSTION,
-                params
+                params,
+                "srv.pool.started", Map.of("queries", concurrentQueries, "poolSize", poolSize, "queryDuration", queryDurationSeconds, "timeout", connectionTimeoutSeconds)
         );
 
         // Track simulation start in Application Insights
@@ -284,7 +285,7 @@ public class ConnectionPoolService {
         }
         
         activeSimulationId = null;
-        simulationTracker.completeSimulation(simulationId);;
+        simulationTracker.completeSimulation(simulationId);
         
         String summary = String.format("Pool exhaustion complete: %d successful, %d timed out",
                 successfulQueries.get(), timedOutRequests.get());
@@ -294,7 +295,8 @@ public class ConnectionPoolService {
                 summary,
                 simulationId,
                 SimulationType.CONNECTION_POOL_EXHAUSTION,
-                Map.of("successful", successfulQueries.get(), "timedOut", timedOutRequests.get())
+                Map.of("successful", successfulQueries.get(), "timedOut", timedOutRequests.get()),
+                "srv.pool.completed", Map.of("successful", successfulQueries.get(), "timedOut", timedOutRequests.get())
         );
         
         telemetryService.trackSimulationCompleted(simulationId, SimulationType.CONNECTION_POOL_EXHAUSTION.name());
@@ -334,7 +336,8 @@ public class ConnectionPoolService {
                 "Connection pool simulation stopped",
                 null,
                 SimulationType.CONNECTION_POOL_EXHAUSTION,
-                null
+                null,
+                "srv.pool.stopped", null
         );
         
         // Track all stopped simulations in Application Insights

@@ -58,6 +58,10 @@ Thumbs.db
 .env.local
 *.env
 
+# JDK installations (should be installed centrally, not in project)
+**/oracleJdk*/
+**/jdk-*/
+
 # Application specific
 /logs/
 *.hprof

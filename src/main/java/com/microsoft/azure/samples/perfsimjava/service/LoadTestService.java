@@ -332,6 +332,13 @@ public class LoadTestService {
                             "errorRate", periodErrorRate,
                             "currentConcurrent", stats.getCurrentConcurrent(),
                             "peakConcurrent", stats.getPeakConcurrent()
+                    ),
+                    "srv.loadtest.stats", Map.of(
+                            "requests", periodExternal,
+                            "avgMs", String.format("%.1f", stats.getAvgResponseTimeMs()),
+                            "maxMs", stats.getMaxResponseTimeMs(),
+                            "rps", String.format("%.2f", stats.getRequestsPerSecond()),
+                            "errorRate", String.format("%.1f", periodErrorRate)
                     )
             );
 

@@ -1,9 +1,10 @@
+<!-- source_hash:536571489992807d lang:zh generated:2026-04-14T21:08:42.119510700Z -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="page.title">Performance Problem Simulator - Java 21 - Dashboard</title>
+    <title data-i18n="page.title">性能问题模拟器 - Java 21 - 仪表盘</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -17,12 +18,12 @@
             <span></span>
             <span></span>
         </button>
-        <h1><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> <span data-i18n="header.title">Performance Problem Simulator - Java 21</span></h1>
-        <span id="sku-badge" class="sku-badge" data-i18n="header.skuLoading">SKU: Loading...</span>
+        <h1><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> <span data-i18n="header.title">性能问题模拟器 - Java 21</span></h1>
+        <span id="sku-badge" class="sku-badge" data-i18n="header.skuLoading">SKU：加载中......</span>
         <nav>
-            <button id="toggle-panel" class="btn-panel-toggle">🎮 <span data-i18n="header.simControls">Simulation Controls</span></button>
+            <button id="toggle-panel" class="btn-panel-toggle">🎮 <span data-i18n="header.simControls">模拟控制</span></button>
         </nav>
-        <div id="connection-status" class="status-disconnected" data-i18n="header.disconnected">Disconnected</div>
+        <div id="connection-status" class="status-disconnected" data-i18n="header.disconnected">断开连接</div>
     </header>
 
     <!-- Sidebar Drawer Navigation -->
@@ -30,45 +31,45 @@
     <aside id="sidebar-drawer" class="sidebar-drawer">
         <div class="sidebar-header">
             <h2><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> PerfSimJava</h2>
-            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">&times;</button>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">×</button>
         </div>
         <nav class="sidebar-nav">
-            <div class="sidebar-section-label" data-i18n="nav.sectionApp">Application</div>
+            <div class="sidebar-section-label" data-i18n="nav.sectionApp">应用</div>
             <a href="/" class="sidebar-nav-item active">
                 <span class="nav-icon">🎮</span>
-                <span class="nav-label"><span data-i18n="nav.dashboard">Dashboard</span><span class="nav-desc" data-i18n="nav.dashboardDesc">Live metrics & controls</span></span>
+                <span class="nav-label"><span data-i18n="nav.dashboard">仪表盘</span><span class="nav-desc" data-i18n="nav.dashboardDesc">实时指标与控制</span></span>
             </a>
             <div class="sidebar-divider"></div>
-            <div class="sidebar-section-label" data-i18n="nav.sectionDocs">Documentation</div>
+            <div class="sidebar-section-label" data-i18n="nav.sectionDocs">文献资料</div>
             <a href="/docs.html" class="sidebar-nav-item">
                 <span class="nav-icon">📚</span>
-                <span class="nav-label"><span data-i18n="nav.documentation">Documentation</span><span class="nav-desc" data-i18n="nav.documentationDesc">API reference & guides</span></span>
+                <span class="nav-label"><span data-i18n="nav.documentation">文献资料</span><span class="nav-desc" data-i18n="nav.documentationDesc">API 参考资料与指南</span></span>
             </a>
             <a href="/azure-diagnostics.html" class="sidebar-nav-item">
                 <span class="nav-icon">☁️</span>
-                <span class="nav-label"><span data-i18n="nav.diagnostics">Azure Diagnostics</span><span class="nav-desc" data-i18n="nav.diagnosticsDesc">Diagnose issues in App Service</span></span>
+                <span class="nav-label"><span data-i18n="nav.diagnostics">Azure 诊断</span><span class="nav-desc" data-i18n="nav.diagnosticsDesc">诊断App Service问题</span></span>
             </a>
             <a href="/azure-load-testing.html" class="sidebar-nav-item">
                 <span class="nav-icon">📈</span>
-                <span class="nav-label"><span data-i18n="nav.loadTesting">Azure Load Testing</span><span class="nav-desc" data-i18n="nav.loadTestingDesc">Load test endpoint & parameters</span></span>
+                <span class="nav-label"><span data-i18n="nav.loadTesting">Azure 负载测试</span><span class="nav-desc" data-i18n="nav.loadTestingDesc">载荷测试终点及参数</span></span>
             </a>
             <a href="/azure-deployment.html" class="sidebar-nav-item">
                 <span class="nav-icon">🚀</span>
-                <span class="nav-label"><span data-i18n="nav.deploy">Deploy to Azure</span><span class="nav-desc" data-i18n="nav.deployDesc">GitHub Actions + OIDC setup</span></span>
+                <span class="nav-label"><span data-i18n="nav.deploy">部署到 Azure</span><span class="nav-desc" data-i18n="nav.deployDesc">GitHub 动作 + OIDC 设置</span></span>
             </a>
             <div class="sidebar-divider"></div>
-            <div class="sidebar-section-label" data-i18n="nav.sectionExternal">External</div>
+            <div class="sidebar-section-label" data-i18n="nav.sectionExternal">外部</div>
             <a id="github-repo-link" href="#" target="_blank" class="sidebar-nav-item" style="display:none">
                 <span class="nav-icon">🐙</span>
-                <span class="nav-label"><span data-i18n="nav.github">GitHub Repository</span><span class="nav-desc" data-i18n="nav.githubDesc">Source code & issues</span></span>
+                <span class="nav-label"><span data-i18n="nav.github">GitHub 仓库</span><span class="nav-desc" data-i18n="nav.githubDesc">源代码与问题</span></span>
             </a>
             <a href="/swagger-ui/index.html" target="_blank" class="sidebar-nav-item">
                 <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="#85ea2d"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm0 1.144c5.995 0 10.856 4.861 10.856 10.856S17.995 22.856 12 22.856 1.144 17.995 1.144 12 6.005 1.144 12 1.144zm-.436 5.024c-.175.004-.353.013-.537.03-1.187.105-1.622.525-1.622 1.449v1.01H8v1.737h1.405v4.876h2.065v-4.876h1.405l.191-1.737h-1.596v-.88c0-.408.186-.52.504-.52h1.092V5.963s-.686-.095-1.502-.095zm3.156 1.117v.79h.54v2.18h-.54v.79h1.87v-.79h-.54v-2.97h-1.33z"/></svg></span>
-                <span class="nav-label"><span data-i18n="nav.swagger">Swagger API</span><span class="nav-desc" data-i18n="nav.swaggerDesc">Interactive API docs</span></span>
+                <span class="nav-label"><span data-i18n="nav.swagger">Swagger API</span><span class="nav-desc" data-i18n="nav.swaggerDesc">互动 API 文档</span></span>
             </a>
         </nav>
         <div class="sidebar-footer">
-            <div id="sidebar-build-info"><span data-i18n="nav.build">Build:</span> Loading...</div>
+            <div id="sidebar-build-info"><span data-i18n="nav.build">构建：</span> 加载中......</div>
         </div>
     </aside>
 
@@ -81,7 +82,7 @@
                         <div class="tile-content">
                             <div class="tile-icon">⚡</div>
                             <div class="tile-info">
-                                <span class="tile-label"><span data-i18n="metrics.cpu.label">CPU Usage</span> <span class="info-icon-small" data-i18n-title="metrics.cpu.tooltip" title="System CPU usage percentage">ⓘ</span></span>
+                                <span class="tile-label"><span data-i18n="metrics.cpu.label">CPU 使用</span> <span class="info-icon-small" data-i18n-title="metrics.cpu.tooltip" title="System CPU usage percentage">（一）</span></span>
                                 <div class="tile-value"><span id="cpu-value">0.0</span> <span class="tile-unit">%</span></div>
                             </div>
                         </div>
@@ -91,9 +92,9 @@
                         <div class="tile-content">
                             <div class="tile-icon">📊</div>
                             <div class="tile-info">
-                                <span class="tile-label"><span data-i18n="metrics.memory.label">Heap Used</span> <span class="info-icon-small" data-i18n-title="metrics.memory.tooltip" title="JVM heap memory currently in use">ⓘ</span></span>
-                                <div class="tile-value"><span id="memory-value">0</span> <span class="tile-unit">MB</span> <span id="memory-total" class="tile-subtext">of -- GB heap</span></div>
-                                <div class="tile-subvalue" id="system-memory">System: -- GB</div>
+                                <span class="tile-label"><span data-i18n="metrics.memory.label">堆的使用情况</span> <span class="info-icon-small" data-i18n-title="metrics.memory.tooltip" title="JVM heap memory currently in use">（一）</span></span>
+                                <div class="tile-value"><span id="memory-value">0</span> <span class="tile-unit">MB</span> <span id="memory-total" class="tile-subtext">的 -- GB 堆</span></div>
+                                <div class="tile-subvalue" id="system-memory">系统：-- GB</div>
                             </div>
                         </div>
                         <div class="metric-bar"><div class="metric-bar-fill" id="memory-bar" style="width: 0%;"></div></div>
@@ -102,7 +103,7 @@
                         <div class="tile-content">
                             <div class="tile-icon">🧵</div>
                             <div class="tile-info">
-                                <span class="tile-label"><span data-i18n="metrics.threads.label">Thread Count</span> <span class="info-icon-small" data-i18n-title="metrics.threads.tooltip" title="Active JVM threads including daemon threads">ⓘ</span></span>
+                                <span class="tile-label"><span data-i18n="metrics.threads.label">线数</span> <span class="info-icon-small" data-i18n-title="metrics.threads.tooltip" title="Active JVM threads including daemon threads">（一）</span></span>
                                 <div class="tile-value"><span id="threads-value">0</span></div>
                             </div>
                         </div>
@@ -112,7 +113,7 @@
                         <div class="tile-content">
                             <div class="tile-icon">📋</div>
                             <div class="tile-info">
-                                <span class="tile-label"><span data-i18n="metrics.queue.label">GC Overhead</span> <span class="info-icon-small" data-i18n-title="metrics.queue.tooltip" title="Percentage of time spent in garbage collection (>5% indicates memory pressure)">ⓘ</span></span>
+                                <span class="tile-label"><span data-i18n="metrics.queue.label">GC 上方</span> <span class="info-icon-small" data-i18n-title="metrics.queue.tooltip" title="Percentage of time spent in garbage collection (>5%表示记忆压力）“>（i）</span></span>
                                 <div class="tile-value"><span id="gc-value">0</span>%</div>
                             </div>
                         </div>
@@ -125,18 +126,18 @@
             <section id="charts-section">
                 <div class="charts-grid">
                     <div class="chart-card">
-                        <h3>📈 <span data-i18n="charts.cpuMemory">CPU & Memory Over Time</span></h3>
+                        <h3>📈 <span data-i18n="charts.cpuMemory">CPU 与记忆与时间的变迁</span></h3>
                         <div class="chart-legend">
-                            <span class="legend-item"><span class="legend-color" style="background: #0078d4;"></span> CPU %</span>
-                            <span class="legend-item"><span class="legend-color" style="background: #1d6f1d;"></span> Heap MB</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #0078d4;"></span>CPU%</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #1d6f1d;"></span> 堆 MB</span>
                         </div>
                         <canvas id="cpuMemoryChart"></canvas>
                     </div>
                     <div class="chart-card">
-                        <h3>🧵 <span data-i18n="charts.threadPool">Threads & GC Activity</span></h3>
+                        <h3>🧵 <span data-i18n="charts.threadPool">线程与 GC 活动</span></h3>
                         <div class="chart-legend">
-                            <span class="legend-item"><span class="legend-color" style="background: #8764b8;"></span> Threads</span>
-                            <span class="legend-item"><span class="legend-color" style="background: #ffb900;"></span> GC Time (ms)</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #8764b8;"></span> 螺丝</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #ffb900;"></span>GC 时间（ms）</span>
                         </div>
                         <canvas id="threadsGcChart"></canvas>
                     </div>
@@ -146,35 +147,35 @@
             <!-- Request Latency Monitor -->
             <section id="latency-section">
                 <div class="latency-card">
-                    <h3>⏱️ <span data-i18n="latency.title">Request Latency Monitor</span> <span id="probe-visualization" class="probe-visualization-inline" title="Probe history: Green=good, Yellow=degraded, Red=critical"></span></h3>
-                    <p class="latency-description" data-i18n="latency.desc">Measures actual response time to a lightweight probe endpoint. Times include server processing and queue time.</p>
+                    <h3>⏱️ <span data-i18n="latency.title">请求延迟监控器</span> <span id="probe-visualization" class="probe-visualization-inline" title="Probe history: Green=good, Yellow=degraded, Red=critical"></span></h3>
+                    <p class="latency-description" data-i18n="latency.desc">衡量对轻量级探针终点的实际响应时间。时间包括服务器处理和排队时间。</p>
                     
                     <div class="latency-stats">
                         <div class="latency-stat">
-                            <span class="stat-label" data-i18n="latency.current">CURRENT</span>
-                            <span class="stat-value" id="latency-current">0.0ms</span>
+                            <span class="stat-label" data-i18n="latency.current">现状</span>
+                            <span class="stat-value" id="latency-current">0.0毫秒</span>
                         </div>
                         <div class="latency-stat">
-                            <span class="stat-label" data-i18n="latency.avg">AVG (60S)</span>
-                            <span class="stat-value" id="latency-avg">0.0ms</span>
+                            <span class="stat-label" data-i18n="latency.avg">AVG（60多岁）</span>
+                            <span class="stat-value" id="latency-avg">0.0毫秒</span>
                         </div>
                         <div class="latency-stat">
-                            <span class="stat-label" data-i18n="latency.max">MAX (60S)</span>
-                            <span class="stat-value" id="latency-max">0.0ms</span>
+                            <span class="stat-label" data-i18n="latency.max">MAX（60年代）</span>
+                            <span class="stat-value" id="latency-max">0.0毫秒</span>
                         </div>
                         <div class="latency-stat">
-                            <span class="stat-label" data-i18n="latency.critical">CRITICAL (>30S)</span>
+                            <span class="stat-label" data-i18n="latency.critical">关键（>30多岁）</span>
                             <span class="stat-value" id="latency-critical">0</span>
                         </div>
                     </div>
                     <div class="thresholds">
-                        <span class="threshold-label" data-i18n="latency.thresholds">Thresholds:</span>
-                        <span class="threshold good" data-i18n="latency.good">● Good (&lt;150ms)</span>
-                        <span class="threshold degraded" data-i18n="latency.degraded">● Degraded (150ms-1s)</span>
-                        <span class="threshold severe" data-i18n="latency.severe">● Severe (&gt;1s)</span>
-                        <span class="threshold critical" data-i18n="latency.criticalThreshold">● Critical (&gt;30s)</span>
+                        <span class="threshold-label" data-i18n="latency.thresholds">门槛：</span>
+                        <span class="threshold good" data-i18n="latency.good">● 良好（&lt;150毫秒）</span>
+                        <span class="threshold degraded" data-i18n="latency.degraded">● 降级（150毫秒-1秒）</span>
+                        <span class="threshold severe" data-i18n="latency.severe">● 严重（&gt;1分）</span>
+                        <span class="threshold critical" data-i18n="latency.criticalThreshold">● 危急（&gt;30多岁）</span>
                     </div>
-                    <h4>📊 <span data-i18n="latency.chart">Response Latency Over Time</span></h4>
+                    <h4>📊 <span data-i18n="latency.chart">响应延迟随时间变化</span></h4>
                     <div class="latency-chart-container">
                         <canvas id="latencyChart"></canvas>
                     </div>
@@ -184,9 +185,9 @@
             <!-- Active Simulations -->
             <section id="active-section">
                 <div class="active-card">
-                    <h3>🏃 <span data-i18n="activeSims.title">Active Simulations</span></h3>
+                    <h3>🏃 <span data-i18n="activeSims.title">主动模拟</span></h3>
                     <div id="active-simulations-list">
-                        <p class="no-simulations" data-i18n="activeSims.none">No active simulations</p>
+                        <p class="no-simulations" data-i18n="activeSims.none">无主动模拟</p>
                     </div>
                 </div>
             </section>
@@ -195,10 +196,10 @@
             <section id="events-section">
                 <div class="event-log-card">
                     <div class="event-log-header">
-                        <h3>📜 <span data-i18n="eventLog.title">Event Log</span></h3>
+                        <h3>📜 <span data-i18n="eventLog.title">活动日志</span></h3>
                         <button id="copy-event-log-btn" class="copy-btn" title="Copy event log to clipboard">
                             <span class="copy-icon">📋</span>
-                            <span class="copy-text" data-i18n="eventLog.copy">Copy</span>
+                            <span class="copy-text" data-i18n="eventLog.copy">收到</span>
                         </button>
                     </div>
                     <div id="eventLog" class="event-log"></div>
@@ -209,145 +210,140 @@
         <!-- Side Panel for Simulation Controls -->
         <aside id="simulation-panel" class="side-panel">
             <div class="panel-header">
-                <h2>🎮 <span data-i18n="sim.title">Simulation Controls</span></h2>
+                <h2>🎮 <span data-i18n="sim.title">模拟控制</span></h2>
                 <button id="close-panel" class="close-btn">✕</button>
             </div>
             <div class="panel-content">
                 <!-- CPU Stress -->
                 <div class="control-section cpu-section">
-                    <h3>🔥 <span data-i18n="sim.cpu.title">CPU Stress</span> <span class="info-icon" data-i18n-title="sim.cpu.tooltip" title="Spawns worker threads performing cryptographic operations">ℹ️</span></h3>
-                    <p class="control-description" data-i18n="sim.cpu.desc">Spawns worker threads running intensive cryptographic operations to stress CPU cores.</p>
+                    <h3>🔥 <span data-i18n="sim.cpu.title">CPU 压力</span> <span class="info-icon" data-i18n-title="sim.cpu.tooltip" title="Spawns worker threads performing cryptographic operations">i️</span></h3>
+                    <p class="control-description" data-i18n="sim.cpu.desc">会生成运行密集加密操作的工线程，以对 CPU 核心施加压力。</p>
                     <form id="cpu-form">
                         <label>
-                            <span data-i18n="sim.cpu.duration">Duration (s):</span>
+                            <span data-i18n="sim.cpu.duration">持续时间：</span>
                             <input type="number" id="cpuDuration" value="30" min="1">
                         </label>
                         <label>
-                            <span data-i18n="sim.cpu.intensity">Intensity:</span>
+                            <span data-i18n="sim.cpu.intensity">强度：</span>
                             <select id="cpuIntensity" class="wide-select">
-                                <option value="HIGH" selected data-i18n="sim.cpu.high">High</option>
-                                <option value="MODERATE" data-i18n="sim.cpu.moderate">Moderate</option>
+                                <option value="HIGH" selected data-i18n="sim.cpu.high">高</option>
+                                <option value="MODERATE" data-i18n="sim.cpu.moderate">中等</option>
                             </select>
                         </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-cpu">🔥 <span data-i18n="sim.cpu.trigger">Trigger CPU Stress</span></button>
-                            <button type="button" id="stop-cpu" class="btn-stop">⬛ <span data-i18n="sim.cpu.stop">Stop</span></button>
+                            <button type="submit" class="btn-trigger btn-cpu">🔥 <span data-i18n="sim.cpu.trigger">压力 CPU 诱因</span></button>
+                            <button type="button" id="stop-cpu" class="btn-stop">⬛ <span data-i18n="sim.cpu.stop">停下</span></button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Memory Pressure -->
                 <div class="control-section memory-section">
-                    <h3>📊 <span data-i18n="sim.memory.title">Memory Pressure</span> <span class="info-icon" data-i18n-title="sim.memory.tooltip" title="Memory is held until released. Multiple allocations stack. Watch for GC pauses.">ℹ️</span></h3>
-                    <p class="control-description" data-i18n="sim.memory.desc">Allocates Buffer blocks filled with random data. Multiple allocations stack - mimics gradual memory leak.</p>
+                    <h3>📊 <span data-i18n="sim.memory.title">记忆压力</span> <span class="info-icon" data-i18n-title="sim.memory.tooltip" title="Memory is held until released. Multiple allocations stack. Watch for GC pauses.">i️</span></h3>
+                    <p class="control-description" data-i18n="sim.memory.desc">分配填充随机数据的缓冲区块。多重分配堆叠——模拟渐进式内存泄漏。</p>
                     <form id="memory-form">
                         <label>
-                            <span data-i18n="sim.memory.size">Size (MB):</span>
+                            <span data-i18n="sim.memory.size">尺寸（MB）：</span>
                             <input type="number" id="memoryTarget" value="512" min="1">
                         </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-memory">☑️ <span data-i18n="sim.memory.allocate">Allocate</span></button>
-                            <button type="button" id="release-memory" class="btn-release">🗑️ <span data-i18n="sim.memory.release">Release</span></button>
+                            <button type="submit" class="btn-trigger btn-memory">☑️ <span data-i18n="sim.memory.allocate">分配</span></button>
+                            <button type="button" id="release-memory" class="btn-release">🗑️ <span data-i18n="sim.memory.release">发行</span></button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Thread Pool Starvation -->
                 <div class="control-section threads-section">
-                    <h3>🧵 <span data-i18n="sim.thread.title">Thread Pool Starvation</span> <span class="info-icon" data-i18n-title="sim.thread.tooltip" title="Blocks servlet threads to starve the thread pool (Java equivalent of Event Loop Blocking)">⚠️</span></h3>
-                    <p class="control-description" data-i18n="sim.thread.desc">Blocks servlet threads to simulate thread pool exhaustion. Server becomes unresponsive to new requests.</p>
+                    <h3>🧵 <span data-i18n="sim.thread.title">线池饥饿</span> <span class="info-icon" data-i18n-title="sim.thread.tooltip" title="Blocks servlet threads to starve the thread pool (Java equivalent of Event Loop Blocking)">⚠️</span></h3>
+                    <p class="control-description" data-i18n="sim.thread.desc">块 servlet 线程以模拟线程池耗尽。服务器对新请求变得无响应。</p>
                     <div class="note-box" style="font-size: 0.85rem; margin-bottom: 0.75rem;">
-                        <span data-i18n="sim.thread.durationNoteText">⏱️ <strong>Duration Note:</strong> Each blocking request runs for the specified duration. If threads &gt; pool size (~200), excess requests queue and run in waves. Total time ≈ <code>duration × ⌈threads/200⌉</code>.</span>
+                        <span data-i18n="sim.thread.durationNoteText">⏱️ <strong>时长说明：</strong> 每个阻塞请求运行时间为指定时长。如果线程&gt;池大小（~200），超余请求会排队并分波运行。总时≈ <code>duration × ⌈threads/200⌉</code>.</span>
                     </div>
                     <form id="threads-form">
                         <label>
-                            <span data-i18n="sim.thread.threads">Blocked Threads:</span>
+                            <span data-i18n="sim.thread.threads">被封锁的讨论串：</span>
                             <input type="number" id="starvationCount" value="150" min="1">
                         </label>
                         <label>
-                            <span data-i18n="sim.thread.duration">Duration (s):</span>
+                            <span data-i18n="sim.thread.duration">持续时间：</span>
                             <input type="number" id="starvationDuration" value="10" min="1">
                         </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-threads">🧵 <span data-i18n="sim.thread.trigger">Start Thread Starvation</span></button>
-                            <button type="button" id="stop-threads" class="btn-stop">⬛ <span data-i18n="sim.thread.stop">Stop</span></button>
+                            <button type="submit" class="btn-trigger btn-threads">🧵 <span data-i18n="sim.thread.trigger">启动线程饥饿</span></button>
+                            <button type="button" id="stop-threads" class="btn-stop">⬛ <span data-i18n="sim.thread.stop">停下</span></button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Connection Pool Exhaustion -->
                 <div class="control-section connection-pool-section">
-                    <h3>🔌 <span data-i18n="sim.connPool.title">Connection Pool</span> <span class="info-icon" data-i18n-title="sim.connPool.tooltip" title="Simulates database connection pool exhaustion">ℹ️</span></h3>
-                    <p class="control-description" data-i18n="sim.connPool.desc">Simulates JDBC connection pool exhaustion. Concurrent queries exceed pool capacity, causing timeouts - a common Java production issue.</p>
+                    <h3>🔌 <span data-i18n="sim.connPool.title">连接池</span> <span class="info-icon" data-i18n-title="sim.connPool.tooltip" title="Simulates database connection pool exhaustion">i️</span></h3>
+                    <p class="control-description" data-i18n="sim.connPool.desc">模拟JDBC连接池耗尽。并发查询超过池容量，导致超时——这是常见的Java生产问题。</p>
                     <div class="note-box">
-                        <span data-i18n="sim.connPool.noteText">🔍 Thread dumps will show threads WAITING on Semaphore - identical to HikariCP/C3P0 pool exhaustion.</span>
+                        <span data-i18n="sim.connPool.noteText">🔍 线程转储会显示线程在Semaphore上等待——这和HikariCP/C3P0池耗尽完全相同。</span>
                     </div>
                     <form id="connection-pool-form">
                         <label>
-                            <span data-i18n="sim.connPool.poolSize">Pool Size</span> <span class="info-icon" data-i18n-title="sim.connPool.poolSizeTip" title="Max connections (like HikariCP maximumPoolSize)">ⓘ</span>:
-                            <input type="number" id="poolSize" value="10" min="1">
+                            <span data-i18n="sim.connPool.poolSize">泳池规模</span> <span class="info-icon" data-i18n-title="sim.connPool.poolSizeTip" title="Max connections (like HikariCP maximumPoolSize)">（一）</span>:                            <input type="number" id="poolSize" value="10" min="1">
                         </label>
                         <label>
-                            <span data-i18n="sim.connPool.queryDuration">Query Duration (s)</span> <span class="info-icon" data-i18n-title="sim.connPool.queryDurationTip" title="How long each slow query holds a connection">ⓘ</span>:
-                            <input type="number" id="queryDuration" value="30" min="1">
+                            <span data-i18n="sim.connPool.queryDuration">查询时长</span> <span class="info-icon" data-i18n-title="sim.connPool.queryDurationTip" title="How long each slow query holds a connection">（一）</span>:                            <input type="number" id="queryDuration" value="30" min="1">
                         </label>
                         <label>
-                            <span data-i18n="sim.connPool.concurrentQueries">Concurrent Queries</span> <span class="info-icon" data-i18n-title="sim.connPool.concurrentQueriesTip" title="Number of queries to execute (should exceed pool size)">ⓘ</span>:
-                            <input type="number" id="concurrentQueries" value="20" min="1">
+                            <span data-i18n="sim.connPool.concurrentQueries">并发查询</span> <span class="info-icon" data-i18n-title="sim.connPool.concurrentQueriesTip" title="Number of queries to execute (should exceed pool size)">（一）</span>:                            <input type="number" id="concurrentQueries" value="20" min="1">
                         </label>
                         <label>
-                            <span data-i18n="sim.connPool.connectionTimeout">Connection Timeout (s)</span> <span class="info-icon" data-i18n-title="sim.connPool.connectionTimeoutTip" title="How long queries wait for a connection before timing out">ⓘ</span>:
-                            <input type="number" id="connectionTimeout" value="5" min="1">
+                            <span data-i18n="sim.connPool.connectionTimeout">连接超时</span> <span class="info-icon" data-i18n-title="sim.connPool.connectionTimeoutTip" title="How long queries wait for a connection before timing out">（一）</span>:                            <input type="number" id="connectionTimeout" value="5" min="1">
                         </label>
                         <div class="btn-group">
-                            <button type="submit" class="btn-trigger btn-connection-pool">🔌 <span data-i18n="sim.connPool.trigger">Exhaust Pool</span></button>
-                            <button type="button" id="stop-connection-pool" class="btn-stop">⬛ <span data-i18n="sim.connPool.stop">Stop</span></button>
+                            <button type="submit" class="btn-trigger btn-connection-pool">🔌 <span data-i18n="sim.connPool.trigger">排气池</span></button>
+                            <button type="button" id="stop-connection-pool" class="btn-stop">⬛ <span data-i18n="sim.connPool.stop">停下</span></button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Failed Requests Simulation -->
                 <div class="control-section failed-requests-section">
-                    <h3>❌ <span data-i18n="sim.failed.title">Failed Requests</span> <span class="info-icon" data-i18n-title="sim.failed.tooltip" title="Generates HTTP 5xx errors visible in AppLens and Application Insights">ℹ️</span></h3>
-                    <p class="control-description" data-i18n="sim.failed.desc">Generates HTTP 500 errors by triggering requests with 100% error probability. Errors appear in AppLens and Application Insights.</p>
+                    <h3>❌ <span data-i18n="sim.failed.title">未完成的请求</span> <span class="info-icon" data-i18n-title="sim.failed.tooltip" title="Generates HTTP 5xx errors visible in AppLens and Application Insights">i️</span></h3>
+                    <p class="control-description" data-i18n="sim.failed.desc">通过触发100%错误概率的请求，生成 HTTP 500个错误。错误出现在 AppLens 和 Application Insights。</p>
                     <div class="note-box failed-requests-note">
-                        <span data-i18n="sim.failed.noteText">📊 Each request performs visible work before failing, appearing in the Request Latency Monitor.</span>
+                        <span data-i18n="sim.failed.noteText">📊 每个请求在失败前都会完成可见工作，并显示在请求延迟监视器中。</span>
                     </div>
                     <form id="failed-requests-form">
                         <label>
-                            <span data-i18n="sim.failed.count">Number of Requests</span> <span class="info-icon" data-i18n-title="sim.failed.countTip" title="How many HTTP 5xx errors to generate">ⓘ</span>:
-                            <input type="number" id="numberOfFailedRequests" value="10" min="1" max="1000">
+                            <span data-i18n="sim.failed.count">请求次数</span> <span class="info-icon" data-i18n-title="sim.failed.countTip" title="How many HTTP 5xx errors to generate">（一）</span>:                            <input type="number" id="numberOfFailedRequests" value="10" min="1" max="1000">
                         </label>
-                        <button type="submit" class="btn-trigger btn-failed-requests">❌ <span data-i18n="sim.failed.trigger">Generate Errors</span></button>
+                        <button type="submit" class="btn-trigger btn-failed-requests">❌ <span data-i18n="sim.failed.trigger">生成错误</span></button>
                     </form>
                 </div>
 
                 <!-- Crash Simulation -->
                 <div class="control-section crash-section">
-                    <h3>💥 <span data-i18n="sim.crash.title">Application Crash</span> <span class="info-icon" data-i18n-title="sim.crash.tooltip" title="Process terminates immediately. Azure App Service auto-restarts.">⚠️</span></h3>
-                    <p class="control-description" data-i18n="sim.crash.desc">Terminates the JVM process. Azure auto-restarts - observe the recovery in Event Log.</p>
+                    <h3>💥 <span data-i18n="sim.crash.title">应用崩溃</span> <span class="info-icon" data-i18n-title="sim.crash.tooltip" title="Process terminates immediately. Azure App Service auto-restarts.">⚠️</span></h3>
+                    <p class="control-description" data-i18n="sim.crash.desc">终止JVM进程。 Azure 自动重启——在事件日志中观察恢复情况。</p>
                     <form id="crash-form">
                         <label>
-                            <span data-i18n="sim.crash.type">Crash Type:</span>
+                            <span data-i18n="sim.crash.type">撞击类型：</span>
                             <select id="crashType" class="wide-select">
-                                <option value="FAILFAST" data-i18n="sim.crash.failfast">Fail Fast (Exit)</option>
-                                <option value="STACKOVERFLOW" data-i18n="sim.crash.stackoverflow">Stack Overflow</option>
-                                <option value="EXCEPTION" selected data-i18n="sim.crash.exception">Unhandled Exception</option>
-                                <option value="OOM" data-i18n="sim.crash.oom">Out of Memory</option>
+                                <option value="FAILFAST" data-i18n="sim.crash.failfast">快速失败（退出）</option>
+                                <option value="STACKOVERFLOW" data-i18n="sim.crash.stackoverflow">堆栈溢出</option>
+                                <option value="EXCEPTION" selected data-i18n="sim.crash.exception">未处理异常</option>
+                                <option value="OOM" data-i18n="sim.crash.oom">记忆之外</option>
                             </select>
                         </label>
-                        <button type="submit" class="btn-danger btn-crash">💥 <span data-i18n="sim.crash.trigger">Trigger Crash</span></button>
+                        <button type="submit" class="btn-danger btn-crash">💥 <span data-i18n="sim.crash.trigger">扳机撞击</span></button>
                     </form>
-                    <p class="crash-warning" data-i18n="sim.crash.warning">⚠️ This will TERMINATE the app!</p>
+                    <p class="crash-warning" data-i18n="sim.crash.warning">⚠️ 这会终止应用！</p>
                 </div>
             </div>
         </aside>
     </div>
 
     <footer>
-        <p data-i18n="footer.tagline">Performance Problem Simulator — Educational Tool for Azure App Service Diagnostics</p>
+        <p data-i18n="footer.tagline">性能问题模拟器—— Azure App Service 诊断的教育工具</p>
         <p id="footer-credits"></p>
-        <p id="build-info"><span data-i18n="footer.build">Build:</span> Loading...</p>
+        <p id="build-info"><span data-i18n="footer.build">构建：</span> 加载中......</p>
     </footer>
 
     <script src="/js/charts.js"></script>

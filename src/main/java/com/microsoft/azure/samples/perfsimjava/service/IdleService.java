@@ -117,7 +117,8 @@ public class IdleService {
             idleLogSent = false;
             logger.info("[IdleService] App waking up from idle state. Source: {}", source);
             eventLogService.warn(EventLogEntry.EventType.WAKING_UP,
-                    "App waking up from idle state. There may be gaps in diagnostics and logs.");
+                    "App waking up from idle state. There may be gaps in diagnostics and logs.",
+                    "log.idle.wakingUp", null);
         }
 
         return wasIdle;
@@ -148,7 +149,8 @@ public class IdleService {
                     logger.info("[IdleService] Application going idle after {} minutes of inactivity",
                             minutesSinceActivity);
                     eventLogService.warn(EventLogEntry.EventType.GOING_IDLE,
-                            "Application going idle, no health probes being sent. There will be gaps in diagnostics and logs.");
+                            "Application going idle, no health probes being sent. There will be gaps in diagnostics and logs.",
+                            "log.idle.goingIdle", null);
                 }
             }
             return true;

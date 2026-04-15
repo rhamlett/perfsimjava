@@ -119,7 +119,8 @@ public class FailedRequestsService {
                 String.format("Failed Requests: Generating %d HTTP 5xx errors", numberOfRequests),
                 simId,
                 SimulationType.FAILED_REQUESTS,
-                params
+                params,
+                "srv.failed.started", Map.of("count", numberOfRequests)
         );
 
         // Track simulation start in Application Insights
@@ -181,7 +182,8 @@ public class FailedRequestsService {
                         String.format("Failed Request #%d: HTTP %d - %s", requestNum, statusCode, errorType),
                         simulationId,
                         SimulationType.FAILED_REQUESTS,
-                        Map.of("requestNum", requestNum, "statusCode", statusCode, "errorType", errorType)
+                        Map.of("requestNum", requestNum, "statusCode", statusCode, "errorType", errorType),
+                        "srv.failed.error", Map.of("requestNum", requestNum, "statusCode", statusCode, "errorType", errorType)
                 );
                 
                 logger.info("[FailedRequests:{}] Request #{} failed as expected: HTTP {} - {}",
@@ -193,7 +195,8 @@ public class FailedRequestsService {
                         String.format("Failed Request #%d: Unexpected HTTP %d (expected 5xx)", requestNum, statusCode),
                         simulationId,
                         SimulationType.FAILED_REQUESTS,
-                        Map.of("requestNum", requestNum, "statusCode", statusCode)
+                        Map.of("requestNum", requestNum, "statusCode", statusCode),
+                        "srv.failed.unexpected", Map.of("requestNum", requestNum, "statusCode", statusCode)
                 );
                 
                 logger.warn("[FailedRequests:{}] Request #{} unexpectedly succeeded: HTTP {}",
@@ -210,7 +213,8 @@ public class FailedRequestsService {
                     String.format("Failed Request #%d: %s - %s", requestNum, errorType, e.getMessage()),
                     simulationId,
                     SimulationType.FAILED_REQUESTS,
-                    Map.of("requestNum", requestNum, "errorType", errorType, "message", e.getMessage())
+                    Map.of("requestNum", requestNum, "errorType", errorType, "message", e.getMessage()),
+                    "srv.failed.exception", Map.of("requestNum", requestNum, "errorType", errorType, "errorMessage", String.valueOf(e.getMessage()))
             );
             
             logger.error("[FailedRequests:{}] Request #{} threw exception: {} - {}",
@@ -294,7 +298,8 @@ public class FailedRequestsService {
                             "totalRequests", totalRequestsForCompletion,
                             "failedRequests", failed,
                             "successRate", String.format("%.1f%%", (double) failed / totalRequestsForCompletion * 100)
-                    )
+                    ),
+                    "srv.failed.completed", Map.of("failed", failed, "total", totalRequestsForCompletion)
             );
 
             telemetryService.trackSimulationCompleted(simulationId, SimulationType.FAILED_REQUESTS.name());
@@ -345,7 +350,8 @@ public class FailedRequestsService {
                             "completed", completedRequests.get(),
                             "failed", failedRequests.get(),
                             "total", totalRequestsForCompletion
-                    )
+                    ),
+                    "srv.failed.stopped", Map.of("completed", completedRequests.get(), "total", totalRequestsForCompletion, "failed", failedRequests.get())
             );
             
             telemetryService.trackSimulationStopped(activeSimulationId, SimulationType.FAILED_REQUESTS.name());

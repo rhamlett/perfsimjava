@@ -207,7 +207,7 @@ async function triggerCrash() {
     SocketClient.ensureWebSocket();
     const type = document.getElementById('crashType').value || 'EXCEPTION';
 
-    if (!confirm(`⚠️ Are you sure you want to trigger a ${type} crash? This may terminate the application.`)) {
+    if (!confirm(i18n('log.crash.confirmTitle') + '\n' + i18n('log.crash.confirmType', { type }) + '\n' + i18n('log.crash.confirmBody'))) {
         return;
     }
 
@@ -276,10 +276,13 @@ const Dashboard = (function() {
             if (lastKnownJvmStartTime !== null && lastKnownJvmStartTime !== currentJvmStartTime) {
                 const prevTime = new Date(lastKnownJvmStartTime).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' });
                 const newTime = new Date(currentJvmStartTime).toLocaleTimeString('en-US', { hour12: false, timeZone: 'UTC' });
+                const restartMsg = typeof I18N !== 'undefined'
+                    ? I18N.t('event.appRestarted').replace('{newTime}', newTime).replace('{prevTime}', prevTime)
+                    : `APPLICATION RESTARTED! Started at ${newTime} (previously ${prevTime}). This may indicate an unexpected crash (OOM, StackOverflow, etc.)`;
                 // Use crash styling for restart notification
                 addEventToLog({
                     level: 'WARN',
-                    message: `APPLICATION RESTARTED! Started at ${newTime} (previously ${prevTime}). This may indicate an unexpected crash (OOM, StackOverflow, etc.)`,
+                    message: restartMsg,
                     timestamp: new Date().toISOString(),
                     simulationType: 'CRASH_EXCEPTION'
                 });
@@ -419,7 +422,7 @@ const Dashboard = (function() {
             if (statusEl) {
                 statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
                 statusEl.classList.add('status-idle');
-                statusEl.textContent = 'Idle';
+                statusEl.textContent = typeof I18N !== 'undefined' ? I18N.t('status.idle') : 'Idle';
             }
             // Intentionally close WebSocket to prevent reconnect-induced status flicker
             SocketClient.closeForIdle();
@@ -431,7 +434,7 @@ const Dashboard = (function() {
             if (statusEl) {
                 statusEl.classList.remove('status-connected', 'status-disconnected', 'status-reconnecting', 'status-idle');
                 statusEl.classList.add('status-connected');
-                statusEl.textContent = 'Connected';
+                statusEl.textContent = typeof I18N !== 'undefined' ? I18N.t('status.connected') : 'Connected';
             }
         }
     }
@@ -607,7 +610,7 @@ const Dashboard = (function() {
                 
                 copyBtn.classList.add('copied');
                 iconSpan.textContent = '✓';
-                textSpan.textContent = 'Copied!';
+                textSpan.textContent = i18n('eventLog.copied');
                 
                 // Reset after 2 seconds
                 setTimeout(() => {
@@ -650,11 +653,11 @@ const Dashboard = (function() {
                 onSuccess();
             } else {
                 console.error('[Dashboard] execCommand copy failed');
-                addEvent('error', 'Failed to copy event log to clipboard');
+                addEvent('error', i18n('eventLog.copyFailed'));
             }
         } catch (error) {
             console.error('[Dashboard] Fallback copy failed:', error);
-            addEvent('error', 'Failed to copy event log to clipboard');
+            addEvent('error', i18n('eventLog.copyFailed'));
         }
         
         document.body.removeChild(textArea);
@@ -675,6 +678,27 @@ const Dashboard = (function() {
         return `<span class="timestamp">${utcTime}<span class="timestamp-tooltip">Local Time: ${localTime}</span></span>`;
     }
 
+    /**
+     * Resolves translated message text for a server event.
+     * Uses messageKey + messageParams from the server when available,
+     * falling back to the English message field.
+     */
+    function resolveEventMessage(event) {
+        if (event.messageKey && typeof I18N !== 'undefined') {
+            let translated = I18N.t(event.messageKey);
+            // If I18N returned the key itself, it wasn't found — fall back to message
+            if (translated !== event.messageKey && event.messageParams) {
+                for (const [key, value] of Object.entries(event.messageParams)) {
+                    translated = translated.replace('{' + key + '}', value);
+                }
+            }
+            if (translated !== event.messageKey) {
+                return translated;
+            }
+        }
+        return event.message;
+    }
+
     function addEventToLog(event, skipRender) {
         eventLog.unshift(event);
         if (skipRender) return;
@@ -686,6 +710,7 @@ const Dashboard = (function() {
             const timestampHtml = buildTimestampHtml(event.timestamp);
             const emoji = getSimulationEmoji(event.simulationType, event.event);
             const prefix = emoji ? emoji + ' ' : '';
+            const displayMessage = resolveEventMessage(event);
             
             const eventDiv = document.createElement('div');
             const nonSimClass = simClass ? '' : 'non-sim';
@@ -705,10 +730,10 @@ const Dashboard = (function() {
                 eventDiv.innerHTML = `${timestampHtml} ${prefix}<span class="sim-message" 
                     data-sim-id="${event.simulationId}" 
                     title="Click to copy Simulation ID: ${event.simulationId}"
-                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${event.message}</span>`;
+                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${displayMessage}</span>`;
             } else {
                 // Regular event without clickable simulation ID
-                eventDiv.innerHTML = `${timestampHtml} ${prefix}${event.message}`;
+                eventDiv.innerHTML = `${timestampHtml} ${prefix}${displayMessage}`;
             }
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
@@ -734,6 +759,7 @@ const Dashboard = (function() {
             const emoji = getSimulationEmoji(event.simulationType, event.event);
             const prefix = emoji ? emoji + ' ' : '';
             const nonSimClass = simClass ? '' : 'non-sim';
+            const displayMessage = resolveEventMessage(event);
 
             const eventDiv = document.createElement('div');
             eventDiv.className = `event ${levelClass} ${simClass} ${nonSimClass}`.trim();
@@ -750,9 +776,9 @@ const Dashboard = (function() {
                 eventDiv.innerHTML = `${timestampHtml} ${prefix}<span class="sim-message"
                     data-sim-id="${event.simulationId}"
                     title="Click to copy Simulation ID: ${event.simulationId}"
-                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${event.message}</span>`;
+                    onclick="Dashboard.copySimulationId('${event.simulationId}', this)">${displayMessage}</span>`;
             } else {
-                eventDiv.innerHTML = `${timestampHtml} ${prefix}${event.message}`;
+                eventDiv.innerHTML = `${timestampHtml} ${prefix}${displayMessage}`;
             }
 
             logEl.appendChild(eventDiv);
@@ -837,13 +863,13 @@ const Dashboard = (function() {
         addEventToLog({
             level: 'WARN',
             event: 'DISCLAIMER',
-            message: '⚖️ Deploy only in isolated, non-production environments. Licensed under MIT License.',
+            message: i18n('log.warning.license'),
             timestamp: new Date(baseTime).toISOString()
         }, true);
         addEventToLog({
             level: 'WARN',
             event: 'DISCLAIMER',
-            message: '⚖️ This software is provided "AS IS" without warranty. The author shall not be liable for any damages arising from use or misuse.',
+            message: i18n('log.warning.disclaimer'),
             timestamp: new Date(baseTime + 1).toISOString()
         }, true);
 
@@ -870,7 +896,7 @@ const Dashboard = (function() {
         }
         addEventToLog({
             level: 'SUCCESS',
-            message: `Dashboard initialized (probe rate: ${probeRate}ms, idle timeout: ${idleTimeoutStr})`,
+            message: i18n('log.system.initialized', { probeRate, idleTimeout: idleTimeoutStr }),
             timestamp: new Date(baseTime + 2).toISOString()
         }, true);
 
@@ -889,7 +915,7 @@ const Dashboard = (function() {
 
             addEventToLog({
                 level: 'INFO',
-                message: `Application is currently running on ${data.sku} SKU on worker ${data.computerName}`,
+                message: i18n('log.system.runningSku', { sku: data.sku, worker: data.computerName }),
                 timestamp: new Date(baseTime + 3).toISOString()
             }, true);
         } catch (error) {
@@ -899,7 +925,7 @@ const Dashboard = (function() {
         // 4. Connected message
         addEventToLog({
             level: 'INFO',
-            message: 'Connected to metrics hub',
+            message: i18n('log.connection.connected'),
             timestamp: new Date(baseTime + 4).toISOString()
         }, true);
 
@@ -907,7 +933,7 @@ const Dashboard = (function() {
         if (window._wokeFromIdle) {
             addEventToLog({
                 level: 'INFO',
-                message: 'App waking up from idle state. There may be gaps in diagnostics and logs.',
+                message: i18n('log.idle.wakingUp'),
                 timestamp: new Date(baseTime + 5).toISOString()
             }, true);
             window._wokeFromIdle = false;
@@ -962,7 +988,7 @@ const Dashboard = (function() {
                         </div>
                     `).join('') + '</div>';
                 } else {
-                    listEl.innerHTML = '<p class="no-simulations">No active simulations</p>';
+                    listEl.innerHTML = '<p class="no-simulations">' + i18n('activeSims.none') + '</p>';
                 }
             }
         } catch (error) {
@@ -1018,5 +1044,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (e) {
         // Non-blocking — WS will retry on its own
     }
+
+    // Fetch uiLanguage from config and initialize i18n BEFORE Dashboard.init()
+    // so that all logEvent calls have translations loaded.
+    let uiLanguage = 'en';
+    try {
+        const configResp = await fetch('/api/health/config');
+        const configData = await configResp.json();
+        uiLanguage = configData.uiLanguage || 'en';
+    } catch (e) {
+        console.log('[Dashboard] Could not fetch uiLanguage from config, defaulting to English');
+    }
+    await I18N.init(uiLanguage);
+
     Dashboard.init();
 });

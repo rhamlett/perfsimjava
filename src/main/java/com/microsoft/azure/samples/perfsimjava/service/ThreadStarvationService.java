@@ -105,7 +105,8 @@ public class ThreadStarvationService {
                         threadCount, durationSeconds),
                 simulation.getId(),
                 SimulationType.THREAD_STARVATION,
-                params
+                params,
+                "srv.thread.started", Map.of("threads", threadCount, "duration", durationSeconds)
         );
 
         // Track simulation start in Application Insights
@@ -166,7 +167,8 @@ public class ThreadStarvationService {
                         String.format("Thread starvation: %d threads now blocking (wave in progress)", currentCount),
                         simulationId,
                         SimulationType.THREAD_STARVATION,
-                        null
+                        null,
+                        "srv.thread.blocking", Map.of("count", currentCount)
                 );
             }
         }
@@ -203,7 +205,8 @@ public class ThreadStarvationService {
                             String.format("Thread starvation: %d threads still blocking (queued requests may start next wave)", remaining),
                             simulationId,
                             SimulationType.THREAD_STARVATION,
-                            null
+                            null,
+                            "srv.thread.remaining", Map.of("count", remaining)
                     );
                 }
                 
@@ -243,7 +246,8 @@ public class ThreadStarvationService {
                 "Thread starvation simulation completed",
                 simulationId,
                 SimulationType.THREAD_STARVATION,
-                null
+                null,
+                "srv.thread.completed", null
         );
         telemetryService.trackSimulationCompleted(simulationId, SimulationType.THREAD_STARVATION.name());
     }
@@ -274,7 +278,8 @@ public class ThreadStarvationService {
                     "Thread starvation simulation stopped by user",
                     simulationId,
                     SimulationType.THREAD_STARVATION,
-                    null
+                    null,
+                    "srv.thread.stopped", null
             );
             telemetryService.trackSimulationStopped(simulationId, SimulationType.THREAD_STARVATION.name());
             

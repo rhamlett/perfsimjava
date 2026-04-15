@@ -1,0 +1,678 @@
+<!-- source_hash:e0da315ea6721c32 lang:es generated:2026-04-15T00:28:37.953989600Z -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Diagnóstico - Simulador de Problemas de Rendimiento - Java 21</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Card-based Documentation Styles - Matching Deployment Page */
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 80px;
+            border: 1px solid #d0d0d0;
+        }
+
+        .card h2 {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-bg);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            color: var(--color-text);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card h4 {
+            color: var(--color-text-muted);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p, .card li {
+            line-height: 1.6;
+            color: var(--color-text-muted);
+        }
+
+        .card ul, .card ol {
+            margin: 0.5rem 0 1rem 1.5rem;
+        }
+
+        .card li {
+            margin-bottom: 0.25rem;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin: 1rem 0;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+
+        code {
+            background: rgba(0,0,0,0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            color: var(--color-danger);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid var(--color-bg);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--color-bg);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .note {
+            background: rgba(231, 111, 0, 0.1);
+            border-left: 4px solid var(--color-primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .note h4 {
+            color: var(--color-primary-dark);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .note p {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .warning {
+            background: rgba(209, 52, 56, 0.1);
+            border-left: 4px solid var(--color-danger);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .warning h4 {
+            color: var(--color-danger);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning p {
+            margin: 0;
+            color: var(--color-text);
+        }
+    </style>
+</head>
+<body class="page-secondary">
+    <header>
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> Simulador de Problemas de Rendimiento - Java 21</h1>
+        <span id="sku-badge" class="sku-badge">SKU: Local</span>
+        <nav>
+            <a href="/" class="nav-link">🎮 Salpicadero</a>
+        </nav>
+    </header>
+
+    <!-- Sidebar Drawer Navigation -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="sidebar-drawer" class="sidebar-drawer">
+        <div class="sidebar-header">
+            <h2><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> PerfSimJava</h2>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">×</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Aplicación</div>
+            <a href="/" class="sidebar-nav-item">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Salpicadero<span class="nav-desc">Métricas y controles en tiempo real</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Documentación</div>
+            <a href="/docs.html" class="sidebar-nav-item">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Documentación<span class="nav-desc">API Referencia y guías</span></span>
+            </a>
+            <a href="/azure-diagnostics.html" class="sidebar-nav-item active">
+                <span class="nav-icon">☁️</span>
+                <span class="nav-label">Azure Diagnóstico<span class="nav-desc">Diagnosticar problemas en App Service</span></span>
+            </a>
+            <a href="/azure-load-testing.html" class="sidebar-nav-item">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Azure Pruebas de carga<span class="nav-desc">Endpoint y parámetros de la prueba de carga</span></span>
+            </a>
+            <a href="/azure-deployment.html" class="sidebar-nav-item">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">Desplegar a Azure<span class="nav-desc">GitHub Acciones + configuración OIDC</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Externo</div>
+            <a id="github-repo-link" href="#" target="_blank" class="sidebar-nav-item" style="display:none">
+                <span class="nav-icon">🐙</span>
+                <span class="nav-label">GitHub Repositorio<span class="nav-desc">Código fuente y problemas</span></span>
+            </a>
+            <a href="/swagger-ui/index.html" target="_blank" class="sidebar-nav-item">
+                <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="#85ea2d"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm0 1.144c5.995 0 10.856 4.861 10.856 10.856S17.995 22.856 12 22.856 1.144 17.995 1.144 12 6.005 1.144 12 1.144zm-.436 5.024c-.175.004-.353.013-.537.03-1.187.105-1.622.525-1.622 1.449v1.01H8v1.737h1.405v4.876h2.065v-4.876h1.405l.191-1.737h-1.596v-.88c0-.408.186-.52.504-.52h1.092V5.963s-.686-.095-1.502-.095zm3.156 1.117v.79h.54v2.18h-.54v.79h1.87v-.79h-.54v-2.97h-1.33z"/></svg></span>
+                <span class="nav-label">Swagger API<span class="nav-desc">Documentación interactiva API</span></span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar-build-info">Construcción: Cargando...</div>
+        </div>
+    </aside>
+
+    <div class="app-container">
+    <!-- Page Header -->
+    <div class="doc-page-header">
+        <h1><span class="doc-icon">☁️</span>Azure Diagnóstico</h1>
+        <p class="doc-subtitle">Guía para diagnosticar problemas de rendimiento con herramientas Azure</p>
+    </div>
+    
+    <div class="doc-layout">
+    <main class="doc-content">
+        <section id="overview" class="card">
+        <h2>Resumen</h2>
+        <p>Esta guía explica cómo utilizar Azure herramientas de diagnóstico para analizar los problemas de rendimiento simulados por esta aplicación.</p>
+        </section>
+
+        <section id="simulation-ids" class="card">
+        <h2>🔗 Correlación ID de simulación</h2>
+        
+        <p>A cada instancia de simulación se le asigna un ID de simulación único (GUID) que permite una correlación de extremo a extremo 
+        entre la interfaz del panel de control y la telemetría Azure Application Insights .</p>
+
+        <h3>Encontrar identificadores de simulación</h3>
+        <p><strong>En el panel de control:</strong> Los mensajes de inicio y finalización de simulación en el Registro de Eventos tienen una 
+        subrayado punteado sutil que indica que son interactivos. Pasa el cursor sobre estos mensajes para ver el contenido completo 
+        ID de simulación en una descripción emergente. Haz clic para copiarlo en tu portapapeles.</p>
+
+        <p><strong>En Azure:</strong> El mismo ID de simulación se emite en los registros del lado del servidor y puede encontrarse en:</p>
+        <ul>
+            <li><strong>Application Insights</strong> — Trazas de búsqueda y eventos personalizados por ID de simulación</li>
+            <li><strong>Análisis de registros</strong> — Registros de consulta usando el ID como filtro</li>
+            <li><strong>App Service Registros</strong> — Filtra stdout/stderr por el GUID</li>
+        </ul>
+
+        <h3>Consultas de correlación</h3>
+        <p>Utiliza estas consultas KQL en Log Analytics para correlacionar eventos del panel con la telemetría del servidor:</p>
+
+        <div class="note">
+            <h4>⚠️ Diferencias en los nombres de las tablas</h4>
+            <p>Los espacios de trabajo de Log Analytics utilizan nombres de tablas y columnas diferentes a los Application Insightsclásicos. 
+            Si ves errores como "El nombre 'traces' no se refiere a ninguna tabla conocida", utiliza los nombres de Log Analytics que aparecen a continuación:</p>
+            <table style="width:100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.875rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 0.5rem; text-align: left;">Información de la aplicación</th>
+                        <th style="padding: 0.5rem; text-align: left;">Análisis de registros</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>traces</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppTraces</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>customEvents</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppEvents</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>requests</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppRequests</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>exceptions</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppExceptions</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>dependencies</code></td><td style="padding: 0.25rem 0.5rem;"><code>AppDependencies</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>message</code></td><td style="padding: 0.25rem 0.5rem;"><code>Message</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>timestamp</code></td><td style="padding: 0.25rem 0.5rem;"><code>TimeGenerated</code></td></tr>
+                    <tr><td style="padding: 0.25rem 0.5rem;"><code>customDimensions</code></td><td style="padding: 0.25rem 0.5rem;"><code>Properties</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <pre><code>// Find simulation start/end events by Simulation ID
+AppEvents
+| where Name in ("SimulationStarted", "SimulationEnded")
+| where Properties["SimulationId"] == "YOUR-SIMULATION-ID-HERE"
+| project TimeGenerated, Name, Properties
+| order by TimeGenerated asc</code></pre>
+
+        <pre><code>// Find all requests during a simulation time window
+let simStart = toscalar(
+    AppEvents 
+    | where Name == "SimulationStarted" and Properties["SimulationId"] == "YOUR-SIMULATION-ID-HERE"
+    | project TimeGenerated);
+let simEnd = toscalar(
+    AppEvents 
+    | where Name == "SimulationEnded" and Properties["SimulationId"] == "YOUR-SIMULATION-ID-HERE"
+    | project TimeGenerated);
+AppRequests
+| where TimeGenerated between (simStart .. simEnd)
+| order by TimeGenerated asc</code></pre>
+
+        <pre><code>// Find failed requests during a simulation
+let simId = "YOUR-SIMULATION-ID-HERE";
+let simEvents = AppEvents | where Properties["SimulationId"] == simId;
+let simStart = toscalar(simEvents | where Name == "SimulationStarted" | project TimeGenerated);
+let simEnd = toscalar(simEvents | where Name == "SimulationEnded" | project TimeGenerated);
+AppRequests
+| where TimeGenerated between (simStart .. simEnd)
+| where Success == false
+| project TimeGenerated, Name, ResultCode, DurationMs, Url
+| order by TimeGenerated asc</code></pre>
+
+        <h3>Flujo de trabajo de resolución de problemas</h3>
+        <ol>
+            <li>Inicia una simulación desde el panel de control</li>
+            <li>Pasa el cursor sobre el mensaje de inicio en el Registro de Eventos para copiar el ID de Simulación</li>
+            <li>Portal abierto Azure → Application Insights → Registros (o Análisis de Registros)</li>
+            <li>Consulta los registros usando el ID de simulación para ver toda la actividad relacionada del lado del servidor</li>
+            <li>Correlacionar las marcas de tiempo entre eventos del panel de control y métricas del servidor</li>
+        </ol>
+
+        <div class="note">
+            <h4>💡 Propina</h4>
+            <p>El ID de simulación ayuda a aislar la telemetría al ejecutar múltiples simulaciones simultáneas o 
+            cuando el panel de control es utilizado por varios usuarios.</p>
+        </div>
+        </section>
+
+        <section id="applens" class="card">
+        <h2>AppLens Integración</h2>
+        
+        <p>Esta aplicación está diseñada para funcionar con Azure AppLens enviando sondas de salud cada 100 ms 
+        a través del frontend de Azure sello. Esta sondeo de alta frecuencia garantiza que la latencia aumente y 
+        Los problemas de disponibilidad son visibles en AppLens paneles.</p>
+
+        <h3>Lo que AppLens puede detectar</h3>
+        <ul>
+            <li><strong>CPU Estrés:</strong> Gráficos de alta utilización de CPU , posibles alertas de limitación</li>
+            <li><strong>Presión de memoria:</strong>Picos de uso de memoria, patrones de potencial OOM</li>
+            <li><strong>Privación de hilos:</strong> Mayor latencia de solicitudes, cola de peticiones</li>
+            <li><strong>Fondo de conexiones:</strong> Los volcados de hilos muestran el estado ESPERANDO, errores de tiempo de espera</li>
+            <li><strong>Solicitudes fallidas:</strong>HTTP picos de error 5xx, caídas de disponibilidad, incrementos en la tasa de error</li>
+            <li><strong>Accidentes:</strong> La instancia se reinicia, la disponibilidad cae</li>
+        </ul>
+        </section>
+
+        <section id="azure-monitor" class="card">
+        <h2>Azure Monitorizar métricas</h2>
+
+        <p>Métricas clave a vigilar en Azure Monitor al ejecutar simulaciones:</p>
+
+        <h3>Métricas de plataforma</h3>
+        <ul>
+            <li><strong>CPU Porcentaje:</strong> Observa picos durante simulaciones de CPU esfuerzo</li>
+            <li><strong>Conjunto de trabajo de memoria:</strong> Aumentos durante simulaciones de presión de memoria</li>
+            <li><strong>HTTP Longitud de la cola:</strong> Crece durante la falta de hilo</li>
+            <li><strong>Tiempo de respuesta:</strong> Cuidado con aumentos de latencia en P95/P99</li>
+            <li><strong>Http 5xx:</strong> Aumentos durante solicitudes fallidas y simulaciones de fallo</li>
+        </ul>
+
+        <h3>Métricas de JVM (si App Insights está habilitado)</h3>
+        <ul>
+            <li><strong>jvm_memory_used:</strong> Memoria heap y no heap</li>
+            <li><strong>jvm_gc_pause:</strong>GC pausas</li>
+            <li><strong>jvm_threads_live:</strong> Conteo de hilos activos</li>
+        </ul>
+        </section>
+
+        <section id="app-insights" class="card">
+        <h2>Application Insights</h2>
+
+        <p>Si Application Insights está configurado, puedes usar estas funciones:</p>
+
+        <h3>Transmisión de métricas en directo</h3>
+        <p>Observa métricas en tiempo real durante las simulaciones:</p>
+        <ol>
+            <li>Navega hasta tu App Service en Azure Portal</li>
+            <li>Ve a Application Insights → Live Metrics</li>
+            <li>Observa CPU, memoria y tasas de solicitud en tiempo real</li>
+        </ol>
+
+        <h3>Búsqueda de transacciones</h3>
+        <p>Encuentra solicitudes lentas o fallidas:</p>
+        <ol>
+            <li>Ve a Application Insights → Búsqueda de transacciones</li>
+            <li>Filtra por "Solicitudes fallidas" o "Tiempo de respuesta del servidor > 5s"</li>
+            <li>Profundiza en solicitudes individuales para ver el desglose temporal</li>
+        </ol>
+
+        <h3>Mapa de aplicaciones</h3>
+        <p>Visualiza la salud y dependencias del servicio:</p>
+        <ol>
+            <li>Ir a Application Insights → Mapa de Aplicaciones</li>
+            <li>Busca indicadores rojos/amarillos durante las simulaciones</li>
+            <li>Comprueba si hay más tasas de fallo o latencia</li>
+        </ol>
+        </section>
+
+        <section id="diagnose-solve" class="card">
+        <h2>Diagnosticar y resolver problemas</h2>
+
+        <p>Azure App Service proporciona herramientas de diagnóstico integradas:</p>
+
+        <h3>Disponibilidad y rendimiento</h3>
+        <ol>
+            <li>Ve a App Service → Diagnosticar y resolver problemas</li>
+            <li>Selecciona "Disponibilidad y Rendimiento"</li>
+            <li>Consulta "HTTP 5xx Errores" para problemas relacionados con los cuelgues</li>
+            <li>Marca "High CPU" para detectar CPU estrés</li>
+            <li>Comprueba "Memoria" para detectar la detección de presión de memoria</li>
+        </ol>
+
+        <h3>Herramientas de diagnóstico</h3>
+        <ul>
+            <li><strong>CPU Profundiza en detalle:</strong> Consulta CPU desglose de uso por instancia</li>
+            <li><strong>Volcado de memoria:</strong> Volcado de captura de heap durante problemas de memoria</li>
+            <li><strong>Volcado de hilos:</strong> Captura de pilas de hilos durante la inanición</li>
+            <li><strong>JFR (Grabador de vuelo Java):</strong> Aplicación Java de perfiles</li>
+        </ul>
+        </section>
+
+        <section id="kql-queries" class="card">
+        <h2>Análisis de Registros / Consultas KQL</h2>
+
+        <p>Consultas útiles de KQL para analizar efectos de simulación:</p>
+
+        <h3>Peticiones de CPU altas</h3>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where ScStatus >= 500
+| summarize Count=count() by bin(TimeGenerated, 1m)
+| render timechart</code></pre>
+
+        <h3>Tiempos de respuesta lentos</h3>
+        <pre><code>AppServiceHTTPLogs
+| where TimeGenerated > ago(1h)
+| where TimeTaken > 5000
+| project TimeGenerated, CsUriStem, TimeTaken, ScStatus
+| order by TimeTaken desc</code></pre>
+
+        <h3>Patrón de uso de memoria</h3>
+        <pre><code>AppServicePlatformLogs
+| where TimeGenerated > ago(1h)
+| where Level == "Informational"
+| project TimeGenerated, Message
+| order by TimeGenerated desc</code></pre>
+        </section>
+
+        <section id="java-diagnostics" class="card">
+        <h2>Diagnósticos específicos de Java</h2>
+
+        <h3>Habilitar JMX para monitorización remota</h3>
+        <p>Añade estos ajustes de la app para acceso a JMX (solo desarrollo):</p>
+        <pre><code>JAVA_OPTS=-Dcom.sun.management.jmxremote \
+  -Dcom.sun.management.jmxremote.port=9010 \
+  -Dcom.sun.management.jmxremote.local.only=false \
+  -Dcom.sun.management.jmxremote.authenticate=false \
+  -Dcom.sun.management.jmxremote.ssl=false</code></pre>
+
+        <h3>Habilitar GC registro</h3>
+        <pre><code>JAVA_OPTS=-Xlog:gc*:file=/home/LogFiles/gc.log:time,level,tags</code></pre>
+
+        <h3>Descargas de montones sobre OOM</h3>
+        <pre><code>JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError \
+  -XX:HeapDumpPath=/home/LogFiles/heapdump.hprof</code></pre>
+
+        <h3>Volcados de hilo de lectura: Agotamiento de la piscina de conexión</h3>
+        <p>Al diagnosticar problemas en el pool de conexiones, busca hilos en <code>TIMED_WAITING</code> Estado bloqueado en la adquisición de recursos:</p>
+        <pre><code>"http-nio-8080-exec-42" #42 daemon prio=5 TIMED_WAITING
+    at jdk.internal.misc.Unsafe.park(Native Method)
+    at java.util.concurrent.locks.LockSupport.parkNanos(...)
+    at java.util.concurrent.Semaphore.tryAcquire(...)</code></pre>
+        
+        <p><strong>Ejemplo real de HikariCP:</strong></p>
+        <pre><code>"http-nio-8080-exec-15" TIMED_WAITING
+    at com.zaxxer.hikari.pool.HikariPool.getConnection(...)
+    at com.zaxxer.hikari.HikariDataSource.getConnection(...)</code></pre>
+
+        <p><strong>Lo que dice el hilo significa:</strong></p>
+        <ul>
+            <li><strong>CORRIENDO</strong> — Ejecución activa (CPU trabajo)</li>
+            <li><strong>BLOQUEADO</strong> — Esperando un bloqueo de monitor (bloque sincronizado)</li>
+            <li><strong>ESPERANDO</strong> — Esperando indefinidamente (Object.wait, Thread.join)</li>
+            <li><strong>TIMED_WAITING</strong> — Esperar con tiempo muerto (común en los tiempos muertos en la piscina)</li>
+        </ul>
+
+        <p>Muchos hilos en TIMED_WAITING sobre adquisición de pool = agotamiento de pool de conexión. Aumenta el tamaño del grupo o reduce el tiempo de espera de consultas.</p>
+        </section>
+
+        <section id="mapping" class="card">
+        <h2>Simulación → Mapeo de Diagnóstico</h2>
+
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color);">
+                    <th style="padding: 0.75rem; text-align: left;">Simulación</th>
+                    <th style="padding: 0.75rem; text-align: left;">Azure Herramienta</th>
+                    <th style="padding: 0.75rem; text-align: left;">Qué buscar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 0.75rem;">CPU Estrés</td>
+                    <td style="padding: 0.75rem;">AppLens, métricas</td>
+                    <td style="padding: 0.75rem;">CPU % de pico, posible limitación</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Presión de memoria</td>
+                    <td style="padding: 0.75rem;">Métricas, volcado de memoria</td>
+                    <td style="padding: 0.75rem;">Aumento del conjunto de trabajo de memoria, GC frecuencia</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Privación de hilo</td>
+                    <td style="padding: 0.75rem;">AppLens, Dump de hilo</td>
+                    <td style="padding: 0.75rem;">Picos de latencia, HTTP longitud de la cola</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Pool de conexiones</td>
+                    <td style="padding: 0.75rem;">Vertido de hilos, registros</td>
+                    <td style="padding: 0.75rem;">Hilos ESPERANDO en Semáforo, errores de tiempo de espera en los registros</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Accidente</td>
+                    <td style="padding: 0.75rem;">AppLens, Registros</td>
+                    <td style="padding: 0.75rem;">Se reinicia la instancia, la disponibilidad baja</td>
+                </tr>
+            </tbody>
+        </table>
+        </section>
+
+        <section id="best-practices" class="card">
+        <h2>Mejores prácticas</h2>
+
+        <div class="note">
+            <h4>Empieza poco a poco</h4>
+            <p>Comienza con simulaciones de corta duración (10-30 segundos) y baja intensidad 
+            (2-4 trabajadores, 100-200MB de memoria) para entender el impacto de referencia antes de escalar.</p>
+        </div>
+
+        <div class="note">
+            <h4>Monitorizar antes de simular</h4>
+            <p>Establece una línea base observando métricas durante unos minutos antes 
+            Iniciando cualquier simulación. Esto facilita identificar los cambios.</p>
+        </div>
+
+        <div class="warning">
+            <h4>Precaución de producción</h4>
+            <p>Nunca realices simulaciones de fallo ni pruebas de estrés de alta intensidad en producción 
+            entornos. Usa los espacios de preparación/desarrollo para las pruebas.</p>
+        </div>
+        </section>
+    </main>
+    
+    <!-- Right-side Table of Contents -->
+    <aside class="doc-toc">
+        <div class="doc-toc-inner">
+            <h2>EN ESTA PÁGINA</h2>
+            <a href="#overview" class="doc-toc-link active"><span class="toc-icon">📄</span> Resumen</a>
+            <a href="#simulation-ids" class="doc-toc-link"><span class="toc-icon">🔗</span> IDs de simulación</a>
+            
+            <div class="doc-toc-section-label">AZURE HERRAMIENTAS</div>
+            <a href="#applens" class="doc-toc-link"><span class="toc-icon">🔍</span>AppLens</a>
+            <a href="#azure-monitor" class="doc-toc-link"><span class="toc-icon">📊</span>Azure Monitor</a>
+            <a href="#app-insights" class="doc-toc-link"><span class="toc-icon">💡</span>Application Insights</a>
+            <a href="#diagnose-solve" class="doc-toc-link"><span class="toc-icon">🔧</span> Diagnosticar y resolver</a>
+            <a href="#kql-queries" class="doc-toc-link"><span class="toc-icon">📝</span> Consultas KQL</a>
+            
+            <div class="doc-toc-section-label">REFERENCIA</div>
+            <a href="#java-diagnostics" class="doc-toc-link"><span class="toc-icon">☕</span> Diagnóstico de Java</a>
+            <a href="#mapping" class="doc-toc-link"><span class="toc-icon">🗺️</span> Mapeo diagnóstico</a>
+            <a href="#best-practices" class="doc-toc-link"><span class="toc-icon">✅</span> Mejores prácticas</a>
+        </div>
+    </aside>
+    </div>
+
+    <footer>
+        <p>Performance Problem Simulator — Herramienta educativa para Azure App Service Diagnósticos</p>
+        <p id="footer-credits"></p>
+        <p id="build-info">Construcción: Cargando...</p>
+    </footer>
+
+    <script>
+        // Sidebar navigation toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarDrawer = document.getElementById('sidebar-drawer');
+        const sidebarClose = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            hamburgerBtn.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            sidebarDrawer.classList.add('active');
+        }
+
+        function closeSidebar() {
+            hamburgerBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            sidebarDrawer.classList.remove('active');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        // TOC scroll highlighting
+        const tocLinks = document.querySelectorAll('.doc-toc-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        function highlightToc() {
+            let current = '';
+            const viewportHeight = window.innerHeight;
+            
+            // Find the section that's most visible in viewport
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                // Section is considered "current" if its top is in upper 40% of viewport
+                if (rect.top <= viewportHeight * 0.4 && rect.bottom > 0) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            // If no section found (scrolled to very top), use first section
+            if (!current && sections.length > 0) {
+                current = sections[0].getAttribute('id');
+            }
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', highlightToc);
+        highlightToc();
+
+        // Load SKU info
+        async function loadSkuInfo() {
+            try {
+                const response = await fetch('/api/health/environment');
+                const data = await response.json();
+                const skuBadge = document.getElementById('sku-badge');
+                if (skuBadge) {
+                    skuBadge.textContent = data.isAzure ? `SKU: ${data.sku}` : 'SKU: Local';
+                }
+            } catch (error) {
+                console.log('Could not load SKU info');
+            }
+        }
+        loadSkuInfo();
+
+        // Load footer info
+        async function loadBuildInfo() {
+            try {
+                const response = await fetch('/api/health/footer');
+                const data = await response.json();
+                
+                const footerCredits = document.getElementById('footer-credits');
+                if (footerCredits) {
+                    if (data.footer) {
+                        footerCredits.innerHTML = data.footer;
+                    } else {
+                        footerCredits.style.display = 'none';
+                    }
+                }
+                
+                const buildInfo = document.getElementById('build-info');
+                if (buildInfo) {
+                    buildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+                
+                const sidebarBuildInfo = document.getElementById('sidebar-build-info');
+                if (sidebarBuildInfo) {
+                    sidebarBuildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+            } catch (error) {
+                console.log('Could not load footer info');
+            }
+        }
+        loadBuildInfo();
+
+        // Load GitHub link configuration
+        async function loadGithubLink() {
+            try {
+                const response = await fetch('/api/health/config');
+                const config = await response.json();
+                if (config.githubUserName && config.githubRepoName) {
+                    const githubLink = document.getElementById('github-repo-link');
+                    if (githubLink) {
+                        githubLink.href = `https://github.com/${config.githubUserName}/${config.githubRepoName}`;
+                        githubLink.style.display = '';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load GitHub link config');
+            }
+        }
+        loadGithubLink();
+    </script>
+</body>
+</html>

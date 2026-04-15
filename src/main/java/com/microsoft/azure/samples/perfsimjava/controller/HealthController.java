@@ -99,6 +99,7 @@ public class HealthController {
         String githubUserName = System.getenv("GITHUB_USER_NAME");
         response.put("githubRepoName", githubRepoName);
         response.put("githubUserName", githubUserName);
+        response.put("uiLanguage", appConfig.getUiLanguage());
         
         return ResponseEntity.ok(response);
     }

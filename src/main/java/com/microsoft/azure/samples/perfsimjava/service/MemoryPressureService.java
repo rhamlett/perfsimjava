@@ -98,7 +98,8 @@ public class MemoryPressureService {
                 String.format("Starting allocation of %dMB...", sizeMb),
                 simulation.getId(),
                 SimulationType.MEMORY_PRESSURE,
-                params
+                params,
+                "srv.memory.allocating", Map.of("size", sizeMb)
         );
 
         // Track simulation start in Application Insights
@@ -139,7 +140,8 @@ public class MemoryPressureService {
                 String.format("Released %dMB of heap memory", releasedMb),
                 simulationId,
                 SimulationType.MEMORY_PRESSURE,
-                Map.of("sizeMb", releasedMb)
+                Map.of("sizeMb", releasedMb),
+                "srv.memory.released", Map.of("size", releasedMb)
         );
 
         // Track simulation stop in Application Insights
@@ -218,7 +220,8 @@ public class MemoryPressureService {
                             sizeMb, allocation.data.size()),
                     simulationId,
                     SimulationType.MEMORY_PRESSURE,
-                    Map.of("sizeMb", sizeMb, "chunks", allocation.data.size())
+                    Map.of("sizeMb", sizeMb, "chunks", allocation.data.size()),
+                    "srv.memory.allocated", Map.of("size", sizeMb, "chunks", allocation.data.size())
             );
 
         } catch (InterruptedException e) {
@@ -231,7 +234,8 @@ public class MemoryPressureService {
                     "Memory allocation failed: OutOfMemoryError",
                     simulationId,
                     SimulationType.MEMORY_PRESSURE,
-                    null
+                    null,
+                    "srv.memory.failed", null
             );
             allocations.remove(simulationId);
             simulationTracker.failSimulation(simulationId);

@@ -17,6 +17,7 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadMXBean;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
 
@@ -96,7 +97,8 @@ public class MetricsService {
         // Log server startup event with JVM start time
         eventLogService.info(
                 EventLogEntry.EventType.SERVER_STARTED,
-                String.format("Server started (JVM: %d, PID: %d)", jvmStartTime, processId)
+                String.format("Server started (JVM: %d, PID: %d)", jvmStartTime, processId),
+                "srv.server.started", Map.of("jvmStartTime", jvmStartTime, "pid", processId)
         );
     }
     

@@ -1,0 +1,703 @@
+<!-- source_hash:21bf8c3db417b8bc lang:pt generated:2026-04-14T21:12:11.969957800Z -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Guia de Teste de Carga - Performance Problem Simulator - Java 21</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="page-doc">
+    <header>
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> Simulador de Problemas de Desempenho - Java 21</h1>
+        <span id="sku-badge" class="sku-badge">SKU: Local</span>
+        <nav>
+            <a href="/" class="nav-link">🎮 Painel</a>
+        </nav>
+    </header>
+
+    <!-- Sidebar Drawer Navigation -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="sidebar-drawer" class="sidebar-drawer">
+        <div class="sidebar-header">
+            <h2><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> PerfSimJava</h2>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">×</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Aplicação</div>
+            <a href="/" class="sidebar-nav-item">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Painel<span class="nav-desc">Métricas e controles ao vivo</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Documentação</div>
+            <a href="/docs.html" class="sidebar-nav-item">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Documentação<span class="nav-desc">API Referência & Guias</span></span>
+            </a>
+            <a href="/azure-diagnostics.html" class="sidebar-nav-item">
+                <span class="nav-icon">☁️</span>
+                <span class="nav-label">Azure Diagnóstico<span class="nav-desc">Diagnosticar problemas na App Service</span></span>
+            </a>
+            <a href="/azure-load-testing.html" class="sidebar-nav-item active">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Azure Testes de Carga<span class="nav-desc">Endpoint e parâmetros do teste de carga</span></span>
+            </a>
+            <a href="/azure-deployment.html" class="sidebar-nav-item">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">Desdobrar para Azure<span class="nav-desc">GitHub Ações + configuração OIDC</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Externo</div>
+            <a id="github-repo-link" href="#" target="_blank" class="sidebar-nav-item" style="display:none">
+                <span class="nav-icon">🐙</span>
+                <span class="nav-label">GitHub Repositório<span class="nav-desc">Código-fonte e problemas</span></span>
+            </a>
+            <a href="/swagger-ui/index.html" target="_blank" class="sidebar-nav-item">
+                <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="#85ea2d"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm0 1.144c5.995 0 10.856 4.861 10.856 10.856S17.995 22.856 12 22.856 1.144 17.995 1.144 12 6.005 1.144 12 1.144zm-.436 5.024c-.175.004-.353.013-.537.03-1.187.105-1.622.525-1.622 1.449v1.01H8v1.737h1.405v4.876h2.065v-4.876h1.405l.191-1.737h-1.596v-.88c0-.408.186-.52.504-.52h1.092V5.963s-.686-.095-1.502-.095zm3.156 1.117v.79h.54v2.18h-.54v.79h1.87v-.79h-.54v-2.97h-1.33z"/></svg></span>
+                <span class="nav-label">Swagger API<span class="nav-desc">Documentação API interativa</span></span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar-build-info">Build: Carregando...</div>
+        </div>
+    </aside>
+
+    <div class="doc-layout-cards">
+        <div class="doc-main">
+        <main class="deploy-container">
+        <div class="deploy-header">
+            <h1>📈 Azure Guia de Testes de Carga</h1>
+            <p>Endpoint de teste de carga projetado para integração Azure Testes de Carga</p>
+        </div>
+
+        <!-- Overview Section -->
+        <section id="overview" class="doc-card">
+            <h2>🔬 Visão geral</h2>
+            <p>O Performance Problem Simulator inclui um endpoint dedicado para testes de carga
+                projetado para uso em testes de carga Azure . Esse ponto final simula o realismo
+                comportamento de aplicação que se degrada graciosamente sob carga.            </p>
+            <p>O <code>/api/loadtest</code> O endpoint é projetado para:</p>
+            <ul>
+                <li>Realizar trabalho CPU sustentado (ciclos SHA256 intercalados a ~50% CPU por fio)</li>
+                <li>Mantenha buffers de memória durante toda a duração da solicitação (cria pressão visível de memória)</li>
+                <li>Degrada de forma gradual conforme as solicitações concorrentes aumentam (padrão de limite suave)</li>
+                <li>Jogar exceções aleatórias após o limite configurável (padrão: 120 segundos com 20% de probabilidade)</li>
+                <li>Eventualmente acionar o tempo de 230 segundos do Azuresob carga extrema</li>
+            </ul>
+        </section>
+
+        <!-- Setting Up Azure Load Testing -->
+        <section id="setup" class="doc-card">
+            <h2>⚙️ Configuração Azure Teste de Carga</h2>
+            <ol>
+                <li>No Azure Portal, crie um recurso de Teste de Carga Azure</li>
+                <li>Crie um novo teste e configure a URL de destino usando uma destas opções:</li>
+            </ol>
+
+            <h3>GET com Parâmetros de Consulta</h3>
+            <p>Use a URL de destino diretamente — sem necessidade de script JMeter:</p>
+            <pre><code># With defaults
+https://your-app.azurewebsites.net/api/loadtest
+
+# Custom parameters
+https://your-app.azurewebsites.net/api/loadtest?workIterations=500&bufferSizeKb=10000
+
+# Thread pool only (no CPU work)
+https://your-app.azurewebsites.net/api/loadtest?workIterations=0&bufferSizeKb=100</code></pre>
+
+            <h3>POST com o Corpo de Solicitação</h3>
+            <p>Para cenários mais complexos, use POST com um corpo JSON :</p>
+            <pre><code>POST /api/loadtest
+Content-Type: application/json
+
+{
+  "workIterations": 200,
+  "bufferSizeKb": 20000,
+  "softLimit": 25,
+  "degradationFactor": 500,
+  "baselineDelayMs": 500,
+  "errorAfterSeconds": 120,
+  "errorPercent": 20
+}</code></pre>
+
+            <ol start="3">
+                <li>Configurar o padrão de carga (aumento de carga, regime estacionário, descida)</li>
+                <li>Configure a integração Azure Monitor para correlacionar métricas</li>
+            </ol>
+        </section>
+
+        <!-- Query Parameters Reference -->
+        <section id="parameters" class="doc-card">
+            <h2>📋 Referência de Parâmetros de Consulta</h2>
+            <p>Cada parâmetro controla um recurso específico de forma independente:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parâmetro</th>
+                        <th>Padrão</th>
+                        <th>Recurso Alvo</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>workIterations</code></td>
+                        <td>200</td>
+                        <td>CPU</td>
+                        <td>Iterações de hash SHA256 por ciclo de trabalho CPU . Controla o uso sustentado CPU (~50% por thread).</td>
+                    </tr>
+                    <tr>
+                        <td><code>bufferSizeKb</code></td>
+                        <td>20000</td>
+                        <td>Memória</td>
+                        <td>Memória mantida durante toda a duração da solicitação no KB (padrão de 20 MB). Cria uma pressão de memória sustentada.</td>
+                    </tr>
+                    <tr>
+                        <td><code>baselineDelayMs</code></td>
+                        <td>500</td>
+                        <td>Pool de Fios</td>
+                        <td>Duração mínima da solicitação (ms). CPU trabalho e sono intercalados ao longo do tempo.</td>
+                    </tr>
+                    <tr>
+                        <td><code>softLimit</code></td>
+                        <td>25</td>
+                        <td>Pool de Fios</td>
+                        <td>Solicitações simultâneas antes da degradação. Menor = exaustão mais rápida.</td>
+                    </tr>
+                    <tr>
+                        <td><code>degradationFactor</code></td>
+                        <td>500</td>
+                        <td>Pool de Fios</td>
+                        <td>Atraso adicional (ms) por requisição sobre softLimit.</td>
+                    </tr>
+                    <tr>
+                        <td><code>errorAfter</code></td>
+                        <td>120</td>
+                        <td>Caos</td>
+                        <td>Segundos antes de erros aleatórios serem lançados. Defina para 0 e desative.</td>
+                    </tr>
+                    <tr>
+                        <td><code>errorPercent</code></td>
+                        <td>20</td>
+                        <td>Caos</td>
+                        <td>Chance percentual (0-100) de lançar um erro aleatório por intervalo de verificação após o limiar.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Understanding the Soft Limit -->
+        <section id="soft-limit" class="doc-card">
+            <h2>📊 Compreendendo o Limite Suave</h2>
+            <p>O limite suave cria uma curva de degradação onde os tempos de resposta aumentam conforme
+                solicitações concorrentes excedem o limite. A fórmula de degradação é:            </p>
+            <pre><code>additionalDelay = max(0, concurrent - softLimit) × degradationFactor</code></pre>
+
+            <div class="info-box">
+                <p><strong>Nota:</strong> Os tempos reais de resposta variam dependendo do seu Azure App Service nível atual
+                Carga e outros fatores. Use Azure Teste de Carga para estabelecer o desempenho de referência
+                Para o seu ambiente específico. Os parâmetros padrão são ajustados para um trabalhador Premium0V3.
+                Qualquer outro tamanho de SKU ou operador precisará de afinação individual.</p>
+            </div>
+
+            <h3>Exemplo de Padrão de Degradação</h3>
+            <p>Com as configurações padrão (<code>softLimit=25</code>, <code>degradationFactor=500</code>):</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Solicitações Simultâneas</th>
+                        <th>Atraso adicional</th>
+                        <th>Tempo de Resposta Esperado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>10</td>
+                        <td>0ms</td>
+                        <td>~500ms (apenas linha de base)</td>
+                    </tr>
+                    <tr>
+                        <td>25</td>
+                        <td>0ms</td>
+                        <td>~500ms (no limite suave)</td>
+                    </tr>
+                    <tr>
+                        <td>50</td>
+                        <td>12.500ms</td>
+                        <td>~13s</td>
+                    </tr>
+                    <tr>
+                        <td>100</td>
+                        <td>37.500ms</td>
+                        <td>~38s</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Tuning Parameters for Different Scenarios -->
+        <section id="scenarios" class="doc-card">
+            <h2>🎛️ Parâmetros de ajuste para diferentes cenários</h2>
+            <p>Exemplos completos de parâmetros para vários cenários de teste:</p>
+
+            <div class="warning-box">
+                <p><strong>Nota:</strong> Os tempos reais de resposta variam dependendo do seu Azure App Service nível atual
+                Carga e outros fatores. Use Azure Teste de Carga para estabelecer o desempenho de referência
+                Para o seu ambiente específico. Esses cenários de exemplo, e os padrões padrão, são
+                para um trabalhador Premium0V3. Qualquer outro tamanho de SKU ou operador precisará de afinação individual.</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cenário</th>
+                        <th>workIterations</th>
+                        <th>bufferSizeKb</th>
+                        <th>baselineDelayMs</th>
+                        <th>softLimit</th>
+                        <th>Fator de degradação</th>
+                        <th>Propósito</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Apenas pool de threads</td>
+                        <td>0</td>
+                        <td>2000</td>
+                        <td>500</td>
+                        <td>25</td>
+                        <td>500</td>
+                        <td>Exaustão da piscina de rosca, CPU</td>
+                    </tr>
+                    <tr>
+                        <td>CPU intensivo</td>
+                        <td>10000</td>
+                        <td>2000</td>
+                        <td>0</td>
+                        <td>500</td>
+                        <td>25</td>
+                        <td>Alta CPU, bloqueio mínimo de rosca</td>
+                    </tr>
+                    <tr>
+                        <td>Pressão de memória</td>
+                        <td>20</td>
+                        <td>100000</td>
+                        <td>100</td>
+                        <td>100</td>
+                        <td>125</td>
+                        <td>Alta alocação de memória (100MB/solicitação)</td>
+                    </tr>
+                    <tr>
+                        <td>Balanceado (padrão)</td>
+                        <td>200</td>
+                        <td>20000</td>
+                        <td>500</td>
+                        <td>25</td>
+                        <td>500</td>
+                        <td>Ajustado para o trabalhador Premium0V3</td>
+                    </tr>
+                    <tr>
+                        <td>Alta concorrência</td>
+                        <td>100</td>
+                        <td>10000</td>
+                        <td>200</td>
+                        <td>250</td>
+                        <td>50</td>
+                        <td>Degradação gradual sob alta carga</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>URLs de exemplo para cada cenário</h3>
+            <pre><code># Thread pool only
+/api/loadtest?workIterations=0&bufferSizeKb=2000&baselineDelayMs=500&softLimit=25&degradationFactor=500
+
+# CPU intensive
+/api/loadtest?workIterations=10000&bufferSizeKb=2000&baselineDelayMs=0&softLimit=500&degradationFactor=25
+
+# Memory pressure
+/api/loadtest?workIterations=20&bufferSizeKb=100000&baselineDelayMs=100&softLimit=100&degradationFactor=125
+
+# Balanced (default - just use without parameters)
+/api/loadtest
+
+# High concurrency
+/api/loadtest?workIterations=100&bufferSizeKb=10000&baselineDelayMs=200&softLimit=250&degradationFactor=50</code></pre>
+        </section>
+
+        <!-- Error Injection -->
+        <section id="error-injection" class="doc-card">
+            <h2>💥 Injeção de Erro</h2>
+            <p>O endpoint de teste de carga pode injetar exceções aleatórias para simular o realismo
+                Falhas de aplicação. Isso é controlado por dois parâmetros:            </p>
+            <ul>
+                <li><code>errorAfter</code> (padrão: 120) - Segundos antes de começarem os erros</li>
+                <li><code>errorPercent</code> (padrão: 20) - Probabilidade de erro uma vez atingido o limiar</li>
+            </ul>
+
+            <h3>Tipos de Exceção</h3>
+            <p>Exceções aleatórias são selecionadas de um conjunto de exceções realistas em Java:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo de Exceção</th>
+                        <th>Mensagem de exemplo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>IllegalStateException</code></td>
+                        <td>A operação não é válida devido ao estado atual do objeto</td>
+                    </tr>
+                    <tr>
+                        <td><code>NullPointerException</code></td>
+                        <td>Referência de objeto não definida para uma instância de um objeto</td>
+                    </tr>
+                    <tr>
+                        <td><code>TimeoutException</code></td>
+                        <td>A operação já está encerrada</td>
+                    </tr>
+                    <tr>
+                        <td><code>IOException</code></td>
+                        <td>O erro de E/S ocorreu durante o processamento</td>
+                    </tr>
+                    <tr>
+                        <td><code>ArithmeticException</code></td>
+                        <td>Tentou dividir por zero</td>
+                    </tr>
+                    <tr>
+                        <td><code>IllegalArgumentException</code></td>
+                        <td>Argumento inválido fornecido</td>
+                    </tr>
+                    <tr>
+                        <td><code>IndexOutOfBoundsException</code></td>
+                        <td>O índice estava fora do alcance</td>
+                    </tr>
+                    <tr>
+                        <td><code>UnsupportedOperationException</code></td>
+                        <td>Operação não é suportada</td>
+                    </tr>
+                    <tr>
+                        <td><code>SecurityException</code></td>
+                        <td>Violação de segurança detectada</td>
+                    </tr>
+                    <tr>
+                        <td><code>ClassCastException</code></td>
+                        <td>Elenco especificado não é válido</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Desabilitando a Injeção de Erro</h3>
+            <pre><code># Disable errors entirely
+/api/loadtest?errorAfter=0
+
+# Or set errorPercent to 0
+/api/loadtest?errorPercent=0</code></pre>
+        </section>
+
+        <!-- Diagnosing Load Test Results -->
+        <section id="diagnosing" class="doc-card">
+            <h2>🔍 Diagnóstico de Resultados de Testes de Carga</h2>
+
+            <h3>1. Application Insights Integração</h3>
+            <ul>
+                <li>Vá para Application Insights > Apresentação</li>
+                <li>Filtrar por nome da operação <code>GET /api/loadtest</code></li>
+                <li>Observe percentis de tempo de resposta (p50, p95, p99)</li>
+                <li>Verifique as taxas de falha para o limiar de erro aleatório configurável (padrão: 120s)</li>
+            </ul>
+
+            <h3>2. Azure Monitorar Métricas</h3>
+            <ul>
+                <li><strong>Pedidos</strong> - Total de solicitações e taxa</li>
+                <li><strong>Tempo de Resposta</strong> - Latências médias e percentuais</li>
+                <li><strong>Erros do servidor Http</strong> - 5xx erros de exceções aleatórias</li>
+                <li><strong>CPU Percentual</strong> - Deve aumentar com a carga</li>
+                <li><strong>Conjunto de Trabalho de Memória</strong> - Deve aumentar com bufferSizeKb</li>
+            </ul>
+
+            <h3>3. Endpoint de Estatísticas de Teste de Carga</h3>
+            <p>Consulte o endpoint de estatística durante o teste:</p>
+            <pre><code>GET /api/loadtest/stats
+
+{
+  "currentConcurrentRequests": 127,
+  "peakConcurrentRequests": 156,
+  "totalRequests": 45230,
+  "successfulRequests": 45207,
+  "failedRequests": 23,
+  "errorRate": 0.05,
+  "averageResponseTimeMs": 847.5,
+  "minResponseTimeMs": 512,
+  "maxResponseTimeMs": 3421,
+  "requestsPerSecond": 42.3
+}</code></pre>
+        </section>
+
+        <!-- Response Format -->
+        <section id="response" class="doc-card">
+            <h2>📤 Formato de Resposta</h2>
+            <p>Cada solicitação bem-sucedida retorna:</p>
+            <pre><code>{
+  "requestId": "a1b2c3d4",
+  "elapsedMs": 1247,
+  "concurrentAtStart": 42,
+  "calculatedDelayMs": 8500,
+  "workIterationsCompleted": 200,
+  "bufferSizeKb": 20000,
+  "workCompleted": true,
+  "message": "Load test completed in 1247ms"
+}</code></pre>
+
+            <h3>Campos de resposta</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>requestId</code></td>
+                        <td>Identificador único para esta solicitação (para correlação)</td>
+                    </tr>
+                    <tr>
+                        <td><code>elapsedMs</code></td>
+                        <td>Duração total da solicitação em milissegundos</td>
+                    </tr>
+                    <tr>
+                        <td><code>concurrentAtStart</code></td>
+                        <td>Número de solicitações simultâneas quando essa solicitação começou</td>
+                    </tr>
+                    <tr>
+                        <td><code>calculatedDelayMs</code></td>
+                        <td>Atraso total aplicado (linha de base + degradação)</td>
+                    </tr>
+                    <tr>
+                        <td><code>workIterationsCompleted</code></td>
+                        <td>Número de iterações de hash SHA256 concluídas</td>
+                    </tr>
+                    <tr>
+                        <td><code>bufferSizeKb</code></td>
+                        <td>Tamanho do buffer de memória alocado para esta solicitação na base de dados</td>
+                    </tr>
+                    <tr>
+                        <td><code>workCompleted</code></td>
+                        <td>Se todo o trabalho foi concluído com sucesso</td>
+                    </tr>
+                    <tr>
+                        <td><code>message</code></td>
+                        <td>Mensagem de conclusão legível por humanos</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Best Practices -->
+        <section id="best-practices" class="doc-card">
+            <h2>✅ Melhores Práticas</h2>
+
+            <h3>FAZ:</h3>
+            <ul>
+                <li>✅ Comece com parâmetros padrão para estabelecer uma linha de base</li>
+                <li>✅ Monitore métricas Azure durante testes de carga</li>
+                <li>✅ Use o endpoint /api/loadtest/stats para acompanhar a concorrência</li>
+                <li>✅ Aumente gradualmente a carga para encontrar pontos de ruptura</li>
+                <li>✅ Correlacione os resultados do teste de carga com Application Insights</li>
+                <li>✅ Teste com padrões de carga realistas (ramp up, steady state, ramp down)</li>
+            </ul>
+
+            <h3>NÃO FAÇA:</h3>
+            <ul>
+                <li>❌ Comece com valores extremos de parâmetros</li>
+                <li>❌ Ignore métricas de memória ao usar um grande bufferSizeKb</li>
+                <li>❌ Execute testes estendidos com erroAfter=0 se quiser ver falhas realistas</li>
+                <li>❌ Suponha que os resultados de um SKU se aplicam a outro</li>
+            </ul>
+        </section>
+
+        <!-- Related Resources -->
+        <section id="resources" class="doc-card">
+            <h2>📚 Recursos Relacionados</h2>
+            <ul>
+                <li><a href="https://docs.microsoft.com/en-us/azure/load-testing/" target="_blank" rel="noopener">Azure Documentação de Testes de Carga</a></li>
+                <li><a href="https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview" target="_blank" rel="noopener">Application Insights Visão Geral</a></li>
+                <li><a href="https://docs.microsoft.com/en-us/azure/app-service/troubleshoot-performance-issues" target="_blank" rel="noopener">Solucionar problemas de desempenho em Azure App Service</a></li>
+                <li><a href="/azure-diagnostics.html">Azure Guia de Diagnóstico</a> - Diagnosticar problemas de desempenho</li>
+                <li><a href="/swagger-ui/index.html" target="_blank" rel="noopener">API Documentação</a> - Referência API completa (Swagger)</li>
+            </ul>
+        </section>
+
+        </main>
+        </div>
+
+        <!-- Table of Contents -->
+        <aside class="doc-toc">
+            <div class="doc-toc-sticky">
+                <div class="doc-toc-card">
+                    <div class="doc-toc-title">Nesta página</div>
+                    <ul>
+                        <li class="doc-toc-item"><a href="#overview"><span class="toc-icon">🔬</span> Visão geral</a></li>
+                        <li class="doc-toc-item"><a href="#setup"><span class="toc-icon">⚙️</span> Configuração</a></li>
+                        <li class="doc-toc-item"><a href="#parameters"><span class="toc-icon">📋</span> Parâmetros</a></li>
+                        <li class="doc-toc-item"><a href="#soft-limit"><span class="toc-icon">📊</span> Soft Limit</a></li>
+                        <li class="doc-toc-item"><a href="#scenarios"><span class="toc-icon">🎛️</span> Cenários</a></li>
+                        <li class="doc-toc-item"><a href="#error-injection"><span class="toc-icon">💥</span> Injeção de Erro</a></li>
+                        <li class="doc-toc-item"><a href="#diagnosing"><span class="toc-icon">🔍</span> Diagnóstico</a></li>
+                        <li class="doc-toc-item"><a href="#response"><span class="toc-icon">📤</span> Resposta</a></li>
+                        <li class="doc-toc-item"><a href="#best-practices"><span class="toc-icon">✅</span> Melhores Práticas</a></li>
+                        <li class="doc-toc-item"><a href="#resources"><span class="toc-icon">📚</span> Recursos</a></li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <footer class="footer">
+        <p>Performance Problem Simulator — Ferramenta Educacional para Diagnóstico Azure App Service</p>
+        <p id="pageFooterContent"></p>
+        <p>Build: <span id="buildTime">--</span></p>
+    </footer>
+
+    <script>
+        // Fetch and display custom page footer and build info
+        (async function() {
+            // Fetch app config for footer
+            try {
+                const response = await fetch('/api/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    const footerEl = document.getElementById('pageFooterContent');
+                    if (footerEl) {
+                        if (config.pageFooter && config.pageFooter.trim()) {
+                            footerEl.innerHTML = config.pageFooter;
+                        } else {
+                            footerEl.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch config', e);
+            }
+            // Fetch build info
+            try {
+                const response = await fetch('/api/health/build');
+                if (response.ok) {
+                    const data = await response.json();
+                    const buildTimeEl = document.getElementById('buildTime');
+                    if (buildTimeEl && data.buildTimestamp) {
+                        const buildDate = new Date(data.buildTimestamp);
+                        buildTimeEl.textContent = buildDate.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch build info', e);
+            }
+        })();
+    </script>
+
+    <script>
+        // Sidebar drawer toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarDrawer = document.getElementById('sidebar-drawer');
+        const sidebarClose = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            hamburgerBtn.classList.remove('attention');
+            hamburgerBtn.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            sidebarDrawer.classList.add('active');
+        }
+
+        function closeSidebar() {
+            hamburgerBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            sidebarDrawer.classList.remove('active');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSidebar();
+        });
+
+        // Scroll spy for TOC highlighting
+        const tocLinks = document.querySelectorAll('.doc-toc-item a');
+        const sections = document.querySelectorAll('.doc-card');
+
+        function updateActiveTocLink() {
+            const scrollPos = window.scrollY + 120;
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+                
+                if (sectionId && scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+                    tocLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + sectionId) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveTocLink);
+        updateActiveTocLink(); // Initial call
+
+        // Load SKU info
+        async function loadSkuInfo() {
+            try {
+                const response = await fetch('/api/health/environment');
+                const data = await response.json();
+                const skuBadge = document.getElementById('sku-badge');
+                if (skuBadge) {
+                    skuBadge.textContent = data.isAzure ? `SKU: ${data.sku}` : 'SKU: Local';
+                }
+            } catch (error) {
+                console.log('Could not load SKU info');
+            }
+        }
+        loadSkuInfo();
+
+        // Fetch and display build info and GitHub repo
+        async function fetchBuildInfo() {
+            try {
+                const response = await fetch('/api/config');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.buildTime) {
+                        const sidebarBuildInfo = document.getElementById('sidebar-build-info');
+                        if (sidebarBuildInfo) sidebarBuildInfo.textContent = 'Build: ' + data.buildTime;
+                    }
+                    // Show GitHub link if available
+                    if (data.githubRepo) {
+                        const githubLink = document.getElementById('github-repo-link');
+                        if (githubLink) {
+                            githubLink.href = data.githubRepo;
+                            githubLink.style.display = '';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch build info', error);
+            }
+        }
+        fetchBuildInfo();
+    </script>
+</body>
+</html>

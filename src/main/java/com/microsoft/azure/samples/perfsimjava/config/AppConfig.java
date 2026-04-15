@@ -71,6 +71,32 @@ public class AppConfig {
      */
     private int cpuStressThreadPoolSize = Runtime.getRuntime().availableProcessors();
 
+    /**
+     * UI language code (ISO 639-1). Determines the language for dashboard UI translations.
+     * Can be overridden by UI_LANGUAGE environment variable.
+     * Default: "en" (English, no translation needed).
+     */
+    private String uiLanguage = "en";
+
+    /**
+     * Azure Cognitive Services Translator API key.
+     * Required for non-English UI languages.
+     * Can be overridden by TRANSLATOR_API_KEY environment variable.
+     */
+    private String translatorApiKey = "";
+
+    /**
+     * Azure Translator API endpoint URL.
+     * Can be overridden by TRANSLATOR_ENDPOINT environment variable.
+     */
+    private String translatorEndpoint = "https://api.cognitive.microsofttranslator.com";
+
+    /**
+     * Azure region of the Translator resource.
+     * Can be overridden by TRANSLATOR_REGION environment variable.
+     */
+    private String translatorRegion = "eastus";
+
     // Getters and Setters
 
     public int getMetricsIntervalMs() {
@@ -113,6 +139,16 @@ public class AppConfig {
                         healthProbeRate, probeIntervalMs);
             }
         }
+
+        // Log i18n configuration (bound via Spring Boot property placeholders)
+        if (uiLanguage != null && !uiLanguage.isBlank() && !uiLanguage.equalsIgnoreCase("en")) {
+            logger.info("[AppConfig] UI_LANGUAGE set to '{}'", uiLanguage);
+            if (translatorApiKey != null && !translatorApiKey.isBlank()) {
+                logger.info("[AppConfig] TRANSLATOR_API_KEY is configured");
+            }
+            logger.info("[AppConfig] TRANSLATOR_ENDPOINT: {}", translatorEndpoint);
+            logger.info("[AppConfig] TRANSLATOR_REGION: {}", translatorRegion);
+        }
     }
 
     public int getMaxSimulationDurationSeconds() {
@@ -137,5 +173,37 @@ public class AppConfig {
 
     public void setCpuStressThreadPoolSize(int cpuStressThreadPoolSize) {
         this.cpuStressThreadPoolSize = cpuStressThreadPoolSize;
+    }
+
+    public String getUiLanguage() {
+        return uiLanguage;
+    }
+
+    public void setUiLanguage(String uiLanguage) {
+        this.uiLanguage = uiLanguage;
+    }
+
+    public String getTranslatorApiKey() {
+        return translatorApiKey;
+    }
+
+    public void setTranslatorApiKey(String translatorApiKey) {
+        this.translatorApiKey = translatorApiKey;
+    }
+
+    public String getTranslatorEndpoint() {
+        return translatorEndpoint;
+    }
+
+    public void setTranslatorEndpoint(String translatorEndpoint) {
+        this.translatorEndpoint = translatorEndpoint;
+    }
+
+    public String getTranslatorRegion() {
+        return translatorRegion;
+    }
+
+    public void setTranslatorRegion(String translatorRegion) {
+        this.translatorRegion = translatorRegion;
     }
 }

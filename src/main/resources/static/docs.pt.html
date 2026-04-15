@@ -1,0 +1,945 @@
+<!-- source_hash:101a80e88fc72478 lang:pt generated:2026-04-14T21:11:57.508247800Z -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação - Performance Problem Simulator - Java 21</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Card-based Documentation Styles - Matching Deployment Page */
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 80px;
+            border: 1px solid #d0d0d0;
+        }
+
+        .card h2 {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-bg);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            color: var(--color-text);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card h4 {
+            color: var(--color-text-muted);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p, .card li {
+            line-height: 1.6;
+            color: var(--color-text-muted);
+        }
+
+        .card ul, .card ol {
+            margin: 0.5rem 0 1rem 1.5rem;
+        }
+
+        .card li {
+            margin-bottom: 0.25rem;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin: 1rem 0;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+
+        code {
+            background: rgba(0,0,0,0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            color: var(--color-danger);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid var(--color-bg);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--color-bg);
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .note {
+            background: rgba(231, 111, 0, 0.1);
+            border-left: 4px solid var(--color-primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .note h4 {
+            color: var(--color-primary-dark);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .note p {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .warning {
+            background: rgba(209, 52, 56, 0.1);
+            border-left: 4px solid var(--color-danger);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .warning p {
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .api-endpoint {
+            background: var(--color-bg);
+            border: 1px solid #d0d0d0;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .api-endpoint .method {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            color: white;
+        }
+
+        .api-endpoint .method.get { background-color: var(--color-success); }
+        .api-endpoint .method.post { background-color: var(--color-cpu); }
+        .api-endpoint .method.delete { background-color: var(--color-danger); }
+
+        .api-endpoint .path {
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+    </style>
+</head>
+<body class="page-secondary">
+    <header>
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Open navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> Simulador de Problemas de Desempenho - Java 21</h1>
+        <span id="sku-badge" class="sku-badge">SKU: Local</span>
+        <nav>
+            <a href="/" class="nav-link">🎮 Painel</a>
+        </nav>
+    </header>
+
+    <!-- Sidebar Drawer Navigation -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="sidebar-drawer" class="sidebar-drawer">
+        <div class="sidebar-header">
+            <h2><svg class="java-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 346" width="24" height="32"><path fill="#1171B0" d="M83 267s-14 8 9 11c28 3 42 3 73-4 0 0 8 5 19 10-68 29-154-2-101-17m-8-40s-15 11 8 14c29 3 53 3 94-5 0 0 6 5 15 8-82 24-173 2-117-17"/><path fill="#1171B0" d="M143 165c17 20-5 38-5 38s44-23 24-51c-19-27-33-40 45-85 0 0-122 30-64 98"/><path fill="#1171B0" d="M223 295s10 8-11 15c-40 12-168 16-203 0-13-5 11-13 18-14l12-2c-14-10-89 19-38 28 138 22 251-10 222-27M89 190s-63 15-22 21c17 2 51 2 83-1 26-3 52-8 52-8l-16 9c-64 17-187 9-152-8 30-15 55-13 55-13m113 63c65-34 35-66 14-61l-6 2s2-3 5-4c35-12 62 36-13 56l2-3"/><path fill="#E44D26" d="M162 0s36 36-34 92c-56 45-13 70 0 99-33-30-57-57-41-81 24-36 90-54 75-110"/><path fill="#1171B0" d="M95 345c62 4 158-3 160-34 0 0-4 11-51 20-53 10-119 9-158 2 0 0 8 7 49 12"/></svg> PerfSimJava</h2>
+            <button id="sidebar-close" class="sidebar-close" aria-label="Close navigation">×</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Aplicação</div>
+            <a href="/" class="sidebar-nav-item">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Painel<span class="nav-desc">Métricas e controles ao vivo</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Documentação</div>
+            <a href="/docs.html" class="sidebar-nav-item active">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Documentação<span class="nav-desc">API Referência & Guias</span></span>
+            </a>
+            <a href="/azure-diagnostics.html" class="sidebar-nav-item">
+                <span class="nav-icon">☁️</span>
+                <span class="nav-label">Azure Diagnóstico<span class="nav-desc">Diagnosticar problemas na App Service</span></span>
+            </a>
+            <a href="/azure-load-testing.html" class="sidebar-nav-item">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Azure Testes de Carga<span class="nav-desc">Endpoint e parâmetros do teste de carga</span></span>
+            </a>
+            <a href="/azure-deployment.html" class="sidebar-nav-item">
+                <span class="nav-icon">🚀</span>
+                <span class="nav-label">Desdobrar para Azure<span class="nav-desc">GitHub Ações + configuração OIDC</span></span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-label">Externo</div>
+            <a id="github-repo-link" href="#" target="_blank" class="sidebar-nav-item" style="display:none">
+                <span class="nav-icon">🐙</span>
+                <span class="nav-label">GitHub Repositório<span class="nav-desc">Código-fonte e problemas</span></span>
+            </a>
+            <a href="/swagger-ui/index.html" target="_blank" class="sidebar-nav-item">
+                <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="#85ea2d"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm0 1.144c5.995 0 10.856 4.861 10.856 10.856S17.995 22.856 12 22.856 1.144 17.995 1.144 12 6.005 1.144 12 1.144zm-.436 5.024c-.175.004-.353.013-.537.03-1.187.105-1.622.525-1.622 1.449v1.01H8v1.737h1.405v4.876h2.065v-4.876h1.405l.191-1.737h-1.596v-.88c0-.408.186-.52.504-.52h1.092V5.963s-.686-.095-1.502-.095zm3.156 1.117v.79h.54v2.18h-.54v.79h1.87v-.79h-.54v-2.97h-1.33z"/></svg></span>
+                <span class="nav-label">Swagger API<span class="nav-desc">Documentação API interativa</span></span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="sidebar-build-info">Build: Carregando...</div>
+        </div>
+    </aside>
+
+    <div class="app-container">
+    <!-- Page Header -->
+    <div class="doc-page-header">
+        <h1><span class="doc-icon">📚</span> Documentação</h1>
+        <p class="doc-subtitle">Referência completa de API e guias para ferramentas de simulação de desempenho do PerfSimJava</p>
+    </div>
+    
+    <div class="doc-layout">
+    <main class="doc-content">
+        <section id="overview" class="card">
+        <h2>🎯 Simulador de Problemas de Desempenho</h2>
+        <p>Uma aplicação Azure App Service educacional que intencionalmente cria problemas de desempenho para fins de aprendizagem e demonstração.</p>
+
+        <h3>Propósito</h3>
+        <p>Esta aplicação foi projetada para ajudar Azure App Service Engenheiros de Suporte e Consultores Técnicos:</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📖</div>
+                <strong>Aprenda</strong>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Como diagnosticar problemas comuns de desempenho em Azure App Service</p>
+            </div>
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔧</div>
+                <strong>Prática</strong>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Usando Azure ferramentas de diagnóstico e monitoramento</p>
+            </div>
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎭</div>
+                <strong>Demonstrar</strong>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Anti-padrões de desempenho em um ambiente controlado</p>
+            </div>
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
+                <strong>Trem</strong>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Apoiar as equipes na identificação e resolução de problemas de desempenho</p>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Aviso</strong> — Este aplicativo cria problemas de desempenho intencionalmente!        </div>
+
+        <ul>
+            <li>🔥 <strong>CPU estresse</strong> — Gera threads de trabalho rodando operações criptográficas para consumir CPU núcleos</li>
+            <li>📊 <strong>Pressão de memória</strong> — Aloca e mantém grandes arrays de bytes para aumentar o uso do heap</li>
+            <li>🟣 <strong>Privação de fios</strong> — Bloqueia threads servlet com operações síncronas</li>
+            <li>🔌 <strong>Exaustão do pool de conexão</strong> — Simula saturação da pool de conexão JDBC</li>
+            <li>💥 <strong>A aplicação trava</strong> — Aciona erros fatais para testes Azure Monitoramento de Acidentes</li>
+            <li>❌ <strong>Pedidos fracassados</strong> — Gera erros HTTP 5xx para testes de AppLens e Application Insights</li>
+        </ul>
+
+        <div class="note">
+            <strong>🛡️ Aviso de Segurança:</strong> Implante essa aplicação apenas em ambientes isolados e não produtivos.        </div>
+        </section>
+
+        <section id="cpu-simulation" class="card">
+        <h2>CPU Simulação de Estresse</h2>
+
+        <div class="note">
+            <h4>Como Funciona</h4>
+            <p>A simulação de CPU tensão cria threads de trabalho que funcionam <strong>PBKDF2WithHmacSHA512</strong> operações criptográficas — trabalho computacionalmente caro que não pode ser otimizado pelo compilador JIT.</p>
+        </div>
+
+        <h3>Entendendo a Simulação</h3>
+        <p>Cada thread de trabalho funciona em um ciclo apertado realizando operações de hash de senha. Isso imita cenários do mundo real como:</p>
+        <ul>
+            <li><strong>Algoritmos ineficientes</strong> — loops O(n²) ou retrocesso regex</li>
+            <li><strong>Caches ausentes</strong> — Recalculando operações caras repetidamente</li>
+            <li><strong>Malware de mineração de criptomoedas</strong>— Consumo não autorizado de CPU</li>
+            <li><strong>Consultas não otimizadas</strong> — Processamento de dados CPUlimitado</li>
+        </ul>
+
+        <h3>Opções de configuração</h3>
+        <ul>
+            <li><strong>Duração (segundos)</strong> — Quanto tempo o estresse dura antes de parar automaticamente.</li>
+            <li><strong>Intensidade</strong> — Escolha <em>Alto</em> ou <em>Moderado</em> para controlar CPU nível de consumo.</li>
+        </ul>
+
+        <h3>O que você verá em diagnósticos</h3>
+        <ul>
+            <li><strong>Despejos de threads:</strong> Threads em <code>RUNNABLE</code> Estado dentro <code>PBKDF2Core</code> ou <code>SecretKeyFactory</code></li>
+            <li><strong>CPU Perfilador:</strong> Amostras de alto CPU em classes criptográficas</li>
+            <li><strong>App Service Métricas:</strong>CPU pico percentual durante a simulação</li>
+        </ul>
+
+        <h4>Controles do Painel</h4>
+        <p>Use o <strong>CPU Estresse</strong> painel no painel para iniciar/parar simulações. Selecione nível de intensidade e duração, depois clique <strong>Gatilho CPU Estresse</strong>.</p>
+        </section>
+
+        <section id="memory-simulation" class="card">
+        <h2>Simulação de Pressão de Memória</h2>
+
+        <div class="note">
+            <h4>Como Funciona</h4>
+            <p>A simulação de memória aloca grandes arrays de bytes que permanecem armazenados no heap até serem liberados explicitamente, impedindo que a coleta de lixo recupere a memória.</p>
+        </div>
+
+        <h3>Entendendo Vazamentos de Memória</h3>
+        <p>Em aplicações reais, vazamentos de memória ocorrem quando objetos permanecem acessíveis, mas não são mais necessários. Causas comuns incluem:</p>
+        <ul>
+            <li><strong>Coleções estáticas</strong> — Somando a um estático <code>List</code> ou <code>Map</code> sem remover</li>
+            <li><strong>Ouvintes do evento</strong> — Registrar ouvintes que nunca são desregistrados</li>
+            <li><strong>Caches sem expulsão</strong> — Caches ilimitados que crescem indefinidamente</li>
+            <li><strong>Variáveis ThreadLocal</strong> — Valores mantidos em threads agrupados</li>
+            <li><strong>Dados da sessão</strong>— Grandes objetos armazenados em sessões HTTP</li>
+        </ul>
+
+        <h3>Opções de configuração</h3>
+        <ul>
+            <li><strong>Tamanho (MB)</strong> — Quantidade de memória heap para alocar por clique. Múltiplas alocações se empilham.</li>
+        </ul>
+
+        <h3>O que você verá em diagnósticos</h3>
+        <ul>
+            <li><strong>GC Frequência:</strong> Aumento da atividade GC à medida que o monte se enche</li>
+            <li><strong>Despejos de pilha:</strong> Grande <code>byte[]</code> Arrays mantidos pelo serviço de simulação</li>
+            <li><strong>Métricas de Memória:</strong> Uso do heap subindo em direção ao alvo configurado</li>
+            <li><strong>GC Pausa:</strong> Mais tempos GC à medida que o heap se aproxima da capacidade</li>
+        </ul>
+
+        <h4>Controles do Painel</h4>
+        <p>Use o <strong>Memória</strong> painel no painel para alocar memória e observar o uso do heap crescer em tempo real. Click <strong>Lançamento</strong> para liberar toda a memória alocada sob demanda.</p>
+        </section>
+
+        <section id="thread-simulation" class="card">
+        <h2>Simulação de Inanição de Pool de Fios</h2>
+        
+        <div class="note">
+            <strong>Nota:</strong> Este é o equivalente em Java ao "Bloqueio de Loop de Eventos" em Node.js. 
+            Como o Java usa um modelo thread-per-request, bloquear múltiplos servlets threads simula 
+            O mesmo sintoma de fila de requisições e picos de latência.        </div>
+
+        <h3>Entendendo a Duração e a Contagem de Fios</h3>
+        <p>A simulação gera solicitações internas de HTTP que bloqueiam cada uma uma thread de servlet. Veja como o tempo funciona:</p>
+        <ul>
+            <li><strong>Duração por solicitação:</strong> Cada solicitação de bloqueio roda pela duração especificada (por exemplo, 10s)</li>
+            <li><strong>Pool de tópicos Tomcat:</strong> Padrão máximo ~200 threads</li>
+            <li><strong>Comportamento das ondas:</strong> Se você gerar mais threads do que o tamanho do pool, pedidos excedentes ficam na fila HTTP do Tomcat</li>
+        </ul>
+        
+        <h4>Exemplo de linha do tempo (220 threads, duração de 10s):</h4>
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <tr style="border-bottom: 1px solid var(--border-color); background: var(--code-bg);">
+                <th style="padding: 0.5rem; text-align: left;">Tempo</th>
+                <th style="padding: 0.5rem; text-align: left;">O que acontece</th>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">0-10s</td>
+                <td style="padding: 0.5rem;">Primeiras 200 solicitações, agarre threads, comece a bloquear. 20 pedidos esperando na fila.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">~10s</td>
+                <td style="padding: 0.5rem;">Primeira onda completa. Com 20 pedidos na fila, agora recebem tópicos.</td>
+            </tr>
+            <tr>
+                <td style="padding: 0.5rem;">~Anos 20</td>
+                <td style="padding: 0.5rem;">A segunda onda termina. Simulação termina.</td>
+            </tr>
+        </table>
+        <p><strong>Fórmula:</strong> Tempo total ≈ <code>durationSeconds × ⌈threadCount / 200⌉</code></p>
+
+        <h3>Opções de configuração</h3>
+        <ul>
+            <li><strong>Fios Bloqueados</strong> — Número de solicitações de bloqueio a serem geradas</li>
+            <li><strong>Duração (segundos)</strong> — Quanto tempo cada requisição bloqueia seu thread</li>
+        </ul>
+
+        <h4>Configurações recomendadas:</h4>
+        <ul>
+            <li><strong>Teste rápido:</strong> 150 fios, 10s (onda única, ~10s no total)</li>
+            <li><strong>Impacto moderado:</strong> 200 roscas, 15s (satura pool, ~15s no total)</li>
+            <li><strong>Teste estendido:</strong> 400 roscas, 10s (duas ondas, ~20s no total)</li>
+        </ul>
+
+        <h3>O que você verá em diagnósticos</h3>
+        <ul>
+            <li><strong>Despejos de threads:</strong> Muitos fios em <code>TIMED_WAITING</code> Estado</li>
+            <li><strong>Picos de latência:</strong> Novas requisições ficam em fila atrás de threads bloqueadas</li>
+            <li><strong>Painel:</strong> A contagem de fios ativos sobe rapidamente</li>
+        </ul>
+        </section>
+
+        <section id="connection-pool" class="card">
+        <h2>Exaustão da Piscina de Conexão</h2>
+
+        <div class="note">
+            <h4>Entendendo Pools de Conexão</h4>
+            <p>Pools de conexão de banco de dados (como HikariCP, C3P0, Tomcat JDBC) mantêm um número fixo de conexões reutilizáveis de banco de dados. Quando todas as conexões estão em uso, novas solicitações precisam esperar. Esse é um dos problemas de desempenho mais comuns em aplicações Java.</p>
+        </div>
+
+        <h3>Como Essa Simulação Funciona</h3>
+        <p>Nós usamos um <strong>Semáforo</strong> — uma primitiva de concorrência Java que controla o acesso a um número limitado de recursos. Pense nisso como um estacionamento:</p>
+        <ul>
+            <li><strong>Tamanho da Piscina</strong> = Número de vagas de estacionamento</li>
+            <li><strong>acquire()</strong> = Carro ocupa um espaço (faz uma conexão)</li>
+            <li><strong>Lançamento()</strong> = Carro sai (retorna conexão ao pool)</li>
+            <li><strong>Threads de espera</strong> = Carros na fila no portão quando o estacionamento está lotado</li>
+        </ul>
+
+        <h4>Semáforo → Mapeamento HikariCP:</h4>
+        <table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;"><code>new Semaphore(10)</code></td>
+                <td style="padding: 0.5rem;"><code>maximumPoolSize=10</code></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;"><code>tryAcquire(30, SECONDS)</code></td>
+                <td style="padding: 0.5rem;"><code>connectionTimeout=30000</code></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;"><code>release()</code></td>
+                <td style="padding: 0.5rem;">Conexão retornada ao pool</td>
+            </tr>
+            <tr>
+                <td style="padding: 0.5rem;">Thread bloqueado ao adquirir</td>
+                <td style="padding: 0.5rem;">Thread aguardando conexão disponível</td>
+            </tr>
+        </table>
+
+        <h3>Opções de configuração</h3>
+        <p>Ajustável pelo painel:</p>
+        <ul>
+            <li><strong>Tamanho da Piscina</strong> — Número de conexões simuladas disponíveis</li>
+            <li><strong>Duração da consulta (segundos)</strong> — Quanto tempo cada \"consulta\" mantém uma conexão</li>
+            <li><strong>Consultas Simultâneas</strong> — Número de consultas simultâneas a serem tentadas</li>
+            <li><strong>Tempo de Conexão (segundos)</strong> — Quanto tempo esperar antes de expirar o tempo</li>
+        </ul>
+
+        <h3>O que você verá em despejos de tópicos</h3>
+        <pre><code>"http-nio-8080-exec-42" #42 daemon prio=5 TIMED_WAITING
+    at jdk.internal.misc.Unsafe.park(Native Method)
+    at java.util.concurrent.locks.LockSupport.parkNanos(...)
+    at java.util.concurrent.Semaphore.tryAcquire(...)
+    at com.microsoft.azure.samples.perfsimjava.service.ConnectionPoolService.executeQuery(...)
+    ...</code></pre>
+        <p>Em aplicações reais, isso mostraria <code>HikariPool.getConnection()</code> ou <code>BasicResourcePool.getResource()</code> em vez disso.</p>
+
+        <h3>Indicadores Diagnósticos</h3>
+        <ul>
+            <li>Dumps de threads mostrar threads <code>TIMED_WAITING</code> em <code>Semaphore.tryAcquire</code></li>
+            <li>Picos de latência quando threads servlet bloqueiam a espera de conexões</li>
+            <li>Erros de tempo de espera quando a espera excede o tempo de espera configurado</li>
+            <li>O painel mostra a utilização em tempo real do pool e a contagem de tempo limite</li>
+        </ul>
+        </section>
+
+        <section id="failed-requests" class="card">
+        <h2>Simulação de Solicitações Falhadas</h2>
+
+        <div class="note">
+            <h4>Como Funciona</h4>
+            <p>A simulação de Solicitações Falhadas gera HTTP erros 5xx ao fazer requisições internas ao endpoint do teste de carga com probabilidade de erro de 100%. Cada requisição gera um erro visível no servidor que aparece nos diagnósticos Azure .</p>
+        </div>
+
+        <h3>Entendendo HTTP Erros 5xx</h3>
+        <p>HTTP erros 5xx indicam falhas no lado do servidor. Esta simulação ajuda você a praticar a identificação e diagnóstico de padrões de erro usando Azure ferramentas:</p>
+        <ul>
+            <li><strong>AppLens:</strong>HTTP erros 5xx aparecem na linha do tempo de disponibilidade e nos relatórios de erros</li>
+            <li><strong>Application Insights:</strong> Solicitações fracassadas são acompanhadas com detalhes completos de exceção</li>
+            <li><strong>Azure Monitor:</strong> A métrica http5xx aumenta, acionando quaisquer alertas configurados</li>
+            <li><strong>Análise de Log:</strong> Detalhes do erro disponíveis via consultas KQL</li>
+        </ul>
+
+        <h3>Opções de configuração</h3>
+        <ul>
+            <li><strong>Número de Solicitações</strong> — Quantas requisições falhadas devem ser geradas (1-1000, padrão: 10)</li>
+        </ul>
+
+        <h3>O que você verá em diagnósticos</h3>
+        <ul>
+            <li><strong>AppLens:</strong>HTTP pico de erro 5xx no cronograma, queda na disponibilidade</li>
+            <li><strong>Application Insights:</strong> Requisições falhadas com tipos de exceção como TimeoutException, IOException</li>
+            <li><strong>Azure Monitor:</strong> Aumento da métrica Http5xx</li>
+            <li><strong>Latência de Solicitação:</strong> Cada requisição leva ~2+ segundos para ser executada antes de falhar</li>
+        </ul>
+
+        <h4>API Endpoint</h4>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <span class="path">/api/simulações/solicitações-falhadas</span>
+            <p>Aciona um lote de HTTP solicitações de erro 5xx.</p>
+            <h4>Corpo do Pedido:</h4>
+            <pre><code>{
+    "numberOfRequests": 10
+}</code></pre>
+            <h4>Resposta:</h4>
+            <pre><code>{
+    "simulationId": "abc123",
+    "type": "FAILED_REQUESTS",
+    "numberOfRequests": 10,
+    "status": "RUNNING",
+    "message": "Generating 10 failed HTTP requests"
+}</code></pre>
+        </div>
+
+        <h4>Controles do Painel</h4>
+        <p>Use o <strong>Pedidos Fracassados</strong> painel no painel para gerar erros. Insira o número de solicitações e clique <strong>Gerar erros</strong>. A simulação é executada rapidamente e produz HTTP respostas 5xx visíveis em Azure ferramentas de diagnóstico.</p>
+        </section>
+
+        <section id="crash-simulation" class="card">
+        <h2>Simulação de Colisão</h2>
+        
+        <div class="warning">
+            <strong>Aviso:</strong> Essas simulações travam ou encerram a aplicação. 
+            Use apenas para testar diagnósticos e cenários de recuperação em App Service.        </div>
+
+        <h3>Tipos de Colisão Disponíveis</h3>
+        <p>Selecione um tipo de falha no painel para testar diferentes modos de falha:</p>
+
+        <h4>🛑 Falha Rápida (System.exit)</h4>
+        <p>Termina imediatamente a JVM com <code>System.exit(1)</code>. O processo sai sem rodar ganchos de paralisação ou finalizadores. Em App Service, isso desencadeia uma reinicialização imediata.</p>
+
+        <h4>📉 Excesso de Pilha</h4>
+        <p>Aciona um <code>StackOverflowError</code> por recursão infinita. Isso simula bugs como chamadas circulares de métodos ou recursão ilimitada. O rastreamento de pilha mostrará chamadas repetidas para o mesmo método.</p>
+
+        <h4>⚠️ Exceção Não Tratada</h4>
+        <p>Joga um sem controle <code>RuntimeException</code> De um responsável por solicitações. Testa como sua aplicação lida com erros inesperados e se o middleware de gerenciamento de exceções está funcionando corretamente.</p>
+
+        <h4>💥 Fora de Memória (OOM)</h4>
+        <p>Aloca memória rapidamente até que a JVM emita um <code>OutOfMemoryError</code>. Isso é útil para testar:</p>
+        <ul>
+            <li>App Service comportamento de reinício automático no OOM</li>
+            <li>Alerta e monitoramento de memória</li>
+            <li>Configuração de coleta de dump de heap</li>
+        </ul>
+        </section>
+
+        <section id="optional-config" class="card">
+        <h2>Configuração Opcional</h2>
+        <p>Você pode personalizar o comportamento da aplicação usando Azure App Service variáveis de ambiente.</p>
+
+        <h3>Taxa de Sondagem de Saúde</h3>
+        <p>Controle com que frequência o servidor envia sondas de saúde para medir a latência das requisições. Todas as sondas são roteadas pelo frontend Azure para capturar latência realista de ponta a ponta.</p>
+        
+        <h4>Variável Ambiente</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome da variável</th>
+                    <th>Descrição</th>
+                    <th>Padrão</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>HEALTH_PROBE_RATE</code></td>
+                    <td>Intervalo de sonda em milissegundos. Mínimo 100ms.</td>
+                    <td><code>200</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Configuração via Azure CLI</h4>
+        <pre><code># Slow down probes if CLR profiler shows overlapping requests
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings HEALTH_PROBE_RATE=400</code></pre>
+
+        <h3>Tempo de inatividade</h3>
+        <p>Quando a aplicação está ociosa (sem conexões no painel ou requisições de teste de carga), as sondas de saúde são automaticamente suspensas para reduzir o tráfego desnecessário de rede para a interface e a telemetria Application Insights da Azure.</p>
+        
+        <h4>Variável Ambiente</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome da variável</th>
+                    <th>Descrição</th>
+                    <th>Padrão</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IDLE_TIMEOUT_MINUTES</code></td>
+                    <td>Minutos de inatividade antes de suspender as sondas de saúde. A atividade é retomada automaticamente quando o painel é aberto ou qualquer solicitação é recebida.</td>
+                    <td><code>20</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Configuração via Azure CLI</h4>
+        <pre><code># Extend idle timeout to 30 minutes
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings IDLE_TIMEOUT_MINUTES=30</code></pre>
+
+        <h3>Rodapé de página personalizado</h3>
+        <p>Defina uma mensagem personalizada no rodapé que apareça em todas as páginas. O rodapé suporta HTML, permitindo incluir links.</p>
+        
+        <h4>Variável Ambiente</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome da variável</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>PAGE_FOOTER</code></td>
+                    <td>Conteúdo HTML para a segunda linha do rodapé. Se não estiver definido, apenas a descrição do app e as informações da build são mostradas.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Exemplo de Valor</h4>
+        <pre><code>Created by &lt;a href="https://yoursite.com"&gt;Your Team&lt;/a&gt; for training purposes</code></pre>
+
+        <h4>Configuração via Azure CLI</h4>
+        <pre><code># Set the footer via Azure CLI
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings 'PAGE_FOOTER=Created by &lt;a href="https://yoursite.com"&gt;Your Team&lt;/a&gt; for training purposes'</code></pre>
+
+        <h4>Ambientação via Azure Portal</h4>
+        <ol>
+            <li>Navegue até sua App Service no Portal Azure</li>
+            <li>Vá para <strong>Configurações</strong> → <strong>Variáveis do ambiente</strong></li>
+            <li>Click <strong>+ Adicionar</strong></li>
+            <li>Nome do Conjunto: <code>PAGE_FOOTER</code></li>
+            <li>Valor de Definição: Seu conteúdo do rodapé HTML</li>
+            <li>Click <strong>Candidate-se</strong>, então <strong>Confirme</strong></li>
+        </ol>
+
+        <h3>GitHub Link do Repositório</h3>
+        <p>Por padrão, o link GitHub Repositório no menu lateral está oculto. Defina ambas as variáveis de ambiente abaixo para exibir um link para seu repositório de GitHub no menu de navegação.</p>
+        
+        <h4>Variáveis Ambientais</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome da variável</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>GITHUB_USER_NAME</code></td>
+                    <td>O GitHub nome de usuário ou organização que é dona do repositório.</td>
+                </tr>
+                <tr>
+                    <td><code>GITHUB_REPO_NAME</code></td>
+                    <td>O nome do repositório GitHub .</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Exemplo</h4>
+        <p>Para linkar <code>https://github.com/myorg/myrepo</code>, set:</p>
+        <ul>
+            <li><code>GITHUB_USER_NAME=myorg</code></li>
+            <li><code>GITHUB_REPO_NAME=myrepo</code></li>
+        </ul>
+
+        <h4>Configuração via Azure CLI</h4>
+        <pre><code># Set the GitHub repository link
+az webapp config appsettings set --name $APP_NAME --resource-group $RESOURCE_GROUP \
+  --settings GITHUB_USER_NAME=myorg GITHUB_REPO_NAME=myrepo</code></pre>
+        </section>
+
+        <section id="architecture" class="card">
+        <h2>Arquitetura</h2>
+        <p>A aplicação roda como uma aplicação Spring Boot 3.3 com Tomcat incorporado, STOMP over WebSocket para métricas em tempo real e estado em memória. Um serviço dedicado de sonda mede a latência da solicitação sondando o aplicativo através do frontend da Azure.</p>
+
+        <h3>Componentes Principais</h3>
+        <ul>
+            <li><strong>Aplicação Spring Boot</strong>— Servidor Tomcat embarcado com controladores REST e suporte a WebSocket</li>
+            <li><strong>Serviço de sonda</strong>— Tarefa agendada em segundo plano que mede a latência do pedido enviando HTTP sondas pela interface Azure</li>
+            <li><strong>Serviços de Simulação</strong> — CPU simulações de estresse, pressão de memória e bloqueio de threads rodam em pools dedicados de threads para evitar privar os threads servlet</li>
+            <li><strong>WebSocket Corretor</strong> — Mensagens STOMP via SockJS para atualizações em tempo real do painel (métricas, eventos, status da simulação)</li>
+        </ul>
+
+        <h3>Estrutura da Fonte</h3>
+        <pre><code>src/main/java/com/microsoft/azure/samples/perfsimjava/
+├── PerfSimJavaApplication.java       # Main entry point
+│
+├── config/                           # Configuration
+│   ├── AppConfig.java                # Application settings
+│   ├── OpenApiConfig.java            # Swagger/OpenAPI setup
+│   └── WebSocketConfig.java          # STOMP/WebSocket setup
+│
+├── controller/                       # REST API endpoints
+│   ├── AdminController.java          # Status and event log
+│   ├── CpuController.java            # CPU stress simulation
+│   ├── CrashController.java          # Crash simulations
+│   ├── HealthController.java         # Health probes and config
+│   ├── MemoryController.java         # Memory pressure simulation
+│   ├── MetricsController.java        # System metrics API
+│   └── ThreadStarvationController.java
+│
+├── service/                          # Business logic
+│   ├── CpuStressService.java         # Thread pool for CPU work
+│   ├── CrashService.java             # Crash triggers
+│   ├── EventLogService.java          # Event broadcasting
+│   ├── IdleService.java              # Idle timeout management
+│   ├── MemoryPressureService.java    # Memory allocation
+│   ├── MetricsService.java           # JMX metrics collection
+│   ├── ProbeService.java             # Latency measurement
+│   └── ThreadStarvationService.java  # Servlet thread blocking
+│
+├── model/                            # Data models and DTOs
+│   ├── Simulation.java
+│   ├── SystemMetrics.java
+│   └── dto/                          # Request/response DTOs
+│
+└── resources/
+    ├── application.properties        # Spring configuration
+    └── static/                       # Dashboard files
+        ├── index.html                # Main dashboard
+        ├── docs.html                 # Documentation
+        ├── azure-diagnostics.html    # Azure diagnostics guide
+        ├── azure-deployment.html     # Deployment guide
+        ├── css/styles.css
+        └── js/
+            ├── charts.js             # Real-time Chart.js charts
+            ├── dashboard.js          # UI interactions & controls
+            └── socket-client.js      # STOMP/SockJS client</code></pre>
+        </section>
+
+        <section id="language-selection" class="card">
+        <h2>🌐 Seleção de Língua</h2>
+        <p>A interface do painel pode ser exibida em qualquer idioma suportado por <strong>Azure Tradutor de Serviços Cognitivos</strong>. A tradução é realizada uma vez na inicialização da aplicação e armazenada em cache — não há nenhuma sobrecarga de tradução em tempo de execução.</p>
+
+        <h3>Como Funciona</h3>
+        <ol>
+            <li><strong>Defina o <code>UI_LANGUAGE</code> Variável ambiente</strong> para um código de idioma ISO 639-1 (por exemplo, <code>es</code>, <code>fr</code>, <code>ja</code>, <code>zh-Hans</code>)</li>
+            <li><strong>Forneça credenciais Azure tradutor</strong> via variáveis de ambiente</li>
+            <li>Ao iniciar, o app traduz todas as strings da interface (<code>en.json</code> → <code>{lang}.json</code>) e páginas de documentação HTML</li>
+            <li>Arquivos traduzidos são armazenados em cache com um hash SHA-256 da fonte — eles só são retraduzidos quando a fonte muda</li>
+        </ol>
+
+        <h3>Variáveis Ambientais Obrigatórias</h3>
+        <table style="width:100%; border-collapse:collapse; margin:1rem 0;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--color-bg);">
+                    <th style="text-align:left; padding:0.5rem;">Variável</th>
+                    <th style="text-align:left; padding:0.5rem;">Descrição</th>
+                    <th style="text-align:left; padding:0.5rem;">Padrão</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>UI_LANGUAGE</code></td>
+                    <td style="padding:0.5rem;">Código no idioma alvo</td>
+                    <td style="padding:0.5rem;"><code>en</code> (sem tradução)</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>TRANSLATOR_API_KEY</code></td>
+                    <td style="padding:0.5rem;">Azure Tradutor API chave</td>
+                    <td style="padding:0.5rem;">—</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>TRANSLATOR_ENDPOINT</code></td>
+                    <td style="padding:0.5rem;">Endpoint de serviço tradutor</td>
+                    <td style="padding:0.5rem;"><code>https://api.cognitive.microsofttranslator.com</code></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-bg);">
+                    <td style="padding:0.5rem;"><code>TRANSLATOR_REGION</code></td>
+                    <td style="padding:0.5rem;">Azure região do recurso Tradutor</td>
+                    <td style="padding:0.5rem;"><code>eastus</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Azure App Service Configuração</h3>
+        <p>No portal Azure , vá até sua App Service → <strong>Configuração</strong> → <strong>Configurações de aplicação</strong> e acrescentar:</p>
+        <pre><code>UI_LANGUAGE=es
+TRANSLATOR_API_KEY=your-key-here
+TRANSLATOR_REGION=eastus</code></pre>
+
+        <h3>Termos Protegidos</h3>
+        <p>Termos técnicos listados em <code>locales/no-translate.json</code> (por exemplo, "Azure App Service", "CPU", "JVM", "STOMP") são automaticamente incluídos em <code>&lt;span class="notranslate"&gt;</code> tags antes da tradução, garantindo que permaneçam em inglês independentemente do idioma de destino.</p>
+
+        <h3>Comportamento do Cache</h3>
+        <ul>
+            <li>Arquivos de localização traduzidos são armazenados como <code>locales/{lang}.json</code> (por exemplo, <code>locales/es.json</code>)</li>
+            <li>Documentos HTML traduzidos são armazenados como <code>{name}.{lang}.html</code> (por exemplo, <code>docs.es.html</code>)</li>
+            <li>Cada arquivo em cache inclui um hash SHA-256 da fonte — se a fonte em inglês não mudou, a tradução é pulada</li>
+            <li>Exclua o arquivo em cache para forçar a retradução na próxima reinicialização</li>
+        </ul>
+        </section>
+    </main>
+    
+    <!-- Right-side Table of Contents -->
+    <aside class="doc-toc">
+        <div class="doc-toc-inner">
+            <h2>NESTA PÁGINA</h2>
+            <a href="#overview" class="doc-toc-link active"><span class="toc-icon">📄</span> Visão geral</a>
+            
+            <div class="doc-toc-section-label toc-section-simulations">
+                <span class="toc-section-icon">🎮</span> SIMULAÇÕES            </div>
+            <a href="#cpu-simulation" class="doc-toc-link"><span class="toc-icon">🔥</span>CPU Estresse</a>
+            <a href="#memory-simulation" class="doc-toc-link"><span class="toc-icon">📊</span> Pressão de Memória</a>
+            <a href="#thread-simulation" class="doc-toc-link"><span class="toc-icon">🟣</span> Privação de Fios</a>
+            <a href="#connection-pool" class="doc-toc-link"><span class="toc-icon">🔌</span> Pool de Conexão</a>
+            <a href="#failed-requests" class="doc-toc-link"><span class="toc-icon">❌</span> Pedidos Fracassados</a>
+            <a href="#crash-simulation" class="doc-toc-link"><span class="toc-icon">💥</span> Simulação de Colisão</a>
+            <a href="#optional-config" class="doc-toc-link"><span class="toc-icon">⚙️</span> Configuração Opcional</a>
+            <a href="#architecture" class="doc-toc-link"><span class="toc-icon">🏗️</span> Arquitetura</a>
+            <a href="#language-selection" class="doc-toc-link"><span class="toc-icon">🌐</span> Seleção de Língua</a>
+        </div>
+    </aside>
+    </div>
+
+    <footer>
+        <p>Performance Problem Simulator — Ferramenta Educacional para Diagnóstico Azure App Service</p>
+        <p id="footer-credits"></p>
+        <p id="build-info">Build: Carregando...</p>
+    </footer>
+
+    <script>
+        // Sidebar navigation toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarDrawer = document.getElementById('sidebar-drawer');
+        const sidebarClose = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            hamburgerBtn.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            sidebarDrawer.classList.add('active');
+        }
+
+        function closeSidebar() {
+            hamburgerBtn.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            sidebarDrawer.classList.remove('active');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        // TOC scroll highlighting
+        const tocLinks = document.querySelectorAll('.doc-toc-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        function highlightToc() {
+            let current = '';
+            const viewportHeight = window.innerHeight;
+            
+            // Find the section that's most visible in viewport
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                // Section is considered "current" if its top is in upper 40% of viewport
+                if (rect.top <= viewportHeight * 0.4 && rect.bottom > 0) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            // If no section found (scrolled to very top), use first section
+            if (!current && sections.length > 0) {
+                current = sections[0].getAttribute('id');
+            }
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', highlightToc);
+        highlightToc();
+
+        // Load SKU info
+        async function loadSkuInfo() {
+            try {
+                const response = await fetch('/api/health/environment');
+                const data = await response.json();
+                const skuBadge = document.getElementById('sku-badge');
+                if (skuBadge) {
+                    skuBadge.textContent = data.isAzure ? `SKU: ${data.sku}` : 'SKU: Local';
+                }
+            } catch (error) {
+                console.log('Could not load SKU info');
+            }
+        }
+        loadSkuInfo();
+
+        // Load footer info
+        async function loadBuildInfo() {
+            try {
+                const response = await fetch('/api/health/footer');
+                const data = await response.json();
+                
+                const footerCredits = document.getElementById('footer-credits');
+                if (footerCredits) {
+                    if (data.footer) {
+                        footerCredits.innerHTML = data.footer;
+                    } else {
+                        footerCredits.style.display = 'none';
+                    }
+                }
+                
+                const buildInfo = document.getElementById('build-info');
+                if (buildInfo) {
+                    buildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+                
+                const sidebarBuildInfo = document.getElementById('sidebar-build-info');
+                if (sidebarBuildInfo) {
+                    sidebarBuildInfo.textContent = `Build: ${data.buildTime}`;
+                }
+            } catch (error) {
+                console.log('Could not load footer info');
+            }
+        }
+        loadBuildInfo();
+
+        // Load GitHub link configuration
+        async function loadGithubLink() {
+            try {
+                const response = await fetch('/api/health/config');
+                const config = await response.json();
+                if (config.githubUserName && config.githubRepoName) {
+                    const githubLink = document.getElementById('github-repo-link');
+                    if (githubLink) {
+                        githubLink.href = `https://github.com/${config.githubUserName}/${config.githubRepoName}`;
+                        githubLink.style.display = '';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load GitHub link config');
+            }
+        }
+        loadGithubLink();
+    </script>
+</body>
+</html>
